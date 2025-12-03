@@ -1,14 +1,37 @@
 import { NextResponse } from "next/server";
-import { PrismaClient } from "@prisma/client";
+import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-
-const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
+    // ADMIN LOGIN CHECK
+    if (
+      email === process.env.ADMIN_EMAIL &&
+      password === process.env.ADMIN_PASSWORD
+    ) {
+      const token = jwt.sign({ role: "ADMIN" }, process.env.JWT_SECRET!, {
+        expiresIn: "7d",
+      });
+
+      const response = NextResponse.json({
+        message: "Admin login successful",
+        redirect: "/dashboard",
+      });
+
+      response.cookies.set("token", token, {
+        httpOnly: true,
+        secure: true,
+        path: "/",
+        maxAge: 60 * 60 * 24 * 7,
+      });
+
+      return response;
+    }
+
+    // USER LOGIN CHECK
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user) {
@@ -22,12 +45,15 @@ export async function POST(req: Request) {
     }
 
     const token = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, email: user.email },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
 
-    const response = NextResponse.json({ message: "Login successful" });
+    const response = NextResponse.json({
+      message: "User login successful",
+      redirect: "/user-home",
+    });
 
     response.cookies.set("token", token, {
       httpOnly: true,
@@ -38,6 +64,9 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error) {
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }
