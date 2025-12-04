@@ -1,0 +1,326 @@
+$primary-text-color: #000000;
+$light-background: #fff5f9;
+$banner-background: #f5d7e3;
+$hover-link-color: #a3a3a3; 
+
+.main {
+  width: 100%;
+  position: fixed;
+  top: 0;
+  z-index: 1000;
+  background-color: $light-background;
+  border-bottom: 1px solid #eee;
+  transition: 0.3s ease;
+}
+
+.scrolled {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.topBanner {
+  background: $banner-background;
+  color: black;
+  text-align: center;
+  padding: 12px 0;
+  letter-spacing: 1px;
+  font-weight: bold;
+  
+  
+}
+.text{
+  margin-right: 80px;
+    font-size: 14px;
+
+  
+}
+
+.navbar {
+  margin: auto;
+  height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;  
+  padding: 0 20px;
+  position: relative;
+}
+
+.leftSection {
+  display: flex;
+  align-items: center;
+}
+
+.hamburger {
+  display: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: black;
+
+  @media (max-width: 768px) {
+    display: block;
+  }
+}
+
+.brandCenter {
+  flex: 1;
+  display: flex;
+  justify-content: center;   
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  cursor: pointer;
+
+  .misha {
+    font-size: 20px;
+    letter-spacing: 2px;
+    color: rgb(0, 0, 0);
+  }
+
+  .lakhani {
+    font-size: 35px;
+    letter-spacing: 5px;
+    color: rgb(0, 0, 0);
+
+  }
+
+  @media (max-width: 768px) {
+    .misha { font-size: 14px; }
+    .lakhani { font-size: 25px; }
+  }
+}
+
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+
+  .icon {
+    cursor: pointer;
+    width: 22px;
+    height: 22px;
+    color: black;
+    transition: transform 0.1s ease;
+
+    &:hover { transform: scale(1.05); }
+  }
+}
+
+.desktopOnlyIcon {
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.desktopNavLinks {
+  position: absolute;
+  top: 90px; /* Position below the main navbar */
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  padding: 10px 0;
+  background: $light-background;
+  color: $primary-text-color;
+  border-bottom: 1px solid #eee;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+
+  a {
+    padding: 5px 0;
+    transition: color 0.1s;
+    &:hover {
+      color: $hover-link-color;
+    }
+  }
+}
+
+/* --- Dropdown/Desktop Link Styles --- */
+.desktopNavLinkItem {
+  position: relative; // Important for positioning the dropdown menu
+  padding: 0 10px; // Add some padding around the link item
+
+  a {
+    // Styling for the main link text
+    color: $primary-text-color;
+    text-decoration: none; // Ensure no default underline
+    // Add transition for the underline
+    transition: color 0.1s, text-decoration 0.2s ease-out;
+
+    &:hover {
+      // 1. **Add Underline on Hover for all primary links**
+      text-decoration: underline; 
+      color: black;
+      // font-weight: bold;
+
+    }
+  }
+}
+
+.dropdownMenu {
+  position: absolute;
+  top: 35px; // Start right below the main link
+  left: 50%;
+  transform: translateX(-50%); // Center the dropdown menu horizontally
+  background: $light-background;
+  padding: 30px 40px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  z-index: 999;
+  border-top: 1px solid #eee;
+  border-radius: 6px;
+  
+  // Default size, used for simpleMenu and as a base
+  width: auto;
+  min-width: 500px; 
+
+  // 2. **Fade-in Animation**
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+}
+
+.megaMenu {
+  width: 100vw; // Full viewport width
+  max-width: 1200px; // Max width cap
+  min-width: auto; // Remove min-width inherited from .dropdownMenu for this case
+}
+
+.simpleMenu {
+  min-width: 750px; // Slightly smaller for Couture/Winter Edit
+}
+
+// **Class to trigger the fade-in animation**
+.menuVisible {
+  opacity: 1;
+  visibility: visible;
+}
+
+
+.dropdownContent {
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  width: 100%;
+}
+
+.categoryColumns {
+  display: flex;
+  gap: 40px;
+}
+
+.categoryColumn {
+  min-width: 150px;
+}
+
+.categoryTitle {
+  font-size: 14px;
+  font-weight: bold;
+  margin-bottom: 15px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.dropdownLink {
+  display: block;
+  font-size: 14px;
+  padding: 5px 0;
+  white-space: nowrap;
+  color: $primary-text-color;
+  transition: color 0.1s;
+
+
+  &:hover {
+    color: $hover-link-color;
+    text-decoration: underline;
+  }
+}
+
+.dropdownImage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 200px;
+  cursor: pointer;
+  border-radius: 4px;
+  overflow: hidden;
+  
+  img {
+    width: 100%;
+    height: auto;
+    display: block;
+    margin-bottom: 10px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+}
+
+.shopAll {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 8px 15px;
+  border: 1px solid $primary-text-color;
+  transition: background-color 0.2s, color 0.2s;
+  border-radius: 4px;
+
+  &:hover {
+    background-color: $primary-text-color;
+    color: $light-background;
+  }
+}
+
+/* --- Mobile Nav Drawer Styles --- */
+.navbarLinks {
+  position: fixed;
+  top: 0;
+  left: -260px;
+  width: 260px;
+  height: 100vh;
+  background: $light-background;
+  transition: 0.3s ease-in-out;
+  z-index: 200;
+  padding-top: 20px;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  color: black;
+
+
+  &.active {
+    left: 0;
+  }
+}
+
+.closeIcon {
+  font-size: 30px;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  cursor: pointer;
+}
+
+.mobileLinks {
+  margin-top: 60px;
+
+  a {
+    display: block;
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+  }
+}
+
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.45);
+  z-index: 150;
+}
