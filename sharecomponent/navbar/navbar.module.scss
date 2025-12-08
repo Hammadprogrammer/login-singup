@@ -1,3 +1,5 @@
+// File: ./navbar.module.scss
+
 $primary-text-color: #000000;
 $light-background: #fff5f9;
 $banner-background: #f5d7e3;
@@ -24,23 +26,19 @@ $hover-link-color: #a3a3a3;
   padding: 12px 0;
   letter-spacing: 1px;
   font-weight: bold;
-  
-  
 }
 .text{
-  margin-right: 80px;
-    font-size: 14px;
-
-  
+  margin: 0; 
+  font-size: 14px;
 }
 
 .navbar {
   margin: auto;
   height: 90px;
   display: flex;
-  align-items: center;
+  // align-items: center;
   justify-content: space-between;  
-  padding: 0 20px;
+  padding:  20px;
   position: relative;
 }
 
@@ -86,6 +84,10 @@ $hover-link-color: #a3a3a3;
   }
 
   @media (max-width: 768px) {
+    position: absolute; 
+    left: 50%;
+    transform: translateX(-50%);
+
     .misha { font-size: 14px; }
     .lakhani { font-size: 25px; }
   }
@@ -114,8 +116,13 @@ $hover-link-color: #a3a3a3;
 }
 
 .desktopNavLinks {
+  // 🎯 FIX: In the original code, this was positioned absolutely below the nav.
+  // For a clean desktop view, this should typically be inline with the logo
+  // or a separate line if needed, but not absolutely positioned from top: 90px 
+  // unless you intend to stack it. 
+  // Keeping the original stacking behavior but ensuring it's hidden on mobile.
   position: absolute;
-  top: 90px; /* Position below the main navbar */
+  top: 90px; 
   left: 0;
   width: 100%;
   display: flex;
@@ -141,31 +148,26 @@ $hover-link-color: #a3a3a3;
 
 /* --- Dropdown/Desktop Link Styles --- */
 .desktopNavLinkItem {
-  position: relative; // Important for positioning the dropdown menu
-  padding: 0 10px; // Add some padding around the link item
+  position: relative;
+  padding: 0 10px;
 
   a {
-    // Styling for the main link text
     color: $primary-text-color;
-    text-decoration: none; // Ensure no default underline
-    // Add transition for the underline
+    text-decoration: none;
     transition: color 0.1s, text-decoration 0.2s ease-out;
 
     &:hover {
-      // 1. **Add Underline on Hover for all primary links**
       text-decoration: underline; 
       color: black;
-      // font-weight: bold;
-
     }
   }
 }
 
 .dropdownMenu {
   position: absolute;
-  top: 35px; // Start right below the main link
+  top: 35px;
   left: 50%;
-  transform: translateX(-50%); // Center the dropdown menu horizontally
+  transform: translateX(-50%);
   background: $light-background;
   padding: 30px 40px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.15);
@@ -173,27 +175,24 @@ $hover-link-color: #a3a3a3;
   border-top: 1px solid #eee;
   border-radius: 6px;
   
-  // Default size, used for simpleMenu and as a base
   width: auto;
   min-width: 500px; 
 
-  // 2. **Fade-in Animation**
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
 }
 
 .megaMenu {
-  width: 100vw; // Full viewport width
-  max-width: 1200px; // Max width cap
-  min-width: auto; // Remove min-width inherited from .dropdownMenu for this case
+  width: 100vw;
+  max-width: 1200px;
+  min-width: auto;
 }
 
 .simpleMenu {
-  min-width: 750px; // Slightly smaller for Couture/Winter Edit
+  min-width: 750px;
 }
 
-// **Class to trigger the fade-in animation**
 .menuVisible {
   opacity: 1;
   visibility: visible;
@@ -305,15 +304,29 @@ $hover-link-color: #a3a3a3;
 .mobileLinks {
   margin-top: 60px;
 
-  a {
+  a, .mobileAccount { /* Added .mobileAccount here too */
     display: block;
     padding: 14px 20px;
     border-bottom: 1px solid #f0f0f0;
     font-size: 16px;
     font-weight: 500;
     text-transform: uppercase;
+    // 🎯 FIX: Ensure text alignment is clean (left-aligned)
+    text-align: left; 
   }
 }
+
+.mobileAccount {
+    padding: 14px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 16px;
+    font-weight: 500;
+    text-transform: uppercase;
+    cursor: pointer;
+    // Ensure the account link has the same left alignment as anchor tags
+    text-align: left; 
+}
+
 
 .backdrop {
   position: fixed;

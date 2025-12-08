@@ -147,4 +147,4 @@ const LoginPopup: React.FC<LoginPopupProps> = ({
   );
 };
 
-export default LoginPopup;
+export default LoginPopup;   

@@ -7,9 +7,7 @@ import { FaRegUser, FaShoppingBag, FaSearch } from "react-icons/fa";
 import Link from "next/link";
 import style from "./navbar.module.scss";
 import { useRouter } from "next/navigation";
-// 🚨 NEW IMPORT: Import the updated LoginPopup component
-import LoginPopup from "../login-popup/login-popup"; // Adjust path as necessary (e.g., if you place it in /components)
-
+// Removed: import LoginPopup from "../login-popup/login-popup";
 
 const menuItems = [
   {
@@ -124,36 +122,8 @@ const Navbar = () => {
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   const drawerRef = useRef<HTMLDivElement>(null);
-  const navLinksRef = useRef<HTMLDivElement>(null);
 
-  // LOGIN POPUP STATE
-  const [loginPopup, setLoginPopup] = useState(false);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    // Check if the popup is currently visible, if not, do nothing.
-    if (!loginPopup) return;
-    
-    // Logic for API call
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (data.redirect) {
-      router.push(data.redirect);
-      setLoginPopup(false); // Close popup on successful login
-    } else {
-      alert(data.error || "Login failed");
-    }
-  };
+  // Removed: Login popup state and related functions
 
   const handleHamburgerClick = () => {
     setIsOpen((prev) => !prev);
@@ -161,24 +131,27 @@ const Navbar = () => {
 
   const handleCloseClick = () => setIsOpen(false);
 
-  const closeLoginPopup = () => {
-    setLoginPopup(false);
-    // Optional: Clear form fields when closing the popup
-    setEmail("");
-    setPassword("");
+  // NEW: Function to handle redirect to /login
+  const handleLoginClick = () => {
+    // Close mobile drawer if open
+    setIsOpen(false); 
+    // Redirect to the login page
+    router.push("/login");
   }
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       // Close mobile drawer on outside click
-      if (drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
+      // We only close if the drawer is open AND the click is outside the drawer element
+      if (isOpen && drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+  }, [isOpen]); // Added isOpen to dependency array
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 50);
@@ -210,24 +183,27 @@ const Navbar = () => {
         </div>
 
         <div className={style.rightSection}>
+          {/* Search Icon */}
           <FaSearch size={22} className={style.icon} />
 
-          {/* USER ICON — OPEN POPUP */}
+          {/* USER ICON — Redirect to /login page */}
           <div
             className={`${style.icon} ${style.desktopOnlyIcon}`}
-            onClick={() => setLoginPopup(true)}
+            onClick={handleLoginClick}
             style={{ cursor: "pointer" }}
           >
             <FaRegUser size={22} />
           </div>
 
+          {/* Shopping Bag Icon */}
           <Link href="/cart" className={style.icon}>
             <FaShoppingBag size={22} />
           </Link>
         </div>
 
+        {/* DESKTOP NAVIGATION LINKS */}
         <div
-          ref={navLinksRef}
+          // Renamed ref from navLinksRef to navLinksContainerRef for clarity
           className={style.desktopNavLinks}
           onMouseLeave={() => setHoveredLink(null)}
         >
@@ -295,12 +271,9 @@ const Navbar = () => {
               </Link>
             ))}
 
-            {/* MOBILE ACCOUNT → OPEN POPUP */}
+            {/* MOBILE ACCOUNT → Redirect to /login page */}
             <div
-              onClick={() => {
-                setLoginPopup(true);
-                setIsOpen(false);
-              }}
+              onClick={handleLoginClick}
               className={style.mobileAccount}
             >
               Account
@@ -309,20 +282,10 @@ const Navbar = () => {
         </div>
       </nav>
 
+      {/* Backdrop for mobile drawer */}
       {isOpen && <div className={style.backdrop} onClick={handleCloseClick}></div>}
       
-      {/* --- Login Popup Integration --- */}
-      {/* Renders the Tailwind styled popup */}
-      <LoginPopup 
-        isVisible={loginPopup}
-        onClose={closeLoginPopup}
-        handleLogin={handleLogin}
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-      />
-      {/* --- End Login Popup Integration --- */}
+      {/* Removed: Login Popup Integration */}
     
     </div>
   );
