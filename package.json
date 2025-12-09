@@ -21,6 +21,7 @@
     "cloudinary": "^1.41.3",
     "framer-motion": "^12.23.25",
     "jsonwebtoken": "^9.0.2",
+    "lucide-react": "^0.556.0",
     "multer": "^2.0.2",
     "next": "^16.0.7",
     "nodemailer": "^7.0.6",

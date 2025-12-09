@@ -7,8 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model User {
   id        String   @id @default(uuid())
   firstName String
@@ -16,4 +14,11 @@ model User {
   email     String   @unique
   password  String
   createdAt DateTime @default(now())
+}
+
+model HomeSlider {
+  id        Int      @id @default(autoincrement())
+  images    String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
