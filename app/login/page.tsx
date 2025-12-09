@@ -5,7 +5,6 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FaChevronLeft } from "react-icons/fa";
 
 const LoginPage: React.FC = () => {
   const router = useRouter();
@@ -47,7 +46,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-20 px-4 sm:px-6 relative">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-20 px-4 sm:px-6">
 
       <div className="mb-6">
         <Link href="/" className="text-3xl font-bold tracking-widest text-gray-800">
@@ -68,30 +67,36 @@ const LoginPage: React.FC = () => {
         )}
 
         <form onSubmit={handleLogin} className="space-y-8">
+          {/* EMAIL */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 uppercase mb-1 tracking-widest">Email Address</label>
+            <label className="block text-xs font-medium text-gray-700 uppercase mb-1 tracking-widest">
+              Email Address
+            </label>
             <input
               type="email"
-              className="w-full border-b border-gray-400 p-3 text-lg tracking-wide focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
+              className="w-full border-b border-gray-700 p-3 text-lg tracking-wide text-gray-700 placeholder-gray-700
+              focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition"
+              placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
 
+          {/* PASSWORD */}
           <div>
-            <label className="block text-xs font-medium text-gray-700 uppercase mb-1 tracking-widest">Password</label>
+            <label className="block text-xs font-medium text-gray-700 uppercase mb-1 tracking-widest">
+              Password
+            </label>
             <input
               type="password"
-              className="w-full border-b border-gray-400 p-3 text-lg tracking-wide focus:outline-none focus:border-black focus:ring-1 focus:ring-black transition"
+              className="w-full border-b border-gray-700 p-3 text-lg tracking-wide text-gray-700 placeholder-gray-700
+              focus:outline-none focus:border-gray-700 focus:ring-1 focus:ring-gray-700 transition"
+              placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-          </div>
-
-          <div className="text-right text-sm -mt-4">
-            <Link href="/forgot-password" className="text-gray-500 hover:text-black transition underline-offset-4 hover:underline">Forgot your password?</Link>
           </div>
 
           <button
@@ -106,7 +111,9 @@ const LoginPage: React.FC = () => {
 
         <div className="text-center text-sm mt-10">
           <span className="text-gray-600">Don't have an account? </span>
-          <Link href="/signup" className="text-pink-600 font-bold hover:text-pink-700 transition underline-offset-4 hover:underline">Join now</Link>
+          <Link href="/signup" className="text-pink-300 font-bold hover:text-pink-400 transition underline-offset-4 hover:underline" style={{ color: primaryPink }}>
+            Join now
+          </Link>
         </div>
       </div>
     </div>

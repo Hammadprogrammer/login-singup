@@ -52,7 +52,7 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json({
       message: "User login successful",
-      redirect: "/user-home",
+      redirect: "/",
     });
 
     response.cookies.set("token", token, {

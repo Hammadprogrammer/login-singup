@@ -1,5 +1,3 @@
-// File: ./navbar.module.scss
-
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import { FaTimes } from "react-icons/fa";
@@ -7,7 +5,6 @@ import { FaRegUser, FaShoppingBag, FaSearch } from "react-icons/fa";
 import Link from "next/link";
 import style from "./navbar.module.scss";
 import { useRouter } from "next/navigation";
-// Removed: import LoginPopup from "../login-popup/login-popup";
 
 const menuItems = [
   {
@@ -65,7 +62,7 @@ const menuItems = [
     name: "COUTURE",
     href: "/couture",
     dropdown: {
-      isMegaMenu: false, // Flag for the simple, narrow layout
+      isMegaMenu: false, 
       categories: [
         {
           title: "BRIDAL",
@@ -123,7 +120,6 @@ const Navbar = () => {
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  // Removed: Login popup state and related functions
 
   const handleHamburgerClick = () => {
     setIsOpen((prev) => !prev);
@@ -268,7 +264,7 @@ const Navbar = () => {
             {menuItems.map((item) => (
               <Link key={item.name} href={item.href} onClick={handleCloseClick}>
                 {item.name}
-              </Link>
+              </Link>  
             ))}
 
             {/* MOBILE ACCOUNT → Redirect to /login page */}
@@ -276,7 +272,7 @@ const Navbar = () => {
               onClick={handleLoginClick}
               className={style.mobileAccount}
             >
-              Account
+              Account 
             </div>
           </div>
         </div>
