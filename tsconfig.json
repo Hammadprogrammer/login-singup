@@ -35,7 +35,7 @@
     ".next/types/**/*.ts",
     "app/api/auth/signup/route.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "app/api/auth/check-token/route.ts"  ],
   "exclude": [
     "node_modules"
   ]

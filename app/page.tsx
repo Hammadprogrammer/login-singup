@@ -7,7 +7,7 @@ const page = () => {
   return (
     <div>
       <Navbar/>
-      <FullScreenImageSlider/>
+      {/* <FullScreenImageSlider/> */}
     </div>
   )
 }
