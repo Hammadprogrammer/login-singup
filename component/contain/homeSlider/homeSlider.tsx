@@ -17,7 +17,7 @@ const FullScreenImageSlider: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = "http://localhost:3000/api/dashboard/homeslider";
+  const API_URL = "https://login-singup-six.vercel.app/api/dashboard/homeslider";
 
   const goToNext = useCallback(() => {
     if (imageUrls.length === 0) return;
