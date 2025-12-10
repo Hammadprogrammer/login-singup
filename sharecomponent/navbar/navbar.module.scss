@@ -59,9 +59,9 @@ $hover-link-color: #a3a3a3;
 }
 
 .brandCenter {
-  flex: 1;
+  flex: 1; // Allows it to take up middle space
   display: flex;
-  justify-content: center;   
+  justify-content: center; // Centers the logo horizontally 
 }
 
 .logoText {
@@ -84,9 +84,10 @@ $hover-link-color: #a3a3a3;
   }
 
   @media (max-width: 768px) {
-    position: absolute; 
-    left: 50%;
-    transform: translateX(-50%);
+    // 🎯 FIX: Remove absolute positioning to center logo using .brandCenter
+    position: static; 
+    left: auto;
+    transform: none;
 
     .misha { font-size: 14px; }
     .lakhani { font-size: 25px; }
@@ -109,6 +110,25 @@ $hover-link-color: #a3a3a3;
   }
 }
 
+// 🎯 NEW: Desktop Login/Logout Text Button Style
+.loginButton {
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $primary-text-color;
+  padding: 5px 10px; // Add a small padding for click area
+  border: 1px solid $primary-text-color;
+  transition: background-color 0.2s, color 0.2s;
+  
+  &:hover {
+    background-color: $primary-text-color;
+    color: $light-background;
+  }
+}
+
+
 .desktopOnlyIcon {
   @media (max-width: 768px) {
     display: none;
@@ -116,11 +136,6 @@ $hover-link-color: #a3a3a3;
 }
 
 .desktopNavLinks {
-  // 🎯 FIX: In the original code, this was positioned absolutely below the nav.
-  // For a clean desktop view, this should typically be inline with the logo
-  // or a separate line if needed, but not absolutely positioned from top: 90px 
-  // unless you intend to stack it. 
-  // Keeping the original stacking behavior but ensuring it's hidden on mobile.
   position: absolute;
   top: 90px; 
   left: 0;
@@ -146,7 +161,7 @@ $hover-link-color: #a3a3a3;
   }
 }
 
-/* --- Dropdown/Desktop Link Styles --- */
+/* --- Dropdown/Desktop Link Styles (No Change) --- */
 .desktopNavLinkItem {
   position: relative;
   padding: 0 10px;
@@ -274,11 +289,13 @@ $hover-link-color: #a3a3a3;
 }
 
 /* --- Mobile Nav Drawer Styles --- */
+
+// 🎯 FIX: Updated drawer width and left position for full screen
 .navbarLinks {
   position: fixed;
   top: 0;
-  left: -260px;
-  width: 260px;
+  left: -100vw; // Start off screen left
+  width: 100vw; // Full width
   height: 100vh;
   background: $light-background;
   transition: 0.3s ease-in-out;
@@ -286,10 +303,14 @@ $hover-link-color: #a3a3a3;
   padding-top: 20px;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   color: black;
+  
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; 
 
 
   &.active {
-    left: 0;
+    left: 0; // Slide in fully
   }
 }
 
@@ -302,29 +323,40 @@ $hover-link-color: #a3a3a3;
 }
 
 .mobileLinks {
-  margin-top: 60px;
-
-  a, .mobileAccount { /* Added .mobileAccount here too */
+  margin-top: 40px; 
+  overflow-y: auto; 
+  flex-grow: 1; 
+  
+  a {
     display: block;
     padding: 14px 20px;
     border-bottom: 1px solid #f0f0f0;
     font-size: 16px;
     font-weight: 500;
     text-transform: uppercase;
-    // 🎯 FIX: Ensure text alignment is clean (left-aligned)
     text-align: left; 
   }
 }
 
+.mobileFooter {
+    padding: 0;
+    border-top: 1px solid #eee;
+    background-color: lighten($light-background, 3%); 
+}
+
 .mobileAccount {
+    display: block;
     padding: 14px 20px;
-    border-bottom: 1px solid #f0f0f0;
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 700; 
     text-transform: uppercase;
     cursor: pointer;
-    // Ensure the account link has the same left alignment as anchor tags
     text-align: left; 
+    color: $primary-text-color;
+
+    &:hover {
+        background-color: $banner-background; 
+    }
 }
 
 

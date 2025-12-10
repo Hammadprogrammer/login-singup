@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
     // Create user
     const user = await prisma.user.create({
       data: {
-        firstName,
-        lastName,
+        // Replace 'firstName' and 'lastName' with the correct field names as defined in your Prisma schema, e.g. 'name'
+        // name: `${firstName} ${lastName}`,
         email,
         password: hashedPassword,
       },
@@ -50,8 +50,6 @@ export async function POST(req: NextRequest) {
       message: "User created successfully",
       user: {
         id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
         email: user.email,
       },
     });

@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { FaTimes, FaRegUser, FaShoppingBag, FaSearch } from "react-icons/fa";
+// Removed FaRegUser, FaUserAlt
+import { FaTimes, FaShoppingBag, FaSearch } from "react-icons/fa"; 
 import Link from "next/link";
 import style from "./navbar.module.scss";
 import { useRouter } from "next/navigation";
@@ -116,21 +117,18 @@ const Navbar: React.FC = () => {
   const handleHamburgerClick = () => setIsOpen((prev) => !prev);
   const handleCloseClick = () => setIsOpen(false);
 
-  // --- Core Function: Check Login Status using Server API ---
+  // --- Core Function: Check Login Status using Server API (No Change) ---
   const checkLoginStatus = async () => {
     try {
       // Calls the /api/auth/check-token route to check for the httpOnly token cookie
       const res = await fetch("/api/auth/check-token", { method: "GET" });
       
-      // If the server returns 200 (res.ok is true), the token is present
       if (res.ok) {
         setIsLoggedIn(true);
       } else {
-        // If the server returns 401 or any other error, the user is logged out
         setIsLoggedIn(false);
       }
     } catch (err) {
-      // Handles network errors (e.g., server is down)
       console.error("Check login status failed (Network error):", err);
       setIsLoggedIn(false); 
     }
@@ -143,13 +141,10 @@ const Navbar: React.FC = () => {
 
   const handleLogoutClick = async () => {
     try {
-      // Calls the API route to delete the token cookie on the server (maxAge: -1)
       const res = await fetch("/api/auth/logout", { method: "POST" });
       
       if (res.ok) {
-        // 1. Update state to logged out immediately
         setIsLoggedIn(false); 
-        // 2. Redirect the user
         router.push("/login");
       }
     } catch (err) {
@@ -158,10 +153,8 @@ const Navbar: React.FC = () => {
   };
 
   useEffect(() => {
-    // 1. IMPORTANT: Check login status when the component mounts
     checkLoginStatus(); 
 
-    // 2. Click outside handler for mobile drawer
     const handleClickOutside = (event: MouseEvent) => {
       if (isOpen && drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -172,7 +165,6 @@ const Navbar: React.FC = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // Scroll handling for sticky navbar
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -195,10 +187,12 @@ const Navbar: React.FC = () => {
             ☰
           </div>
         </div>
-
+          <FaSearch size={22} className={style.icon} />
+          
         <div className={style.brandCenter}>
           <Link href="/" onClick={handleLinkClick}>
             <div className={style.logoText}>
+              
               <span className={style.misha}>Cloting</span>
               <span className={style.lakhani}>Brand</span>
             </div>
@@ -206,35 +200,24 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className={style.rightSection}>
-          <FaSearch size={22} className={style.icon} />
 
-          {/* DESKTOP: Dynamic Login Icon / Logout Button */}
-          {isLoggedIn ? (
-            <div
-              className={`${style.icon} ${style.desktopOnlyIcon}`}
-              onClick={handleLogoutClick}
-              style={{ cursor: "pointer" }}
-              title="Logout" 
-            >
-              Logout
-            </div>
-          ) : (
-            <div
-              className={`${style.icon} ${style.desktopOnlyIcon}`}
-              onClick={handleLoginClick}
-              style={{ cursor: "pointer" }}
-              title="Login" 
-            >
-              <FaRegUser size={22} />
-            </div>
-          )}
-
+          {/* 🎯 DESKTOP: Dynamic Text-Only Login/Logout */}
           <Link href="/cart" className={style.icon}>
             <FaShoppingBag size={22} />
           </Link>
+          <div
+          
+            className={`${style.loginButton} ${style.desktopOnlyIcon}`}
+            onClick={isLoggedIn ? handleLogoutClick : handleLoginClick}
+            title={isLoggedIn ? "Logout" : "Sign Up / Login"} 
+          >
+            {isLoggedIn ? "LOGOUT" : "LOGIN"}
+          </div>
+
+          
         </div>
 
-        {/* DESKTOP NAV LINKS */}
+        {/* DESKTOP NAV LINKS (No Change) */}
         <div className={style.desktopNavLinks} onMouseLeave={() => setHoveredLink(null)}>
           {menuItems.map((item) => (
             <div
@@ -295,12 +278,15 @@ const Navbar: React.FC = () => {
                 {item.name}
               </Link>
             ))}
+          </div>
 
-            {/* MOBILE: Dynamic Login/Logout Display */}
+          {/* 🎯 MOBILE: Login/Logout link outside the main links to ensure it sits at the bottom */}
+          <div className={style.mobileFooter}>
             <div onClick={isLoggedIn ? handleLogoutClick : handleLoginClick} className={style.mobileAccount}>
-              {isLoggedIn ? "Logout" : "Account"}
+              {isLoggedIn ? "LOGOUT" : "LOGIN"}
             </div>
           </div>
+
         </div>
       </nav>
 
