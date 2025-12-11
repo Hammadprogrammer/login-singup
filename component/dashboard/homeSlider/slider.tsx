@@ -248,7 +248,7 @@ export const HomeSliderCRUD = () => {
         setModalMessage('Slider item successfully updated.');
         setShowSuccessModal(true);
         
-        cancelEdit(); // Reset edit state
+        cancelEdit(); 
         await fetchSliders(); 
 
     } catch (err: any) {
@@ -686,7 +686,11 @@ export const HomeSliderCRUD = () => {
                     </div>
                 )}
             </section>
+
+
+            
         </div>
     </div>
+
   );
 };
