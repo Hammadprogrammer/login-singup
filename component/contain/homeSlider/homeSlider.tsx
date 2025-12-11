@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import style from './homeSLider.module.scss';
 
 interface HomeSliderResponse {
   id: number;
@@ -17,17 +18,14 @@ const FullScreenImageSlider: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const API_URL = "https://login-singup-six.vercel.app/api/dashboard/homeslider";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL?.trim() || '/api/dashboard/homeslider';
 
   const goToNext = useCallback(() => {
     if (imageUrls.length === 0) return;
     setCurrentIndex(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
   }, [imageUrls.length]);
 
-  const goToPrev = () => {
-    if (imageUrls.length === 0) return;
-    setCurrentIndex(prev => (prev === 0 ? imageUrls.length - 1 : prev - 1));
-  };
+
 
   const fetchSlides = useCallback(async () => {
     try {
@@ -35,7 +33,6 @@ const FullScreenImageSlider: React.FC = () => {
       if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
 
       const data: HomeSliderResponse[] = await res.json();
-
       if (data && data.length > 0) {
         const merged = data.flatMap(slider => slider.images);
         setImageUrls(merged);
@@ -45,10 +42,10 @@ const FullScreenImageSlider: React.FC = () => {
 
       setLoading(false);
     } catch (err: any) {
-      setError(err.message || "Failed to load images");
+      setError(err.message || 'Failed to load images');
       setLoading(false);
     }
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
     fetchSlides();
@@ -61,70 +58,34 @@ const FullScreenImageSlider: React.FC = () => {
   }, [imageUrls.length, goToNext]);
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen text-xl">
-        Loading...
-      </div>
-    );
+    return <div className={`${style.loading}`}>Loading...</div>;
   }
 
   if (error) {
-    return (
-      <div className="flex justify-center items-center h-screen text-red-600 text-xl">
-        Error: {error}
-      </div>
-    );
+    return <div className={`${style.error}`}>Error: {error}</div>;
   }
 
   if (imageUrls.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-screen text-lg">
-        No images found.
-      </div>
-    );
+    return <div className={`${style.noImages}`}>No images found.</div>;
   }
 
   return (
-    // The main container defining the size.
-    <div className="w-full h-[80vh] relative overflow-hidden select-none mt-[180px] bg-white">
-
-      {/* RESPONSIVE IMAGE */}
+    <div className={style.sliderWrapper}>
       <img
         src={imageUrls[currentIndex]}
         alt="Slider Image"
-        className="
-          absolute inset-0 
-          w-full h-full 
-          **object-contain** transition-opacity duration-700 ease-in-out
-        "
+        className={style.sliderImage}
         key={currentIndex}
       />
 
-      {/* PREVIOUS BUTTON */}
-      <button
-        onClick={goToPrev}
-        className="absolute left-5 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-full z-20 text-2xl"
-      >
-        ❮
-      </button>
+ 
 
-      {/* NEXT BUTTON */}
-      <button
-        onClick={goToNext}
-        className="absolute right-5 top-1/2 -translate-y-1/2 bg-black/60 hover:bg-black/80 text-white p-4 rounded-full z-20 text-2xl"
-      >
-        ❯
-      </button>
-
-      {/* DOTS */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
+      <div className={style.dotsWrapper}>
         {imageUrls.map((_, index) => (
           <div
             key={index}
             onClick={() => setCurrentIndex(index)}
-            className={`w-3 h-3 rounded-full cursor-pointer transition-all duration-300 
-              ${index === currentIndex ? 'bg-white scale-110' : 'bg-gray-400'}
-            `}
+            className={`${style.dot} ${index === currentIndex ? style.activeDot : ''}`}
           />
         ))}
       </div>

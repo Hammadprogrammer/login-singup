@@ -1,0 +1,139 @@
+/* ------------------ Slider Container ------------------ */
+.sliderWrapper {
+  width: 100%;
+  height: 80vh;  
+  transition: all 0.7s ease-in-out;
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+  margin-top: 180px;
+}
+
+/* Breakpoints for container */
+@media (max-width: 1400px) {
+  .sliderWrapper {
+    height: 75vh;
+  }
+}
+
+@media (max-width: 1200px) {
+  .sliderWrapper {
+    height: 70vh;
+  }
+}
+
+@media (max-width: 992px) {
+  .sliderWrapper {
+    height: 60vh;
+  }
+}
+
+@media (max-width: 786px) {
+  .sliderWrapper {
+    height: 50vh;
+    margin-top: 130px;
+  }
+}
+
+@media (max-width: 576px) {
+  .sliderWrapper {
+    height: 40vh;
+    margin-top: 130px;
+  }
+}
+
+/* ------------------ Slider Image ------------------ */
+.sliderImage {
+  width: 100%;
+  height: 100%;  // image fills container by default
+  display: block;
+  transition: all 0.7s ease-in-out;
+  margin: 0 auto;
+}
+
+/* Breakpoints for image */
+@media (max-width: 1400px) {
+  .sliderImage {
+    height: 100%;  // fills container
+  }
+}
+
+@media (max-width: 1200px) {
+  .sliderImage {
+    height: 100%;
+  }
+}
+
+@media (max-width: 992px) {
+  .sliderImage {
+    height: 100%;
+  }
+}
+
+@media (max-width: 786px) {
+  .sliderImage {
+    height: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .sliderImage {
+    height: 100%;
+  }
+}
+
+
+
+.prevButton, .nextButton {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: rgba(0,0,0,0.6);
+  color: white;
+  padding: 1rem;
+  border-radius: 9999px;
+  z-index: 20;
+  font-size: 2rem;
+  cursor: pointer;
+  border: none;
+
+  &:hover {
+    background-color: rgba(0,0,0,0.8);
+  }
+}
+
+
+
+.dotsWrapper {
+  position: absolute;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.75rem;
+  z-index: 20;
+}
+
+.dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background-color: #9ca3af;
+  cursor: pointer;
+  transition: all 0.3s;
+
+  &.activeDot {
+    background-color: white;
+    transform: scale(1.1);
+  }
+}
+
+.loading, .error, .noImages {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.25rem;
+
+  &.error { color: #dc2626; }
+}

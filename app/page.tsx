@@ -8,6 +8,7 @@ const page = () => {
     <div>
       <Navbar/>
       <FullScreenImageSlider/>
+      
     </div>
   )
 }
