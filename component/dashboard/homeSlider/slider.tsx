@@ -354,27 +354,17 @@ export const HomeSliderCRUD = () => {
         {itemToDelete && <ConfirmationModal itemToDelete={itemToDelete} onConfirm={executeDelete} onCancel={() => setItemToDelete(null)} />}
 
         {/* Fixed Sidebar (Simulated Dashboard Menu) - Hidden on Mobile */}
-        <div className="hidden lg:flex flex-col w-64 bg-gray-800 border-r border-gray-700 p-6 shadow-2xl">
+        {/* <div className="hidden lg:flex flex-col w-64 bg-gray-800 border-r border-gray-700 p-6 shadow-2xl">
             <div className="text-3xl font-extrabold text-indigo-400 mb-10 mt-2 flex items-center">
                 <LayoutDashboard className="w-8 h-8 mr-2"/> Admin Panel
             </div>
-            <nav className="space-y-3">
-                <a href="#" className="flex items-center p-3 rounded-xl bg-indigo-600 text-white font-semibold transition duration-200 hover:bg-indigo-700 shadow-lg">
-                    <TrendingUp className="w-5 h-5 mr-3"/> Home Slider (Active)
-                </a>
-                <a href="#" className="flex items-center p-3 rounded-xl text-gray-400 font-medium transition duration-200 hover:text-white hover:bg-gray-700">
-                    <FileText className="w-5 h-5 mr-3"/> Content Management
-                </a>
-                <a href="#" className="flex items-center p-3 rounded-xl text-gray-400 font-medium transition duration-200 hover:text-white hover:bg-gray-700">
-                    <Settings className="w-5 h-5 mr-3"/> Global Settings
-                </a>
-            </nav>
+         
             <div className="mt-auto pt-6 border-t border-gray-700">
                 <button className="flex items-center p-3 rounded-xl text-red-400 font-medium w-full transition duration-200 hover:text-red-300 hover:bg-gray-700">
                     <LogOut className="w-5 h-5 mr-3"/> Logout
                 </button>
             </div>
-        </div>
+        </div> */}
 
         {/* Main Content Area */}
         <div className="flex-1 p-4 sm:p-8 lg:p-10">

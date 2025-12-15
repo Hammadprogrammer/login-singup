@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       where: { email },
       data: {
         resetCode: code,
-        resetCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), // 10 min
+        resetCodeExpiry: new Date(Date.now() + 10 * 60 * 1000), 
       } as any,
     });
 

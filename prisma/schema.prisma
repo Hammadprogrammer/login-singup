@@ -8,19 +8,34 @@ datasource db {
 }
 
 model User {
-  id              Int      @id @default(autoincrement())
-  name            String?
-  email           String   @unique
+  email           String    @unique
   password        String
+  createdAt       DateTime  @default(now())
+  name            String?
   resetCode       String?
   resetCodeExpiry DateTime?
-  createdAt       DateTime @default(now())
+  id              Int       @id @default(autoincrement())
 }
-
 
 model HomeSlider {
   id        Int      @id @default(autoincrement())
   images    String[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+
+model Product {
+  id          String    @id @default(uuid()) // Unique ID (Primary Key)
+  name        String    @unique               // Product Name (Must be unique)
+  description String?                       // Optional description
+  price       Float                       // Price value (Decimal equivalent)
+  stock       Int       @default(0)         // Stock quantity
+  category    String?                       // Product category
+  imageUrls   String[]  @default([])        // List of image URLs
+  isPublished Boolean   @default(false)     // True if visible on site
+
+  // Timestamps
+  createdAt   DateTime  @default(now())     // Creation time
+  updatedAt   DateTime  @updatedAt          // Last update time
 }

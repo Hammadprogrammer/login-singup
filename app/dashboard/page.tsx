@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { HomeSliderCRUD } from "@/component/dashboard/homeSlider/slider";
+import ProductDashboard from "@/component/dashboard/product/product";
 
 
 export default async function DashboardPage() {
@@ -22,5 +23,6 @@ export default async function DashboardPage() {
 
   return <div>
 <HomeSliderCRUD/>
+    <ProductDashboard/>
   </div>;
 }
