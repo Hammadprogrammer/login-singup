@@ -1,0 +1,118 @@
+// ElegantFooter.module.scss
+
+// Variables for a minimalist palette
+$background-color: #fff;
+$primary-text: #000;
+$secondary-text: #666;
+$copyright-background: #000;
+$copyright-text: #fff;
+$divider-color: #e0e0e0;
+
+.footer {
+  background-color: $background-color;
+  font-family: 'Georgia', serif; // Using a classic, elegant font choice
+  padding-top: 60px;
+}
+
+.footerContent {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 40px 30px; 
+}
+
+// --- 1. Links Grid ---
+.linksGridContainer {
+  margin-bottom: 40px;
+}
+
+.linksGrid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  // Desktop: 4 columns
+  grid-template-columns: repeat(4, 1fr); 
+  gap: 15px 30px;
+
+  @media (max-width: 900px) {
+    // Tablet: 3 columns
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px 20px;
+  }
+
+  @media (max-width: 600px) {
+    // Mobile: 2 columns
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.listItem {
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.link {
+  color: $secondary-text;
+  text-decoration: none;
+  letter-spacing: 0.1px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $primary-text;
+    text-decoration: underline;
+  }
+}
+
+// --- Separator ---
+.divider {
+  border: none;
+  border-top: 1px solid $divider-color;
+  margin: 40px 0;
+}
+
+// --- 2. Utility Section (Social & App) ---
+.utilitySection {
+  display: flex;
+  flex-direction: column;
+  align-items: center; // Center everything horizontally
+  gap: 25px; // Space between social icons and app badge
+}
+
+.socialIcons {
+  display: flex;
+  gap: 25px;
+}
+
+.socialLink {
+  color: $secondary-text;
+  font-size: 20px;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $primary-text;
+  }
+}
+
+.appStoreLink {
+  display: block;
+  
+  .appStoreImage {
+    height: 40px; 
+    width: auto;
+  }
+}
+
+// --- 3. Copyright Bar ---
+.copyrightBar {
+  background-color: $copyright-background;
+  padding: 15px 40px;
+  text-align: center;
+  margin-top: 50px; // Space above the black bar
+}
+
+.copyrightText {
+  color: $copyright-text;
+  font-size: 0.75rem;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
