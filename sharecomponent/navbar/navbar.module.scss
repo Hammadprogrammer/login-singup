@@ -27,7 +27,8 @@ $hover-link-color: #a3a3a3;
   letter-spacing: 1px;
   font-weight: bold;
 }
-.text{
+
+.text {
   margin: 0; 
   font-size: 14px;
 }
@@ -36,9 +37,8 @@ $hover-link-color: #a3a3a3;
   margin: auto;
   height: 90px;
   display: flex;
-  // align-items: center;
   justify-content: space-between;  
-  padding:  20px;
+  padding: 20px;
   position: relative;
 }
 
@@ -59,9 +59,9 @@ $hover-link-color: #a3a3a3;
 }
 
 .brandCenter {
-  flex: 1; // Allows it to take up middle space
+  flex: 1;
   display: flex;
-  justify-content: center; // Centers the logo horizontally 
+  justify-content: center; 
 }
 
 .logoText {
@@ -80,11 +80,9 @@ $hover-link-color: #a3a3a3;
     font-size: 35px;
     letter-spacing: 5px;
     color: rgb(0, 0, 0);
-
   }
 
   @media (max-width: 768px) {
-    // 🎯 FIX: Remove absolute positioning to center logo using .brandCenter
     position: static; 
     left: auto;
     transform: none;
@@ -110,7 +108,6 @@ $hover-link-color: #a3a3a3;
   }
 }
 
-// 🎯 NEW: Desktop Login/Logout Text Button Style
 .loginButton {
   cursor: pointer;
   font-size: 14px;
@@ -118,7 +115,7 @@ $hover-link-color: #a3a3a3;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: $primary-text-color;
-  padding: 5px 10px; // Add a small padding for click area
+  padding: 5px 10px;
   border: 1px solid $primary-text-color;
   transition: background-color 0.2s, color 0.2s;
   
@@ -127,7 +124,6 @@ $hover-link-color: #a3a3a3;
     color: $light-background;
   }
 }
-
 
 .desktopOnlyIcon {
   @media (max-width: 768px) {
@@ -161,7 +157,6 @@ $hover-link-color: #a3a3a3;
   }
 }
 
-/* --- Dropdown/Desktop Link Styles (No Change) --- */
 .desktopNavLinkItem {
   position: relative;
   padding: 0 10px;
@@ -189,10 +184,8 @@ $hover-link-color: #a3a3a3;
   z-index: 999;
   border-top: 1px solid #eee;
   border-radius: 6px;
-  
   width: auto;
   min-width: 500px; 
-
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
@@ -212,7 +205,6 @@ $hover-link-color: #a3a3a3;
   opacity: 1;
   visibility: visible;
 }
-
 
 .dropdownContent {
   display: flex;
@@ -245,7 +237,6 @@ $hover-link-color: #a3a3a3;
   white-space: nowrap;
   color: $primary-text-color;
   transition: color 0.1s;
-
 
   &:hover {
     color: $hover-link-color;
@@ -288,29 +279,25 @@ $hover-link-color: #a3a3a3;
   }
 }
 
-/* --- Mobile Nav Drawer Styles --- */
+/* --- MOBILE NAV DRAWER (UPDATED) --- */
 
-// 🎯 FIX: Updated drawer width and left position for full screen
 .navbarLinks {
   position: fixed;
   top: 0;
-  left: -100vw; // Start off screen left
-  width: 100vw; // Full width
+  left: -100vw; 
+  width: 80vw; 
   height: 100vh;
   background: $light-background;
   transition: 0.3s ease-in-out;
-  z-index: 200;
+  z-index: 1200; // Higher than navbar
   padding-top: 20px;
   box-shadow: 2px 0 5px rgba(0,0,0,0.1);
   color: black;
-  
   display: flex;
   flex-direction: column;
-  justify-content: space-between; 
-
 
   &.active {
-    left: 0; // Slide in fully
+    left: 0;
   }
 }
 
@@ -320,45 +307,54 @@ $hover-link-color: #a3a3a3;
   top: 15px;
   right: 15px;
   cursor: pointer;
+  z-index: 10;
 }
 
 .mobileLinks {
   margin-top: 40px; 
   overflow-y: auto; 
   flex-grow: 1; 
+  display: flex;
+  flex-direction: column;
   
   a {
     display: block;
-    padding: 14px 20px;
+    padding: 16px 20px;
     border-bottom: 1px solid #f0f0f0;
     font-size: 16px;
     font-weight: 500;
     text-transform: uppercase;
     text-align: left; 
+    color: $primary-text-color;
+    text-decoration: none;
   }
 }
 
-.mobileFooter {
-    padding: 0;
-    border-top: 1px solid #eee;
-    background-color: lighten($light-background, 3%); 
-}
-
+// 🎯 UPDATED: Login button now follows directly after NavLinks
 .mobileAccount {
     display: block;
-    padding: 14px 20px;
+    padding: 16px 20px;
     font-size: 16px;
     font-weight: 700; 
     text-transform: uppercase;
     cursor: pointer;
     text-align: left; 
     color: $primary-text-color;
+    border-bottom: 1px solid #f0f0f0; 
+  
 
     &:hover {
         background-color: $banner-background; 
     }
 }
 
+.mobileFooter {
+    border-top: 1px solid #eee;
+    text-align: center;
+     position: relative;
+    bottom: 270px;
+    
+}
 
 .backdrop {
   position: fixed;
@@ -367,5 +363,5 @@ $hover-link-color: #a3a3a3;
   width: 100%;
   height: 100%;
   background: rgba(0,0,0,0.45);
-  z-index: 150;
+  z-index: 1100;
 }
