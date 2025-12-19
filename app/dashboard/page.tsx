@@ -1,28 +1,36 @@
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
+import { redirect } from "next/navigation";
+
 import { HomeSliderCRUD } from "@/component/dashboard/homeSlider/slider";
 import ProductDashboard from "@/component/dashboard/product/product";
-
+import LogoutDashboard from "@/component/dashboard/logout/logout";
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies(); 
+  const cookieStore = await cookies();
   const token = cookieStore.get("token")?.value;
 
   if (!token) {
-    return <div>Access denied
-
-
-    </div>;
+    redirect("/login");
   }
 
-  const decoded: any = jwt.decode(token);
+  let decoded: any;
 
-  if (decoded?.role !== "ADMIN") {
-    return <div>You are not allowed to view this page.</div>;
+  try {
+    decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  } catch (error) {
+    redirect("/login");
   }
 
-  return <div>
-<HomeSliderCRUD/>
-    <ProductDashboard/>
-  </div>;
+  if (decoded.role !== "ADMIN") {
+    redirect("/");
+  }
+
+  return (
+    <div>
+      <LogoutDashboard />
+      <HomeSliderCRUD />
+      <ProductDashboard />
+    </div>
+  );
 }
