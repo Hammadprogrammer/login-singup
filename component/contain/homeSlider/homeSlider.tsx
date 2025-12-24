@@ -25,8 +25,6 @@ const FullScreenImageSlider: React.FC = () => {
     setCurrentIndex(prev => (prev === imageUrls.length - 1 ? 0 : prev + 1));
   }, [imageUrls.length]);
 
-
-
   const fetchSlides = useCallback(async () => {
     try {
       const res = await fetch(API_URL);
@@ -57,8 +55,17 @@ const FullScreenImageSlider: React.FC = () => {
     return () => clearInterval(interval);
   }, [imageUrls.length, goToNext]);
 
+  // Updated Loading UI with 5 Pink Bars
   if (loading) {
-    return <div className={`${style.loading}`}>Loading...</div>;
+    return (
+      <div className={style.loadingContainer}>
+        <div className={style.bar}></div>
+        <div className={style.bar}></div>
+        <div className={style.bar}></div>
+        <div className={style.bar}></div>
+        <div className={style.bar}></div>
+      </div>
+    );
   }
 
   if (error) {
@@ -77,8 +84,6 @@ const FullScreenImageSlider: React.FC = () => {
         className={style.sliderImage}
         key={currentIndex}
       />
-
- 
 
       <div className={style.dotsWrapper}>
         {imageUrls.map((_, index) => (
