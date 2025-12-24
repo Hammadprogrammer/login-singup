@@ -15,8 +15,9 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Check if user exists
-    const existingUser = await prisma.user.findUnique({ where: { email } });
+    const existingUser = await prisma.user.findUnique({
+      where: { email },
+    });
 
     if (existingUser) {
       return NextResponse.json(
@@ -25,32 +26,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
+    const fullName = `${firstName} ${lastName}`;
+
     const user = await prisma.user.create({
       data: {
-        // Replace 'firstName' and 'lastName' with the correct field names as defined in your Prisma schema, e.g. 'name'
-        // name: `${firstName} ${lastName}`,
         email,
         password: hashedPassword,
+        name: fullName, 
       },
     });
 
-    // Create token
     const token = jwt.sign(
       { id: user.id, email: user.email },
       process.env.JWT_SECRET!,
       { expiresIn: "7d" }
     );
 
-    // Response + Cookie
     const res = NextResponse.json({
       message: "User created successfully",
       user: {
         id: user.id,
         email: user.email,
+        name: user.name,
       },
     });
 
@@ -61,7 +60,8 @@ export async function POST(req: NextRequest) {
     });
 
     return res;
-  } catch (err) {
+  } catch (error) {
+    console.error(error);
     return NextResponse.json(
       { error: "Something went wrong" },
       { status: 500 }

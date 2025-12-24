@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { HomeSliderCRUD } from "@/component/dashboard/homeSlider/slider";
 import ProductDashboard from "@/component/dashboard/product/product";
 import LogoutDashboard from "@/component/dashboard/logout/logout";
+import UserStatus from "@/component/dashboard/user-status/user-status";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -28,9 +29,10 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <LogoutDashboard />
-      <HomeSliderCRUD />
-      <ProductDashboard />
+      {/* <LogoutDashboard /> */}
+      <UserStatus/>
+      {/* <HomeSliderCRUD />
+      <ProductDashboard /> */}
     </div>
   );
 }
