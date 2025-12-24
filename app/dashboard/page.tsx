@@ -29,10 +29,11 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      {/* <LogoutDashboard /> */}
+      <LogoutDashboard />
+      <HomeSliderCRUD />
+      <ProductDashboard />
       <UserStatus/>
-      {/* <HomeSliderCRUD />
-      <ProductDashboard /> */}
+
     </div>
   );
 }

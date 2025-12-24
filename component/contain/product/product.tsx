@@ -1,21 +1,38 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { ImageOff } from 'lucide-react';
-import Link from 'next/link'; // 👈 Step 1: Link import karein
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { ImageOff, SlidersHorizontal, Heart, ChevronDown, Check } from 'lucide-react';
+import Link from 'next/link';
 
 interface Product {
   id: string;
   name: string;
+  brand?: string;
   price: number;
   imageUrls: string[];
 }
 
 const API_ROUTE = 'api/products';
 
+const LoadingSkeleton = () => (
+  <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-10 animate-pulse">
+    {[...Array(8)].map((_, i) => (
+      <div key={i} className="flex flex-col">
+        <div className="aspect-[3/4] bg-gray-100 rounded-sm mb-3"></div>
+        <div className="h-2 bg-gray-100 w-1/3 mb-2 mx-auto"></div>
+        <div className="h-3 bg-gray-100 w-2/3 mx-auto"></div>
+      </div>
+    ))}
+  </div>
+);
+
 const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [cols, setCols] = useState(4);
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortBy, setSortBy] = useState<'default' | 'low-to-high' | 'high-to-low'>('default');
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -24,7 +41,7 @@ const ProductGrid = () => {
         const data = await res.json();
         setProducts(data);
       } catch (err) {
-        console.error("Error fetching products:", err);
+        console.error("Error:", err);
       } finally {
         setLoading(false);
       }
@@ -32,54 +49,139 @@ const ProductGrid = () => {
     fetchProducts();
   }, []);
 
-  if (loading) return <div className="text-center py-20 tracking-widest uppercase text-[10px] text-gray-400">Loading Collection...</div>;
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowFilters(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const sortedProducts = useMemo(() => {
+    let result = [...products];
+    if (sortBy === 'low-to-high') result.sort((a, b) => a.price - b.price);
+    if (sortBy === 'high-to-low') result.sort((a, b) => b.price - a.price);
+    return result;
+  }, [products, sortBy]);
+
+  const sortOptions = [
+    { id: 'default', label: 'Recommended' },
+    { id: 'low-to-high', label: 'Price: Low to High' },
+    { id: 'high-to-low', label: 'Price: High to Low' }
+  ];
 
   return (
-    <div className="w-full bg-white py-16 px-4 font-serif">
-      <div className="max-w-7xl mx-auto">
-        <h2 className="text-center text-[20px] tracking-[0.4em] uppercase mb-16 text-gray-800 font-light">
-          Curated For You
-        </h2>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-14">
-          {products.map((product) => (
-            /* 👈 Step 2: Har product ko Link se wrap karein */
-            <Link 
-              href={`/product/${product.id}`} 
-              key={product.id} 
-              className="group flex flex-col cursor-pointer"
+    <div className="w-full bg-white font-sans text-[#1a1a1a]">
+      
+      {/* --- STICKY NAV --- */}
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-10 py-5 flex items-center justify-between">
+          
+          {/* Filter Dropdown Container */}
+          <div className="relative" ref={dropdownRef}>
+            <button 
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold"
             >
-              {/* Image Section */}
-              <div className="relative aspect-[2/3] w-full overflow-hidden bg-[#fafafa]">
-                {product.imageUrls && product.imageUrls[0] ? (
-                  <img
-                    src={product.imageUrls[0]}
-                    alt={product.name}
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full text-gray-200">
-                    <ImageOff size={24} strokeWidth={1} />
-                  </div>
-                )}
-              </div>
+              <SlidersHorizontal size={14} className={showFilters ? 'rotate-90 transition-transform' : 'transition-transform'} />
+              <span>Sort By</span>
+              <ChevronDown size={12} className={`transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
+            </button>
 
-              {/* Product Details */}
-              <div className="mt-6 text-center">
-                <h3 className="text-[12px] tracking-[0.18em] uppercase text-gray-900 mb-2 font-medium leading-5">
-                  {product.name}
-                </h3>
-                <p className="text-[11px] tracking-[0.15em] text-gray-500 font-sans">
-                  {new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                  }).format(product.price)} USDT
-                </p>
+            {/* --- DROPDOWN MENU --- */}
+            {showFilters && (
+              <div className="absolute top-full left-0 mt-4 w-56 bg-white border border-gray-100 shadow-xl py-3 rounded-sm animate-in fade-in slide-in-from-top-2 duration-200">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.id}
+                    onClick={() => {
+                      setSortBy(option.id as any);
+                      setShowFilters(false);
+                    }}
+                    className="w-full flex items-center justify-between px-5 py-3 text-[10px] uppercase tracking-widest hover:bg-gray-50 transition-colors"
+                  >
+                    <span className={sortBy === option.id ? 'font-bold' : 'font-light text-gray-500'}>
+                      {option.label}
+                    </span>
+                    {sortBy === option.id && <Check size={12} className="text-black" />}
+                  </button>
+                ))}
               </div>
-            </Link>
-          ))}
+            )}
+          </div>
+
+          {/* Luxury Heading */}
+          <div className="absolute left-1/2 -translate-x-1/2">
+            <h1 className="text-[18px] md:text-[26px] tracking-[0.5em] uppercase font-extralight bg-gradient-to-b from-black to-gray-400 bg-clip-text text-transparent">
+              Ski Trip
+            </h1>
+          </div>
+
+          {/* Desktop Grid Switcher */}
+          <div className="hidden lg:flex items-center gap-4">
+            <button onClick={() => setCols(4)} className={`p-1 transition-all ${cols === 4 ? 'opacity-100 scale-110' : 'opacity-20'}`}>
+              <div className="grid grid-cols-2 gap-0.5">
+                {[...Array(4)].map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-black"></div>)}
+              </div>
+            </button>
+            <button onClick={() => setCols(2)} className={`p-1 transition-all ${cols === 2 ? 'opacity-100 scale-110' : 'opacity-20'}`}>
+              <div className="flex gap-0.5">
+                <div className="w-2 h-3.5 bg-black"></div>
+                <div className="w-2 h-3.5 bg-black"></div>
+              </div>
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
+
+      {/* --- MAIN GRID --- */}
+      <main className="max-w-[1600px] mx-auto px-2 md:px-10 py-8">
+        {loading ? (
+          <LoadingSkeleton />
+        ) : (
+          <div className={`grid transition-all duration-700 ease-in-out ${
+            cols === 4 
+            ? 'grid-cols-2 lg:grid-cols-4 gap-x-2 gap-y-10 md:gap-x-10 md:gap-y-20' 
+            : 'grid-cols-2 gap-x-2 gap-y-10 md:gap-x-12 md:gap-y-24'
+          }`}>
+            {sortedProducts.map((product) => (
+              <Link href={`/product/${product.id}`} key={product.id} className="group flex flex-col">
+                <div className="relative aspect-[3/4] overflow-hidden bg-[#f9f9f9]">
+                  <button className="absolute top-3 right-3 z-10 text-black/10 hover:text-black transition-colors">
+                    <Heart size={18} strokeWidth={1} />
+                  </button>
+                  {product.imageUrls?.[0] ? (
+                    <img
+                      src={product.imageUrls[0]}
+                      alt={product.name}
+                      className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-gray-200"><ImageOff size={24} /></div>
+                  )}
+                </div>
+
+                <div className="mt-4 text-center px-2">
+                  <span className="text-[8px] md:text-[9px] tracking-[0.3em] uppercase text-gray-400 block mb-1">
+                    {product.brand || 'Elite Winter'}
+                  </span>
+                  <h3 className="text-[10px] md:text-[12px] tracking-widest uppercase font-light text-gray-800 line-clamp-1">
+                    {product.name}
+                  </h3>
+                  <p className="mt-3 text-[11px] md:text-[14px] font-medium italic text-gray-600">
+                    {product.price} USDT
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+      </main>
+
+    
     </div>
   );
 };
