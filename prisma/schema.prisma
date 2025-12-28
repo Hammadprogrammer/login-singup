@@ -25,17 +25,41 @@ model HomeSlider {
 }
 
 
-model Product {
-  id          String    @id @default(uuid()) // Unique ID (Primary Key)
-  name        String    @unique               // Product Name (Must be unique)
-  description String?                       // Optional description
-  price       Float                       // Price value (Decimal equivalent)
-  stock       Int       @default(0)         // Stock quantity
-  category    String?                       // Product category
-  imageUrls   String[]  @default([])        // List of image URLs
-  isPublished Boolean   @default(false)     // True if visible on site
 
-  // Timestamps
-  createdAt   DateTime  @default(now())     // Creation time
-  updatedAt   DateTime  @updatedAt          // Last update time
+model Product {
+  id            String    @id @default(uuid())
+  name          String
+  description   String?
+  price         Float
+
+  // Multiple values (no relations)
+  categories    String[]  @default([])   // ["dress", "shoes"]
+  subCategories String[]  @default([])   // ["men", "women"]
+  brands        String[]  @default([])   // ["Nike", "Adidas"]
+  sizes         String[]  @default([])   // ["S", "M", "L", "XL"]
+  colors        String[]  @default([])   // ["Red", "Black"]
+  imageUrls     String[]  @default([])
+
+  // 👉 Rent or Sell
+  saleType      SaleType  @default(SELL)
+
+  // 👉 NEW FIELD (Old / New)
+  condition     ProductCondition @default(NEW)
+
+  isPublished   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([price])
 }
+
+enum SaleType {
+  RENT
+  SELL
+}
+
+enum ProductCondition {
+  NEW
+  OLD
+}
+
