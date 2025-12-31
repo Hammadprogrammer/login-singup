@@ -1,10 +1,9 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-// Removed FaRegUser, FaUserAlt
-import { FaTimes, FaShoppingBag, FaSearch } from "react-icons/fa"; 
+import { FaTimes, FaShoppingBag, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Link from "next/link";
 import style from "./navbar.module.scss";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 
 // --- Menu Data (No Changes) ---
 const menuItems = [
@@ -106,45 +105,47 @@ const menuItems = [
 
 const Navbar: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
+  const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
-  const handleHamburgerClick = () => setIsOpen((prev) => !prev);
-  const handleCloseClick = () => setIsOpen(false);
+  const handleHamburgerClick = () => setIsOpen(true);
+  const handleCloseClick = () => {
+    setIsOpen(false);
+    setActiveMobileSub(null);
+  };
 
-  // --- Core Function: Check Login Status using Server API (No Change) ---
+  const toggleMobileSub = (name: string) => {
+    setActiveMobileSub(activeMobileSub === name ? null : name);
+  };
+
+  // --- Auth Functions ---
   const checkLoginStatus = async () => {
     try {
-      // Calls the /api/auth/check-token route to check for the httpOnly token cookie
-      const res = await fetch("/api/auth/check-token", { method: "GET" });
-      
-      if (res.ok) {
-        setIsLoggedIn(true);
-      } else {
-        setIsLoggedIn(false);
-      }
-    } catch (err) {
-      console.error("Check login status failed (Network error):", err);
-      setIsLoggedIn(false); 
+      const res = await fetch("/api/auth/check-token");
+      setIsLoggedIn(res.ok);
+    } catch {
+      setIsLoggedIn(false);
     }
   };
 
   const handleLoginClick = () => {
-    setIsOpen(false);
+    handleCloseClick();
     router.push("/login");
   };
 
   const handleLogoutClick = async () => {
     try {
       const res = await fetch("/api/auth/logout", { method: "POST" });
-      
       if (res.ok) {
-        setIsLoggedIn(false); 
+        setIsLoggedIn(false);
+        handleCloseClick();
         router.push("/login");
       }
     } catch (err) {
@@ -153,11 +154,13 @@ const Navbar: React.FC = () => {
   };
 
   useEffect(() => {
-    checkLoginStatus(); 
+    checkLoginStatus();
+  }, []);
 
+  useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isOpen && drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        handleCloseClick();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -170,10 +173,16 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const handleLinkClick = () => {
-    setIsOpen(false);
-    setHoveredLink(null);
-  };
+  const ShopSellToggle = ({ isMobile = false }) => (
+    <div className={`${style.toggleContainer} ${isMobile ? style.mobileToggle : style.desktopToggle}`}>
+      <Link href="/" onClick={handleCloseClick} className={`${style.toggleBtn} ${pathname === "/" ? style.activeToggle : ""}`}>
+        SHOP
+      </Link>
+      <Link href="/sell" onClick={handleCloseClick} className={`${style.toggleBtn} ${pathname === "/sell" ? style.activeToggle : ""}`}>
+        SELL
+      </Link>
+    </div>
+  );
 
   return (
     <div className={`${style.main} ${scrolled ? style.scrolled : ""}`}>
@@ -183,81 +192,55 @@ const Navbar: React.FC = () => {
 
       <nav className={style.navbar}>
         <div className={style.leftSection}>
-          <div className={style.hamburger} onClick={handleHamburgerClick}>
-            ☰
-          </div>
+          <div className={style.hamburger} onClick={handleHamburgerClick}>☰</div>
+          <ShopSellToggle isMobile={false} />
+          {/* <FaSearch size={18} className={style.searchIcon} /> */}
         </div>
-          <FaSearch size={22} className={style.icon} />
-          
+
         <div className={style.brandCenter}>
-          <Link href="/" onClick={handleLinkClick}>
+          <Link href="/" onClick={handleCloseClick}>
             <div className={style.logoText}>
-              
-              <span className={style.misha}>Cloting</span>
+              <span className={style.misha}>CLothing</span>
               <span className={style.lakhani}>Brand</span>
             </div>
           </Link>
         </div>
 
         <div className={style.rightSection}>
-
-          {/* 🎯 DESKTOP: Dynamic Text-Only Login/Logout */}
           <Link href="/cart" className={style.icon}>
-            <FaShoppingBag size={22} />
+            <FaShoppingBag size={20} />
           </Link>
+          {/* DESKTOP LOGOUT/LOGIN */}
           <div
-          
             className={`${style.loginButton} ${style.desktopOnlyIcon}`}
             onClick={isLoggedIn ? handleLogoutClick : handleLoginClick}
-            title={isLoggedIn ? "Logout" : "Sign Up / Login"} 
           >
             {isLoggedIn ? "LOGOUT" : "LOGIN"}
           </div>
-
-          
         </div>
 
-        {/* DESKTOP NAV LINKS (No Change) */}
+        {/* --- DESKTOP NAVIGATION --- */}
         <div className={style.desktopNavLinks} onMouseLeave={() => setHoveredLink(null)}>
           {menuItems.map((item) => (
-            <div
-              key={item.name}
-              className={style.desktopNavLinkItem}
-              onMouseEnter={() => setHoveredLink(item.name)}
-            >
-              <Link href={item.href} onClick={() => setHoveredLink(null)}>
-                {item.name}
-              </Link>
-
+            <div key={item.name} className={style.desktopNavLinkItem} onMouseEnter={() => setHoveredLink(item.name)}>
+              <Link href={item.href} onClick={() => setHoveredLink(null)}>{item.name}</Link>
               {item.dropdown && (
-                <div
-                  className={`
-                    ${style.dropdownMenu}
-                    ${item.dropdown.isMegaMenu ? style.megaMenu : style.simpleMenu}
-                    ${hoveredLink === item.name ? style.menuVisible : ""}
-                  `}
-                >
+                <div className={`${style.dropdownMenu} ${hoveredLink === item.name ? style.menuVisible : ""}`}>
                   <div className={style.dropdownContent}>
                     <div className={style.categoryColumns}>
-                      {item.dropdown.categories.map((category) => (
-                        <div key={category.title} className={style.categoryColumn}>
-                          <h4 className={style.categoryTitle}>{category.title}</h4>
-                          {category.links.map((link) => (
-                            <Link
-                              key={link.label}
-                              href={link.href}
-                              className={style.dropdownLink}
-                              onClick={handleLinkClick}
-                            >
+                      {item.dropdown.categories.map((cat) => (
+                        <div key={cat.title} className={style.categoryColumn}>
+                          <h4 className={style.categoryTitle}>{cat.title}</h4>
+                          {cat.links.map((link) => (
+                            <Link key={link.label} href={link.href} className={style.dropdownLink} onClick={handleCloseClick}>
                               {link.label}
                             </Link>
                           ))}
                         </div>
                       ))}
                     </div>
-
-                    <Link href={item.dropdown.imageLink} onClick={handleLinkClick} className={style.dropdownImage}>
-                      <img src={item.dropdown.imageUrl} alt={`${item.name} image`} />
+                    <Link href={item.dropdown.imageLink} className={style.dropdownImage}>
+                      <img src={item.dropdown.imageUrl} alt="nav" />
                     </Link>
                   </div>
                 </div>
@@ -266,27 +249,53 @@ const Navbar: React.FC = () => {
           ))}
         </div>
 
-        {/* MOBILE DRAWER */}
+        {/* --- MOBILE DRAWER --- */}
         <div ref={drawerRef} className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}>
           <div className={style.closeIcon} onClick={handleCloseClick}>
-            <FaTimes size={30} />
+            <FaTimes size={24} color="black" />
           </div>
 
           <div className={style.mobileLinks}>
+            <div className={style.mobileToggleWrapper}>
+              <ShopSellToggle isMobile={true} />
+            </div>
+
             {menuItems.map((item) => (
-              <Link key={item.name} href={item.href} onClick={handleCloseClick}>
-                {item.name}
-              </Link>
+              <div key={item.name}>
+                {item.dropdown ? (
+                  <>
+                    <div className={style.mobileMainLink} onClick={() => toggleMobileSub(item.name)}>
+                      {item.name}
+                      {activeMobileSub === item.name ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
+                    </div>
+                    <div className={`${style.mobileSubMenu} ${activeMobileSub === item.name ? style.subMenuOpen : ""}`}>
+                      {item.dropdown.categories.map((cat) => (
+                        <div key={cat.title}>
+                          <p style={{ fontSize: '11px', fontWeight: 'bold', padding: '10px 0 5px', color: '#888' }}>{cat.title}</p>
+                          {cat.links.map((link) => (
+                            <Link key={link.label} href={link.href} className={style.mobileSubLink} onClick={handleCloseClick}>
+                              {link.label}
+                            </Link>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <Link href={item.href} className={style.mobileMainLink} onClick={handleCloseClick}>
+                    {item.name}
+                  </Link>
+                )}
+              </div>
             ))}
           </div>
 
-          {/* 🎯 MOBILE: Login/Logout link outside the main links to ensure it sits at the bottom */}
           <div className={style.mobileFooter}>
+            {/* MOBILE LOGOUT/LOGIN */}
             <div onClick={isLoggedIn ? handleLogoutClick : handleLoginClick} className={style.mobileAccount}>
-              {isLoggedIn ? "LOGOUT" : "LOGIN"}
+              {isLoggedIn ? "LOGOUT" : "LOGIN / REGISTER"}
             </div>
           </div>
-
         </div>
       </nav>
 

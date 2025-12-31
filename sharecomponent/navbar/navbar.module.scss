@@ -1,5 +1,3 @@
-// File: ./navbar.module.scss
-
 $primary-text-color: #000000;
 $light-background: #fff5f9;
 $banner-background: #f5d7e3;
@@ -21,41 +19,31 @@ $hover-link-color: #a3a3a3;
 
 .topBanner {
   background: $banner-background;
-  color: black;
+  color: black; 
   text-align: center;
   padding: 12px 0;
   letter-spacing: 1px;
   font-weight: bold;
 }
 
-.text {
-  margin: 0; 
-  font-size: 14px;
-}
+.text { margin: 0; font-size: 14px; }
 
 .navbar {
   margin: auto;
   height: 90px;
   display: flex;
+  align-items: center;
   justify-content: space-between;  
-  padding: 20px;
+  padding: 0 20px;
   position: relative;
 }
 
+/* --- SECTIONS --- */
 .leftSection {
   display: flex;
   align-items: center;
-}
-
-.hamburger {
-  display: none;
-  font-size: 28px;
-  cursor: pointer;
-  color: black;
-
-  @media (max-width: 768px) {
-    display: block;
-  }
+  gap: 15px;
+  flex: 1;
 }
 
 .brandCenter {
@@ -64,73 +52,104 @@ $hover-link-color: #a3a3a3;
   justify-content: center; 
 }
 
+.rightSection {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  flex: 1;
+  justify-content: flex-end;
+  .icon { cursor: pointer; color: black; transition: transform 0.1s; &:hover { transform: scale(1.05); } }
+}
+
+/* --- SHOP / SELL TOGGLE --- */
+.toggleContainer {
+  display: flex;
+  background: #f0f0f0;
+  border-radius: 50px;
+  padding: 4px;
+  border: 1px solid #e0e0e0;
+  width: fit-content;
+
+  &.desktopToggle {
+    @media (max-width: 768px) {
+      display: none; // Hides from top bar on mobile
+    }
+  }
+
+  &.mobileToggle {
+    width: 100%; // Spans across drawer width
+    background: #f4f4f4;
+  }
+}
+
+.toggleBtn {
+  padding: 6px 16px;
+  border-radius: 40px;
+  font-size: 11px;
+  font-weight: 700;
+  text-decoration: none;
+  color: #666;
+  transition: 0.3s;
+  text-align: center;
+  flex: 1;
+
+  &.activeToggle {
+    background: white;
+    color: black;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  }
+}
+
+.mobileToggleWrapper {
+  padding-bottom: 20px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* --- ELEMENTS --- */
+.searchIcon {
+  cursor: pointer;
+  color: black;
+  margin-left: 10px;
+}
+
+.hamburger {
+  display: none;
+  font-size: 28px;
+  cursor: pointer;
+  color: black;
+  @media (max-width: 768px) { display: block; }
+}
+
 .logoText {
   display: flex;
   flex-direction: column;
   text-align: center;
   cursor: pointer;
-
-  .misha {
-    font-size: 20px;
-    letter-spacing: 2px;
-    color: rgb(0, 0, 0);
-  }
-
-  .lakhani {
-    font-size: 35px;
-    letter-spacing: 5px;
-    color: rgb(0, 0, 0);
-  }
+  .misha { font-size: 16px; letter-spacing: 2px; color: black; }
+  .lakhani { font-size: 24px; letter-spacing: 3px; color: black; line-height: 1; }
 
   @media (max-width: 768px) {
-    position: static; 
-    left: auto;
-    transform: none;
-
-    .misha { font-size: 14px; }
-    .lakhani { font-size: 25px; }
-  }
-}
-
-.rightSection {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-
-  .icon {
-    cursor: pointer;
-    width: 22px;
-    height: 22px;
-    color: black;
-    transition: transform 0.1s ease;
-
-    &:hover { transform: scale(1.05); }
+    .misha { font-size: 12px; }
+    .lakhani { font-size: 18px; }
   }
 }
 
 .loginButton {
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   font-weight: bold;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
   color: $primary-text-color;
   padding: 5px 10px;
   border: 1px solid $primary-text-color;
-  transition: background-color 0.2s, color 0.2s;
-  
-  &:hover {
-    background-color: $primary-text-color;
-    color: $light-background;
-  }
+  transition: 0.2s;
+  &:hover { background-color: $primary-text-color; color: white; }
 }
 
-.desktopOnlyIcon {
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
+.desktopOnlyIcon { @media (max-width: 768px) { display: none; } }
 
+/* --- DESKTOP DROPDOWN NAV --- */
 .desktopNavLinks {
   position: absolute;
   top: 90px; 
@@ -141,227 +160,128 @@ $hover-link-color: #a3a3a3;
   gap: 30px;
   padding: 10px 0;
   background: $light-background;
-  color: $primary-text-color;
   border-bottom: 1px solid #eee;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-
-  a {
-    padding: 5px 0;
-    transition: color 0.1s;
-    &:hover {
-      color: $hover-link-color;
-    }
-  }
+  @media (max-width: 768px) { display: none; }
 }
 
 .desktopNavLinkItem {
   position: relative;
-  padding: 0 10px;
-
   a {
     color: $primary-text-color;
     text-decoration: none;
-    transition: color 0.1s, text-decoration 0.2s ease-out;
-
-    &:hover {
-      text-decoration: underline; 
-      color: black;
-    }
+    font-size: 13px;
+    font-weight: 500;
+    &:hover { text-decoration: underline; }
   }
 }
 
 .dropdownMenu {
-  position: absolute;
-  top: 35px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
+  top: 180px;
+  left: 0;
+  width: 100vw;
   background: $light-background;
-  padding: 30px 40px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  padding: 40px 80px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
   z-index: 999;
-  border-top: 1px solid #eee;
-  border-radius: 6px;
-  width: auto;
-  min-width: 500px; 
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  transition: 0.3s ease;
 }
 
-.megaMenu {
-  width: 100vw;
-  max-width: 1200px;
-  min-width: auto;
-}
+.menuVisible { opacity: 1; visibility: visible; }
+.dropdownContent { display: flex; justify-content: center; gap: 60px; }
+.categoryColumns { display: flex; gap: 40px; }
+.categoryTitle { font-size: 14px; font-weight: bold; margin-bottom: 15px; text-transform: uppercase; color: black; }
+.dropdownLink { display: block; font-size: 14px; padding: 5px 0; color: $primary-text-color; &:hover { color: $hover-link-color; } }
+.dropdownImage { max-width: 200px; img { width: 100%; border-radius: 4px; } }
 
-.simpleMenu {
-  min-width: 750px;
-}
-
-.menuVisible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.dropdownContent {
-  display: flex;
-  justify-content: center;
-  gap: 60px;
-  width: 100%;
-}
-
-.categoryColumns {
-  display: flex;
-  gap: 40px;
-}
-
-.categoryColumn {
-  min-width: 150px;
-}
-
-.categoryTitle {
-  font-size: 14px;
-  font-weight: bold;
-  margin-bottom: 15px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.dropdownLink {
-  display: block;
-  font-size: 14px;
-  padding: 5px 0;
-  white-space: nowrap;
-  color: $primary-text-color;
-  transition: color 0.1s;
-
-  &:hover {
-    color: $hover-link-color;
-    text-decoration: underline;
-  }
-}
-
-.dropdownImage {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  max-width: 200px;
-  cursor: pointer;
-  border-radius: 4px;
-  overflow: hidden;
-  
-  img {
-    width: 100%;
-    height: auto;
-    display: block;
-    margin-bottom: 10px;
-    object-fit: cover;
-    border-radius: 4px;
-  }
-}
-
-.shopAll {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  padding: 8px 15px;
-  border: 1px solid $primary-text-color;
-  transition: background-color 0.2s, color 0.2s;
-  border-radius: 4px;
-
-  &:hover {
-    background-color: $primary-text-color;
-    color: $light-background;
-  }
-}
-
-/* --- MOBILE NAV DRAWER (UPDATED) --- */
-
+/* --- MOBILE DRAWER --- */
 .navbarLinks {
   position: fixed;
   top: 0;
   left: -100vw; 
-  width: 80vw; 
+  width: 85vw; 
   height: 100vh;
-  background: $light-background;
-  transition: 0.3s ease-in-out;
-  z-index: 1200; // Higher than navbar
-  padding-top: 20px;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  color: black;
+  background: white;
+  transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1200;
   display: flex;
   flex-direction: column;
-
-  &.active {
-    left: 0;
-  }
+  overflow-y: auto;
+  &.active { left: 0; }
 }
 
-.closeIcon {
-  font-size: 30px;
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  cursor: pointer;
+.closeIcon { 
+  position: absolute; 
+  top: 20px; 
+  right: 20px; 
+  cursor: pointer; 
   z-index: 10;
 }
 
 .mobileLinks {
-  margin-top: 40px; 
-  overflow-y: auto; 
-  flex-grow: 1; 
+  margin-top: 70px; 
+  padding: 0 20px;
+}
+
+.mobileMainLink {
   display: flex;
-  flex-direction: column;
-  
-  a {
-    display: block;
-    padding: 16px 20px;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 16px;
-    font-weight: 500;
-    text-transform: uppercase;
-    text-align: left; 
-    color: $primary-text-color;
-    text-decoration: none;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: black;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.mobileSubMenu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  background: #fafafa;
+  padding-left: 15px;
+  &.subMenuOpen {
+    max-height: 1200px; 
   }
 }
 
-// 🎯 UPDATED: Login button now follows directly after NavLinks
-.mobileAccount {
-    display: block;
-    padding: 16px 20px;
-    font-size: 16px;
-    font-weight: 700; 
-    text-transform: uppercase;
-    cursor: pointer;
-    text-align: left; 
-    color: $primary-text-color;
-    border-bottom: 1px solid #f0f0f0; 
-  
-
-    &:hover {
-        background-color: $banner-background; 
-    }
+.mobileSubLink {
+  display: block;
+  padding: 10px 0;
+  font-size: 13px;
+  color: #555;
+  text-decoration: none;
 }
 
 .mobileFooter {
-    border-top: 1px solid #eee;
-    text-align: center;
-     position: relative;
-    bottom: 270px;
-    
+  margin-top: auto;
+  padding: 40px 20px;
+}
+
+.mobileAccount {
+  padding: 18px 0;
+  font-size: 15px;
+  font-weight: 700; 
+  text-transform: uppercase;
+  color: black;
+  border-top: 1px solid #eee;
+  text-align: center;
+  background: $banner-background;
+  border-radius: 8px;
+  cursor: pointer;
 }
 
 .backdrop {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100%;  
   height: 100%;
-  background: rgba(0,0,0,0.45);
+  background: rgba(0,0,0,0.5);
   z-index: 1100;
 }
