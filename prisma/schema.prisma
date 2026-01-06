@@ -33,24 +33,25 @@ model Product {
   price         Float
 
   // Multiple values (no relations)
-  categories    String[]  @default([])   // ["dress", "shoes"]
-  subCategories String[]  @default([])   // ["men", "women"]
-  brands        String[]  @default([])   // ["Nike", "Adidas"]
-  sizes         String[]  @default([])   // ["S", "M", "L", "XL"]
-  colors        String[]  @default([])   // ["Red", "Black"]
-  imageUrls     String[]  @default([])
+  categories    String[]  @default([])         // Example: ["dress", "shoes"]
+  subCategories String[]  @default([])         // Example: ["men", "women"]
+  productTypes  String[]  @default([])         // Example: ["casual", "party"] (for each subCategory)
+  brands        String[]  @default([])         // Example: ["Nike", "Adidas"]
+  sizes         String[]  @default([])         // Example: ["S", "M", "L", "XL"]
+  colors        String[]  @default([])         // Example: ["Red", "Black"]
+  imageUrls     String[]  @default([])         // Store multiple images URLs
 
-  // 👉 Rent or Sell
+  // Sell or Rent
   saleType      SaleType  @default(SELL)
 
-  // 👉 NEW FIELD (Old / New)
+  // Condition of product
   condition     ProductCondition @default(NEW)
 
-  isPublished   Boolean   @default(false)
+  isPublished   Boolean   @default(false)     // Whether product is live
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  @@index([price])
+  @@index([price]) // Optional index for faster price queries
 }
 
 enum SaleType {
@@ -62,4 +63,3 @@ enum ProductCondition {
   NEW
   OLD
 }
-
