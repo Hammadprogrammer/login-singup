@@ -4,9 +4,10 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ShoppingBag, ArrowRight, Minus, Plus, Trash2, 
-  ChevronLeft, ShieldCheck, Clock3, ArrowUpRight, CreditCard
+  ChevronLeft, ShieldCheck, CreditCard, Tag, RefreshCw
 } from 'lucide-react';
 
+// Updated Interface to include condition and listingType
 interface Product {
   id: string;
   name: string;
@@ -15,6 +16,8 @@ interface Product {
   brands: string[];
   sizes: string[]; 
   imageUrls: string[];
+  condition?: 'New' | 'Used' | 'Old'; // API field
+  listingType?: 'Sell' | 'Rent';       // API field
 }
 
 interface CartItem extends Product {
@@ -60,7 +63,6 @@ export default function LuxuryCartPage() {
   };
 
   const handleProcessOrder = () => {
-    // This replaces the WhatsApp logic with a professional checkout flow
     console.log("Processing Order:", cart);
     alert("Redirecting to Secure Payment & Order Verification...");
   };
@@ -69,13 +71,11 @@ export default function LuxuryCartPage() {
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans antialiased pb-32 md:pb-12">
-      {/* Dynamic Shipping Banner */}
       <div className="bg-zinc-900 text-zinc-100 text-[10px] tracking-[0.25em] uppercase py-4 text-center font-bold px-4 border-b border-zinc-800">
         Complimentary Insured Express Shipping on all Orders
       </div>
 
       <main className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-16 py-8 md:py-16">
-        {/* Header Navigation */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-12 border-b border-zinc-100 pb-10 gap-6">
           <Link href="/" className="group inline-flex items-center gap-2 text-[11px] tracking-[0.2em] uppercase font-black text-zinc-900 hover:opacity-70 transition-all">
             <ChevronLeft size={18} /> Continue Shopping
@@ -103,21 +103,18 @@ export default function LuxuryCartPage() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
             
-            {/* List Section - Left */}
             <div className="lg:col-span-8">
               <div className="border-t border-zinc-900 pt-2">
                 {cart.map((item) => (
                   <div key={`${item.id}-${item.selectedSize}`} className="flex flex-col md:flex-row gap-6 md:gap-10 py-10 border-b border-zinc-100 items-start">
-                    {/* Visual: Image */}
                     <div className="relative w-full md:w-56 aspect-[3/4] bg-zinc-50 overflow-hidden flex-shrink-0 border border-zinc-100 group">
                       <img src={item.imageUrls[0]} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     </div>
 
-                    {/* Content: Details & Alignment */}
                     <div className="flex-1 flex flex-col justify-between self-stretch">
                       <div className="space-y-4">
                         <div className="flex justify-between items-start">
-                          <h4 className="text-[12px] tracking-[0.3em] uppercase font-black text-zinc-500">{item.brands[0]}</h4>
+                          <h4 className="text-[12px] tracking-[0.3em] uppercase font-black text-zinc-800">{item.brands[0]}</h4>
                           <button onClick={() => removeItem(item.id, item.selectedSize)} className="text-zinc-400 hover:text-red-600 transition-colors p-1">
                             <Trash2 size={20} />
                           </button>
@@ -128,13 +125,17 @@ export default function LuxuryCartPage() {
                           <span className="text-[10px] border border-zinc-900 px-4 py-1.5 uppercase tracking-widest font-black text-zinc-900">
                             Size: {item.selectedSize}
                           </span>
-                          <span className="text-[11px] text-zinc-500 font-bold uppercase tracking-widest bg-zinc-50 px-3 py-1.5">
-                            ID: {item.id.slice(0, 8)}
+                          
+                          {/* New Status Badges: Replacing ID with Condition and Listing Type */}
+                          <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-zinc-100 px-3 py-1.5">
+                            <Tag size={12} /> {item.condition || 'New'}
+                          </span>
+                          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 ${item.listingType === 'Rent' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
+                            For {item.listingType || 'Sell'}
                           </span>
                         </div>
                       </div>
 
-                      {/* Controls & PRICE AREA (Visible Bottom) */}
                       <div className="flex items-end justify-between mt-12 pt-6 border-t border-zinc-50">
                         <div className="space-y-3">
                           <p className="text-[9px] uppercase tracking-widest text-zinc-400 font-bold">Adjust Quantity</p>
@@ -151,7 +152,7 @@ export default function LuxuryCartPage() {
                             {formatUSDT(item.price * item.quantity)}
                           </p>
                           <p className="text-[10px] text-zinc-400 font-medium italic mt-1">
-                            {formatUSDT(item.price)} per unit
+                            {formatUSDT(item.price)} {item.listingType === 'Rent' ? '/ period' : 'total'}
                           </p>
                         </div>
                       </div>
@@ -161,7 +162,7 @@ export default function LuxuryCartPage() {
               </div>
             </div>
 
-            {/* Checkout Section - Right */}
+            {/* Checkout Section */}
             <div className="lg:col-span-4">
               <div className="bg-zinc-50 p-8 md:p-12 sticky top-12 border border-zinc-100 shadow-sm">
                 <h3 className="text-[13px] tracking-[0.4em] uppercase font-black text-zinc-900 mb-10 border-b-2 border-zinc-900 pb-4">Order Summary</h3>
@@ -174,10 +175,6 @@ export default function LuxuryCartPage() {
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500">Shipping</span>
                     <span className="text-emerald-700 font-black tracking-widest uppercase text-[10px] bg-emerald-50 px-2 py-1">Complimentary</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500">Tax</span>
-                    <span className="text-zinc-400 text-[10px] italic uppercase">Calculated at Checkout</span>
                   </div>
                   
                   <div className="pt-10 mt-6 border-t border-zinc-200">
@@ -194,12 +191,11 @@ export default function LuxuryCartPage() {
                       onClick={handleProcessOrder}
                       className="w-full bg-zinc-900 text-white py-6 text-[12px] tracking-[0.5em] uppercase font-black hover:bg-black transition-all flex items-center justify-center gap-4 shadow-2xl active:scale-[0.98]"
                     >
-                      Check Order <ArrowRight size={18} />
+                      Proceed to Checkout <ArrowRight size={18} />
                     </button>
                   </div>
                 </div>
 
-                {/* Secure Trust Badges */}
                 <div className="grid grid-cols-1 gap-6 pt-8 border-t border-zinc-200">
                   <div className="flex items-center gap-4">
                     <ShieldCheck size={20} className="text-zinc-900" />
@@ -217,7 +213,7 @@ export default function LuxuryCartPage() {
         )}
       </main>
 
-      {/* MOBILE PERSISTENT BOTTOM BAR */}
+      {/* MOBILE BAR */}
       {cart.length > 0 && (
         <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-zinc-900 p-6 z-[100] shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
           <div className="flex items-center justify-between gap-6">
@@ -229,7 +225,7 @@ export default function LuxuryCartPage() {
               onClick={handleProcessOrder}
               className="flex-1 bg-zinc-900 text-white py-5 px-6 text-[11px] tracking-[0.3em] uppercase font-black flex items-center justify-center gap-3 rounded-sm active:scale-95 transition-transform"
             >
-              Check Order <ArrowUpRight size={18} />
+           Proceed to Checkout
             </button>
           </div>
         </div>

@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Loader2, ChevronLeft, ShoppingBag, 
-  X, ShieldCheck, Truck, Heart, ArrowRight, Info, Plus, Minus, Trash2
+  X, ShieldCheck, Truck, Heart, ArrowRight, Info, Plus, Minus, Trash2,
+  Package, CheckCircle2, Calendar, Tag
 } from 'lucide-react';
 import { useParams } from 'next/navigation';
 
@@ -18,8 +19,8 @@ interface Product {
   sizes: string[]; 
   colors: string[];
   imageUrls: string[];
-  saleType: string;
-  condition: string;
+  saleType: 'sale' | 'rent'; // Added specific types
+  condition: 'New' | 'Pre-owned' | 'Vintage'; // Added specific types
 }
 
 interface CartItem extends Product {
@@ -32,7 +33,6 @@ export default function LuxuryProductPage() {
   const id = params?.id;
 
   const MASTER_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  const WHATSAPP_NUMBER = "923000000000"; 
 
   const [product, setProduct] = useState<Product | null>(null);
   const [mainImage, setMainImage] = useState<string>('');
@@ -78,7 +78,6 @@ export default function LuxuryProductPage() {
         if (found) {
           setProduct(found);
           setMainImage(found.imageUrls[0]);
-          // Default selection only if size is available
           const firstAvailable = found.sizes[0];
           if (firstAvailable) setSelectedSize(firstAvailable);
         }
@@ -121,15 +120,6 @@ export default function LuxuryProductPage() {
 
   const removeItem = (productId: string, size: string) => {
     setCart(prevCart => prevCart.filter(item => !(item.id === productId && item.selectedSize === size)));
-  };
-
-  const handleCheckout = () => {
-    const messageHeader = `*NEW ORDER - LUXURY STORE*%0A--------------------------%0A`;
-    const itemsList = cart.map(item => 
-        `• *${item.name}*%0A  Size: ${item.selectedSize}%0A  Qty: ${item.quantity}%0A  Price: ${formatUSDT(item.price * item.quantity)}%0A`
-    ).join('%0A');
-    const footer = `%0A--------------------------%0A*TOTAL AMOUNT: ${formatUSDT(cartTotal)}*`;
-    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${messageHeader}${itemsList}${footer}`, '_blank');
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -188,7 +178,11 @@ export default function LuxuryProductPage() {
                   <div className="flex-1 space-y-2">
                     <p className="text-[8px] tracking-widest uppercase text-zinc-400 font-bold">{item.brands[0]}</p>
                     <h3 className="text-xs font-light tracking-wide">{item.name}</h3>
-                    <p className="text-[10px] text-zinc-900 font-bold">SIZE: {item.selectedSize}</p>
+                    <div className="flex gap-2">
+                        <span className="text-[7px] border px-1 uppercase font-bold text-zinc-500">{item.saleType}</span>
+                        <span className="text-[7px] border px-1 uppercase font-bold text-zinc-500">{item.condition}</span>
+                    </div>
+                    <p className="text-[10px] text-zinc-900 font-bold mt-2">SIZE: {item.selectedSize}</p>
                     <div className="flex items-center justify-between pt-4">
                       <div className="flex items-center border border-zinc-100 rounded-sm">
                         <button onClick={() => updateQuantity(item.id, item.selectedSize, -1)} className="p-2 hover:bg-zinc-50"><Minus size={10} /></button>
@@ -200,7 +194,7 @@ export default function LuxuryProductPage() {
                       </button>
                     </div>
                   </div>
-                  <p className="text-xs font-bold whitespace-nowrap">{formatUSDT(item.price * item.quantity)}</p>
+                  <p className="text-xs font-bold">{formatUSDT(item.price * item.quantity)}</p>
                 </div>
               ))
             )}
@@ -212,14 +206,15 @@ export default function LuxuryProductPage() {
                 <p className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">Total Amount</p>
                 <p className="text-xl font-medium tracking-tighter">{formatUSDT(cartTotal)}</p>
               </div>
-              <button onClick={handleCheckout} className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black flex items-center justify-center gap-4 transition-all">
-                Checkout to WhatsApp <ArrowRight size={14} />
+              <button className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black flex items-center justify-center gap-4 transition-all">
+                Proceed to Checkout <ArrowRight size={14} />
               </button>
             </div>
           )}
         </div>
       </div>
 
+      {/* --- MAIN PAGE CONTENT --- */}
       <main className="max-w-[1700px] mx-auto px-8 lg:px-16 py-12">
         <nav className="mb-16 flex justify-between items-center">
           <Link href="/" className="inline-flex items-center gap-3 text-[10px] tracking-[0.4em] uppercase font-bold text-zinc-400 hover:text-black transition-colors">
@@ -236,7 +231,7 @@ export default function LuxuryProductPage() {
         </nav>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
-          {/* Gallery */}
+          {/* Gallery Section */}
           <div className="flex flex-col-reverse xl:flex-row gap-8">
             <div className="flex xl:flex-col gap-4 overflow-x-auto xl:w-24 no-scrollbar">
               {product.imageUrls.map((url, i) => (
@@ -246,6 +241,13 @@ export default function LuxuryProductPage() {
               ))}
             </div>
             <div className="flex-1 relative bg-white group overflow-hidden">
+              {/* SALE/RENT BADGE */}
+              <div className="absolute top-6 left-6 z-10">
+                <span className="bg-zinc-900 text-white text-[9px] tracking-[0.2em] uppercase font-bold px-4 py-2 shadow-xl">
+                  {product.saleType === 'rent' ? 'For Rent' : 'For Sale'}
+                </span>
+              </div>
+
               <div className="relative aspect-[3/4.5] cursor-crosshair" onMouseMove={handleMouseMove} onMouseLeave={() => setZoomStyle({ opacity: 0 })}>
                 <img src={mainImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
                 <div className="absolute inset-0 pointer-events-none transition-opacity duration-500 hidden md:block" style={{ ...zoomStyle, backgroundRepeat: 'no-repeat' }} />
@@ -253,16 +255,36 @@ export default function LuxuryProductPage() {
             </div>
           </div>
 
-          {/* Details */}
+          {/* Details Section */}
           <div className="flex flex-col pt-4">
             <div className="sticky top-16 space-y-12">
-              <div className="space-y-6">
-                <p className="text-[11px] tracking-[0.5em] uppercase font-black text-zinc-300">{product.brands[0]}</p>
-                <h1 className="text-4xl lg:text-5xl font-light tracking-tight text-zinc-900">{product.name}</h1>
-                <p className="text-3xl font-medium tracking-tighter">{formatUSDT(product.price)}</p>
+              <div className="space-y-4">
+                <p className="text-[16px] tracking-[0.5em] uppercase font-black text-zinc-900">{product.brands[0]}</p>
+                {/* SMALLER TITLE AS REQUESTED */}
+                <h1 className="text-[16px] font-light tracking-tight text-zinc-900 uppercase">{product.name}</h1>
+                
+                <div className="flex items-center gap-4">
+                    <p className="text-[15px]  font-bold tracking-tighter">{formatUSDT(product.price)}</p>
+                    {product.saleType === 'rent' && <span className="text-[10px] text-zinc-400 uppercase tracking-widest">/ Per Day</span>}
+                </div>
+
+                <div className="inline-flex items-center gap-2 bg-zinc-10 px-3 py-1 rounded-full border border-zinc-100">
+                    <div className={`w-1.5 h-1.5 rounded-full ${product.condition === 'New' ? 'bg-green-500' : 'bg-orange-400'}`} />
+                    <span className="text-[10px] uppercase tracking-widest font-bold text-zinc-900">Condition: {product.condition}</span>
+                </div>
               </div>
 
-              {/* Sizes with Strikethrough Logic */}
+              {/* Description */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase font-bold text-zinc-900">
+                  <Info size={14} /> Description
+                </div>
+                <p className="text-sm leading-relaxed text-zinc-600 font-light max-w-xl">
+                  {product.description || "No description available for this luxury piece."}
+                </p>
+              </div>
+
+              {/* Sizes */}
               <div className="space-y-6">
                 <p className="text-[10px] tracking-[0.3em] uppercase font-bold">Select Size</p>
                 <div className="flex flex-wrap gap-4">
@@ -279,8 +301,6 @@ export default function LuxuryProductPage() {
                         `}
                       >
                         <span className={!isAvailable ? 'text-zinc-800' : ''}>{size}</span>
-                        
-                        {/* Diagonal Strikethrough Line */}
                         {!isAvailable && (
                           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                             <div className="w-[140%] h-[1px] bg-zinc-800 rotate-[45deg] absolute" />
@@ -292,26 +312,35 @@ export default function LuxuryProductPage() {
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <button 
                   onClick={addToBag}
                   className="bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black transition-all flex items-center justify-center gap-4 shadow-2xl"
                 >
-                  <ShoppingBag size={18} /> Add to Bag
+                  {product.saleType === 'rent' ? <Calendar size={18} /> : <ShoppingBag size={18} />} 
+                  {product.saleType === 'rent' ? 'Reserve for Rent' : 'Add to Bag'}
                 </button>
-                <button onClick={() => setIsCartOpen(true)} className="border border-zinc-200 py-6 text-[10px] tracking-[0.3em] uppercase font-bold text-zinc-600 hover:border-zinc-900 transition-all">
+                <button onClick={() => setIsCartOpen(true)} className="border border-zinc-800 py-6 text-[10px] tracking-[0.3em] uppercase font-bold text-zinc-900 hover:border-zinc-900 transition-all">
                   View Bag ({cart.length})
                 </button>
               </div>
               
-              <div className="pt-10 border-t border-zinc-100 flex gap-10">
+              {/* Trust Badges */}
+              <div className="pt-10 border-t border-zinc-100 flex flex-wrap gap-10">
                 <div className="flex items-center gap-3">
                   <Truck size={18} className="text-zinc-400" />
-                  <span className="text-[9px] uppercase tracking-widest font-bold">Free Shipping</span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-zinc-500">
+                    {product.saleType === 'rent' ? 'Express Delivery & Pickup' : 'Free Express Shipping'}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <ShieldCheck size={18} className="text-zinc-400" />
-                  <span className="text-[9px] uppercase tracking-widest font-bold">100% Authentic</span>
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-zinc-500">Quality Verified</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Tag size={18} className="text-zinc-400" />
+                  <span className="text-[9px] uppercase tracking-widest font-bold text-zinc-500">{product.saleType} listing</span>
                 </div>
               </div>
             </div>
