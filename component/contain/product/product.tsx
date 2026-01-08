@@ -29,7 +29,7 @@ const LoadingSkeleton = () => (
 const ProductGrid = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [cols, setCols] = useState(4);
+  const [cols, setCols] = useState(4); // Default 4
   const [showFilters, setShowFilters] = useState(false);
   const [sortBy, setSortBy] = useState<'default' | 'low-to-high' | 'high-to-low'>('default');
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -49,7 +49,6 @@ const ProductGrid = () => {
     fetchProducts();
   }, []);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -76,11 +75,9 @@ const ProductGrid = () => {
   return (
     <div className="w-full bg-white font-sans text-[#1a1a1a]">
       
-      {/* --- STICKY NAV --- */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-[1600px] mx-auto px-4 md:px-10 py-5 flex items-center justify-between">
           
-          {/* Filter Dropdown Container */}
           <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setShowFilters(!showFilters)}
@@ -91,7 +88,6 @@ const ProductGrid = () => {
               <ChevronDown size={12} className={`transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
             </button>
 
-            {/* --- DROPDOWN MENU --- */}
             {showFilters && (
               <div className="absolute top-full left-0 mt-4 w-56 bg-white border border-gray-100 shadow-xl py-3 rounded-sm animate-in fade-in slide-in-from-top-2 duration-200">
                 {sortOptions.map((option) => (
@@ -113,52 +109,74 @@ const ProductGrid = () => {
             )}
           </div>
 
-          {/* Luxury Heading */}
           <div className="absolute left-1/2 -translate-x-1/2">
             <h1 className="text-[18px] md:text-[26px] tracking-[0.5em] uppercase font-extralight bg-gradient-to-b from-black to-gray-400 bg-clip-text text-transparent">
               Ski Trip
             </h1>
           </div>
 
-          {/* Desktop Grid Switcher */}
-          <div className="hidden lg:flex items-center gap-4">
-            <button onClick={() => setCols(4)} className={`p-1 transition-all ${cols === 4 ? 'opacity-100 scale-110' : 'opacity-20'}`}>
+          {/* --- UPDATED COLUMN SELECTOR --- */}
+          <div className="hidden lg:flex items-center gap-6">
+             {/* 6 Columns Button */}
+             <button onClick={() => setCols(6)} className={`p-1 transition-all ${cols === 6 ? 'opacity-100 scale-110' : 'opacity-20 hover:opacity-50'}`}>
+              <div className="grid grid-cols-3 gap-0.5">
+                {[...Array(6)].map((_, i) => <div key={i} className="w-1 h-1 bg-black"></div>)}
+              </div>
+            </button>
+
+            {/* 4 Columns Button */}
+            <button onClick={() => setCols(4)} className={`p-1 transition-all ${cols === 4 ? 'opacity-100 scale-110' : 'opacity-20 hover:opacity-50'}`}>
               <div className="grid grid-cols-2 gap-0.5">
                 {[...Array(4)].map((_, i) => <div key={i} className="w-1.5 h-1.5 bg-black"></div>)}
               </div>
             </button>
-            <button onClick={() => setCols(2)} className={`p-1 transition-all ${cols === 2 ? 'opacity-100 scale-110' : 'opacity-20'}`}>
+
+            {/* 2 Columns Button */}
+            <button onClick={() => setCols(2)} className={`p-1 transition-all ${cols === 2 ? 'opacity-100 scale-110' : 'opacity-20 hover:opacity-50'}`}>
               <div className="flex gap-0.5">
-                <div className="w-2 h-3.5 bg-black"></div>
-                <div className="w-2 h-3.5 bg-black"></div>
+                <div className="w-2.5 h-4 bg-black"></div>
+                <div className="w-2.5 h-4 bg-black"></div>
               </div>
             </button>
           </div>
         </div>
       </nav>
 
-      {/* --- MAIN GRID --- */}
       <main className="max-w-[1600px] mx-auto px-2 md:px-10 py-8">
         {loading ? (
           <LoadingSkeleton />
         ) : (
           <div className={`grid transition-all duration-700 ease-in-out ${
-            cols === 4 
+            cols === 6 
+            ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-2 gap-y-8 md:gap-x-4 md:gap-y-12'
+            : cols === 4 
             ? 'grid-cols-2 lg:grid-cols-4 gap-x-2 gap-y-10 md:gap-x-10 md:gap-y-20' 
             : 'grid-cols-2 gap-x-2 gap-y-10 md:gap-x-12 md:gap-y-24'
           }`}>
             {sortedProducts.map((product) => (
               <Link href={`/product/${product.id}`} key={product.id} className="group flex flex-col">
                 <div className="relative aspect-[3/4] overflow-hidden bg-[#f9f9f9]">
-                  <button className="absolute top-3 right-3 z-10 text-black/10 hover:text-black transition-colors">
+                  <button className="absolute top-3 right-3 z-20 text-black/10 hover:text-black transition-colors">
                     <Heart size={18} strokeWidth={1} />
                   </button>
+                  
                   {product.imageUrls?.[0] ? (
-                    <img
-                      src={product.imageUrls[0]}
-                      alt={product.name}
-                      className="w-full h-full object-cover transition-transform duration-[1.5s] group-hover:scale-105"
-                    />
+                    <>
+                      <img
+                        src={product.imageUrls[0]}
+                        alt={product.name}
+                        className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${
+                          product.imageUrls[1] ? 'group-hover:opacity-0' : 'group-hover:scale-105'
+                        }`}
+                      />
+                      {product.imageUrls[1] && (
+                        <img
+                          src={product.imageUrls[1]}
+                          alt={`${product.name} alternate`}
+                          className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-in-out scale-105 group-hover:scale-100"
+                        />
+                      )}
+                    </>
                   ) : (
                     <div className="flex items-center justify-center h-full text-gray-200"><ImageOff size={24} /></div>
                   )}
@@ -180,8 +198,6 @@ const ProductGrid = () => {
           </div>
         )}
       </main>
-
-    
     </div>
   );
 };

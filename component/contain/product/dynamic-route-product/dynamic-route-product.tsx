@@ -2,32 +2,45 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ImageOff, Loader2, ChevronLeft, ShoppingBag, MessageCircle, Ruler, X, Minus, Plus } from 'lucide-react';
+import { 
+  Loader2, ChevronLeft, ShoppingBag, 
+  X, ShieldCheck, Truck, Heart, ArrowRight, Info, Plus, Minus, Trash2
+} from 'lucide-react';
 import { useParams } from 'next/navigation';
 
+// --- INTERFACES ---
 interface Product {
   id: string;
   name: string;
+  description: string;
   price: number;
+  brands: string[];
+  sizes: string[]; 
+  colors: string[];
   imageUrls: string[];
-  description?: string;
-  category?: string;
-  stock: number;
-  sizes?: string[]; 
+  saleType: string;
+  condition: string;
 }
 
-export default function ProductDetailPage() {
+interface CartItem extends Product {
+  selectedSize: string;
+  quantity: number;
+}
+
+export default function LuxuryProductPage() {
   const params = useParams();
   const id = params?.id;
 
+  const MASTER_SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const WHATSAPP_NUMBER = "923000000000"; 
+
   const [product, setProduct] = useState<Product | null>(null);
   const [mainImage, setMainImage] = useState<string>('');
-  const [selectedSize, setSelectedSize] = useState<string>('M');
+  const [selectedSize, setSelectedSize] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [quantity, setQuantity] = useState(1);
   
-  // High-Resolution Zoom State
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [zoomStyle, setZoomStyle] = useState<React.CSSProperties>({ opacity: 0 });
 
   const formatUSDT = (amount: number) => {
@@ -36,6 +49,25 @@ export default function ProductDetailPage() {
       currency: 'USD',
     }).format(amount).replace('$', 'USDT ');
   };
+
+  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+
+  useEffect(() => {
+    const savedCart = localStorage.getItem('luxury_cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (e) {
+        console.error("Cart load error", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      localStorage.setItem('luxury_cart', JSON.stringify(cart));
+    }
+  }, [cart, loading]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -46,176 +78,246 @@ export default function ProductDetailPage() {
         if (found) {
           setProduct(found);
           setMainImage(found.imageUrls[0]);
+          // Default selection only if size is available
+          const firstAvailable = found.sizes[0];
+          if (firstAvailable) setSelectedSize(firstAvailable);
         }
-      } catch (err) {
-        console.error("Error:", err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err) { console.error(err); } finally { setLoading(false); }
     };
     if (id) fetchProduct();
   }, [id]);
 
-  // Precise Area Zoom Logic (Covers Face, Body, and Feet)
+  const addToBag = () => {
+    if (!product) return;
+    if (!selectedSize) {
+      alert("Please select a size first");
+      return;
+    }
+
+    setCart(prevCart => {
+      const existingIndex = prevCart.findIndex(
+        item => item.id === product.id && item.selectedSize === selectedSize
+      );
+      
+      if (existingIndex > -1) {
+        const newCart = [...prevCart];
+        newCart[existingIndex].quantity += 1;
+        return newCart;
+      }
+      return [...prevCart, { ...product, selectedSize, quantity: 1 }];
+    });
+    
+    setIsCartOpen(true);
+  };
+
+  const updateQuantity = (productId: string, size: string, delta: number) => {
+    setCart(prevCart => prevCart.map(item => {
+      if (item.id === productId && item.selectedSize === size) {
+        return { ...item, quantity: Math.max(1, item.quantity + delta) };
+      }
+      return item;
+    }));
+  };
+
+  const removeItem = (productId: string, size: string) => {
+    setCart(prevCart => prevCart.filter(item => !(item.id === productId && item.selectedSize === size)));
+  };
+
+  const handleCheckout = () => {
+    const messageHeader = `*NEW ORDER - LUXURY STORE*%0A--------------------------%0A`;
+    const itemsList = cart.map(item => 
+        `• *${item.name}*%0A  Size: ${item.selectedSize}%0A  Qty: ${item.quantity}%0A  Price: ${formatUSDT(item.price * item.quantity)}%0A`
+    ).join('%0A');
+    const footer = `%0A--------------------------%0A*TOTAL AMOUNT: ${formatUSDT(cartTotal)}*`;
+    window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${messageHeader}${itemsList}${footer}`, '_blank');
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
-    
-    // Percentage calculation for accurate tracking
     const x = ((e.pageX - left) / width) * 100;
     const y = ((e.pageY - (top + window.scrollY)) / height) * 100;
-
     setZoomStyle({
       opacity: 1,
       backgroundImage: `url(${mainImage})`,
       backgroundPosition: `${x}% ${y}%`,
-      backgroundSize: '350%', // High detail zoom level
+      backgroundSize: '250%',
     });
   };
 
-  const handleMouseLeave = () => {
-    setZoomStyle({ opacity: 0 });
-  };
-
   if (loading) return (
-    <div className="flex h-screen items-center justify-center bg-[#fcfcfc]">
-      <Loader2 className="animate-spin text-gray-300" size={30} />
+    <div className="flex h-screen items-center justify-center bg-white">
+      <Loader2 className="animate-spin text-zinc-200" size={40} />
     </div>
   );
-
-  if (!product) return <div className="text-center py-20 tracking-widest uppercase text-xs">Product not found.</div>;
+  
+  if (!product) return <div className="text-center py-40">Product Not Found</div>;
 
   return (
-    <div className={`min-h-screen bg-[#F4F4F4] text-[#1a1a1a] pb-20 transition-all duration-500 ${isCartOpen ? 'brightness-90' : ''}`}>
+    <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 selection:bg-zinc-900 selection:text-white">
       
-      {/* --- CART SIDEBAR --- */}
-      <div className={`fixed top-0 right-0 h-full w-full max-w-[400px] bg-white z-[100] shadow-2xl transform transition-transform duration-500 ease-in-out ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
-        <div className="flex justify-between items-center p-6 border-b border-gray-100">
-          <h2 className="text-[11px] tracking-[0.3em] uppercase font-medium">Cart</h2>
-          <button onClick={() => setIsCartOpen(false)}><X size={18} strokeWidth={1} /></button>
-        </div>
-        <div className="p-6">
-          <div className="flex gap-4">
-            <img src={mainImage} alt={product.name} className="w-20 aspect-[3/4] object-cover" />
-            <div className="space-y-1">
-              <h3 className="text-[10px] tracking-widest uppercase">{product.name}</h3>
-              <p className="text-[10px] text-gray-500">{formatUSDT(product.price)}</p>
+      {/* --- BAG DRAWER --- */}
+      <div 
+        className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-[100] transition-opacity duration-700 ${isCartOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`} 
+        onClick={() => setIsCartOpen(false)} 
+      />
+      
+      <div className={`fixed top-0 right-0 h-full w-full max-w-[480px] bg-white z-[110] shadow-2xl transition-transform duration-[600ms] ease-[cubic-bezier(0.16,1,0.3,1)] ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+        <div className="flex flex-col h-full">
+          <div className="flex justify-between items-center p-8 border-b border-zinc-50">
+            <div className="flex items-center gap-3">
+              <ShoppingBag size={18} strokeWidth={1.5} />
+              <h2 className="text-[10px] tracking-[0.5em] uppercase font-bold">Shopping Bag ({cart.length})</h2>
             </div>
+            <button onClick={() => setIsCartOpen(false)} className="hover:rotate-90 transition-transform duration-300 p-2">
+              <X size={20} strokeWidth={1.2} />
+            </button>
           </div>
-        </div>
-        <div className="absolute bottom-0 w-full p-6 border-t border-gray-100">
-          <button className="w-full bg-black text-white py-4 text-[11px] tracking-[0.3em] uppercase">
-            Checkout • {formatUSDT(product.price * quantity)}
-          </button>
+
+          <div className="flex-1 overflow-y-auto p-8 space-y-8 scrollbar-hide">
+            {cart.length === 0 ? (
+              <div className="h-full flex flex-col items-center justify-center text-zinc-400 space-y-4">
+                 <ShoppingBag size={40} strokeWidth={0.5} />
+                 <p className="uppercase tracking-[0.3em] text-[10px]">Your bag is empty</p>
+              </div>
+            ) : (
+              cart.map((item) => (
+                <div key={`${item.id}-${item.selectedSize}`} className="flex gap-6 items-start border-b border-zinc-50 pb-8 last:border-0">
+                  <div className="w-24 bg-zinc-50 aspect-[3/4] overflow-hidden flex-shrink-0">
+                    <img src={item.imageUrls[0]} alt="" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 space-y-2">
+                    <p className="text-[8px] tracking-widest uppercase text-zinc-400 font-bold">{item.brands[0]}</p>
+                    <h3 className="text-xs font-light tracking-wide">{item.name}</h3>
+                    <p className="text-[10px] text-zinc-900 font-bold">SIZE: {item.selectedSize}</p>
+                    <div className="flex items-center justify-between pt-4">
+                      <div className="flex items-center border border-zinc-100 rounded-sm">
+                        <button onClick={() => updateQuantity(item.id, item.selectedSize, -1)} className="p-2 hover:bg-zinc-50"><Minus size={10} /></button>
+                        <span className="px-3 text-[10px] font-bold">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.id, item.selectedSize, 1)} className="p-2 hover:bg-zinc-50"><Plus size={10} /></button>
+                      </div>
+                      <button onClick={() => removeItem(item.id, item.selectedSize)} className="text-zinc-300 hover:text-red-500 transition-colors">
+                        <Trash2 size={14} strokeWidth={1.5} />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs font-bold whitespace-nowrap">{formatUSDT(item.price * item.quantity)}</p>
+                </div>
+              ))
+            )}
+          </div>
+
+          {cart.length > 0 && (
+            <div className="p-8 bg-zinc-50 border-t border-zinc-100 space-y-6">
+              <div className="flex justify-between items-center">
+                <p className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">Total Amount</p>
+                <p className="text-xl font-medium tracking-tighter">{formatUSDT(cartTotal)}</p>
+              </div>
+              <button onClick={handleCheckout} className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black flex items-center justify-center gap-4 transition-all">
+                Checkout to WhatsApp <ArrowRight size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {isCartOpen && <div className="fixed inset-0 bg-black/10 backdrop-blur-[2px] z-[90]" onClick={() => setIsCartOpen(false)} />}
+      <main className="max-w-[1700px] mx-auto px-8 lg:px-16 py-12">
+        <nav className="mb-16 flex justify-between items-center">
+          <Link href="/" className="inline-flex items-center gap-3 text-[10px] tracking-[0.4em] uppercase font-bold text-zinc-400 hover:text-black transition-colors">
+            <ChevronLeft size={16} /> Collection
+          </Link>
+          <button onClick={() => setIsCartOpen(true)} className="relative group">
+            <ShoppingBag size={20} strokeWidth={1.5} className="group-hover:scale-110 transition-transform" />
+            {cart.length > 0 && (
+              <span className="absolute -top-2 -right-2 bg-zinc-900 text-white text-[8px] w-4 h-4 rounded-full flex items-center justify-center">
+                {cart.length}
+              </span>
+            )}
+          </button>
+        </nav>
 
-      {/* --- MAIN PAGE CONTENT --- */}
-      <div className="max-w-[1300px] mx-auto px-6 pt-10">
-        <Link href="/" className="group inline-flex items-center gap-2 text-[10px] tracking-[0.3em] uppercase text-gray-500 hover:text-black transition-all mb-12">
-          <ChevronLeft size={14} /> Back to Gallery
-        </Link>
-
-        <div className="flex flex-col lg:flex-row gap-12 items-start">
-          
-          {/* LEFT: Media Section with Precision Zoom (No Click) */}
-          <div className="w-full lg:w-[65%] flex flex-col-reverse md:flex-row gap-5">
-            <div className="flex md:flex-col gap-3 md:w-20 overflow-x-auto no-scrollbar">
-              {product.imageUrls.map((url, index) => (
-                <button 
-                  key={index} 
-                  onClick={() => setMainImage(url)} 
-                  className={`relative aspect-[3/4] w-16 md:w-full overflow-hidden transition-all duration-500 ${mainImage === url ? 'ring-1 ring-black ring-offset-1' : 'opacity-60 hover:opacity-100'}`}
-                >
-                  <img src={url} alt="thumb" className="w-full h-full object-cover" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start">
+          {/* Gallery */}
+          <div className="flex flex-col-reverse xl:flex-row gap-8">
+            <div className="flex xl:flex-col gap-4 overflow-x-auto xl:w-24 no-scrollbar">
+              {product.imageUrls.map((url, i) => (
+                <button key={i} onClick={() => setMainImage(url)} className={`relative aspect-[3/4.5] w-20 xl:w-full overflow-hidden transition-all duration-500 ${mainImage === url ? 'ring-1 ring-zinc-900 ring-offset-4' : 'opacity-40 hover:opacity-100'}`}>
+                  <img src={url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
-
-            <div className="flex-1 bg-white shadow-sm overflow-hidden relative">
-              {/* Interaction Area */}
-              <div 
-                className="relative aspect-[4/5] md:aspect-[3/4] max-h-[750px] mx-auto overflow-hidden cursor-crosshair"
-                onMouseMove={handleMouseMove}
-                onMouseLeave={handleMouseLeave}
-              >
-                {/* Base Image */}
-                <img 
-                  src={mainImage} 
-                  alt={product.name} 
-                  className="w-full h-full object-cover"
-                />
-                
-                {/* Zoom Layer (Purely Visual, No Click Handler) */}
-                <div 
-                  className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                  style={{
-                    ...zoomStyle,
-                    backgroundRepeat: 'no-repeat',
-                  }}
-                />
+            <div className="flex-1 relative bg-white group overflow-hidden">
+              <div className="relative aspect-[3/4.5] cursor-crosshair" onMouseMove={handleMouseMove} onMouseLeave={() => setZoomStyle({ opacity: 0 })}>
+                <img src={mainImage} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]" />
+                <div className="absolute inset-0 pointer-events-none transition-opacity duration-500 hidden md:block" style={{ ...zoomStyle, backgroundRepeat: 'no-repeat' }} />
               </div>
             </div>
           </div>
 
-          {/* RIGHT: Product Info */}
-          <div className="w-full lg:w-[35%] lg:sticky lg:top-10 space-y-10">
-            <section className="space-y-4">
-              <p className="text-[10px] tracking-[0.4em] uppercase text-gray-400 font-medium">{product.category || 'Collection'}</p>
-              <h1 className="text-2xl md:text-3xl font-light tracking-tight">{product.name}</h1>
-              <p className="text-xl font-medium text-gray-800">{formatUSDT(product.price)}</p>
-            </section>
-
-            {/* Size Section */}
-            <section>
-              <div className="flex justify-between items-center mb-5">
-                <span className="text-[11px] uppercase tracking-[0.2em] font-bold">Select Size</span>
-                <button className="text-[10px] uppercase text-gray-400 hover:text-black">Size Guide</button>
+          {/* Details */}
+          <div className="flex flex-col pt-4">
+            <div className="sticky top-16 space-y-12">
+              <div className="space-y-6">
+                <p className="text-[11px] tracking-[0.5em] uppercase font-black text-zinc-300">{product.brands[0]}</p>
+                <h1 className="text-4xl lg:text-5xl font-light tracking-tight text-zinc-900">{product.name}</h1>
+                <p className="text-3xl font-medium tracking-tighter">{formatUSDT(product.price)}</p>
               </div>
-              <div className="grid grid-cols-5 gap-2">
-                {['XS', 'S', 'M', 'L', 'XL'].map((size) => (
-                  <button 
-                    key={size} 
-                    onClick={() => setSelectedSize(size)}
-                    className={`py-3 text-[11px] transition-all border ${selectedSize === size ? 'border-black bg-black text-white' : 'border-gray-200 text-gray-600 hover:border-black'}`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </section>
 
-            {/* CTA Actions */}
-            <section className="space-y-3">
-              <button 
-                onClick={() => setIsCartOpen(true)}
-                className="w-full bg-[#111] text-white py-5 px-8 text-[11px] tracking-[0.3em] uppercase flex items-center justify-center gap-3 hover:bg-black transition-all"
-              >
-                <ShoppingBag size={16} />
-                Add to Bag
-              </button>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <button className="border border-gray-200 py-4 text-[10px] uppercase text-gray-400 hover:text-black">Wishlist</button>
-                <a 
-                  href={`https://wa.me/YOUR_NUMBER`}
-                  target="_blank"
-                  className="border border-gray-200 py-4 text-[10px] uppercase text-gray-600 flex items-center justify-center gap-2 hover:text-green-600 transition-all"
+              {/* Sizes with Strikethrough Logic */}
+              <div className="space-y-6">
+                <p className="text-[10px] tracking-[0.3em] uppercase font-bold">Select Size</p>
+                <div className="flex flex-wrap gap-4">
+                  {MASTER_SIZES.map((size) => {
+                    const isAvailable = product.sizes.includes(size);
+                    return (
+                      <button
+                        key={size}
+                        disabled={!isAvailable}
+                        onClick={() => setSelectedSize(size)}
+                        className={`relative w-16 h-16 flex items-center justify-center text-[12px] font-bold border transition-all overflow-hidden
+                          ${selectedSize === size ? 'border-zinc-900 bg-zinc-900 text-white shadow-xl' : 'border-zinc-800 text-zinc-900 hover:border-zinc-900'}
+                          ${!isAvailable ? 'opacity-30 cursor-not-allowed bg-zinc-50' : ''}
+                        `}
+                      >
+                        <span className={!isAvailable ? 'text-zinc-800' : ''}>{size}</span>
+                        
+                        {/* Diagonal Strikethrough Line */}
+                        {!isAvailable && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <div className="w-[140%] h-[1px] bg-zinc-800 rotate-[45deg] absolute" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <button 
+                  onClick={addToBag}
+                  className="bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black transition-all flex items-center justify-center gap-4 shadow-2xl"
                 >
-                  <MessageCircle size={14} /> WhatsApp
-                </a>
+                  <ShoppingBag size={18} /> Add to Bag
+                </button>
+                <button onClick={() => setIsCartOpen(true)} className="border border-zinc-200 py-6 text-[10px] tracking-[0.3em] uppercase font-bold text-zinc-600 hover:border-zinc-900 transition-all">
+                  View Bag ({cart.length})
+                </button>
               </div>
-            </section>
-
-            <section className="pt-8 border-t border-gray-200">
-              <p className="text-gray-500 font-light leading-relaxed text-[13.5px]">
-                {product.description || "Meticulously crafted with premium fabrics for a contemporary silhouette."}
-              </p>
-            </section>
+              
+              <div className="pt-10 border-t border-zinc-100 flex gap-10">
+                <div className="flex items-center gap-3">
+                  <Truck size={18} className="text-zinc-400" />
+                  <span className="text-[9px] uppercase tracking-widest font-bold">Free Shipping</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <ShieldCheck size={18} className="text-zinc-400" />
+                  <span className="text-[9px] uppercase tracking-widest font-bold">100% Authentic</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>  
+      </main>
+    </div>
   );
 }
