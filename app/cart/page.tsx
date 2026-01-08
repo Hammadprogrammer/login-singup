@@ -189,9 +189,9 @@ export default function LuxuryCartPage() {
 
                     <button 
                       onClick={handleProcessOrder}
-                      className="w-full bg-zinc-900 text-white py-6 text-[12px] tracking-[0.5em] uppercase font-black hover:bg-black transition-all flex items-center justify-center gap-4 shadow-2xl active:scale-[0.98]"
+                      className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.5em] uppercase font-black hover:bg-black transition-all flex items-center justify-center shadow-2xl active:scale-[0.98]"
                     >
-                      Proceed to Checkout <ArrowRight size={18} />
+                      Proceed to Checkout <ArrowRight size={13} />
                     </button>
                   </div>
                 </div>
