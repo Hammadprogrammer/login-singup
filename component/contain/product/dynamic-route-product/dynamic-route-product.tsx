@@ -188,10 +188,11 @@ export default function LuxuryProductPage() {
                         <button onClick={() => updateQuantity(item.id, item.selectedSize, -1)} className="p-2 hover:bg-zinc-50"><Minus size={10} /></button>
                         <span className="px-3 text-[10px] font-bold">{item.quantity}</span>
                         <button onClick={() => updateQuantity(item.id, item.selectedSize, 1)} className="p-2 hover:bg-zinc-50"><Plus size={10} /></button>
-                      </div>
-                      <button onClick={() => removeItem(item.id, item.selectedSize)} className="text-zinc-300 hover:text-red-500 transition-colors">
-                        <Trash2 size={14} strokeWidth={1.5} />
+                       <button onClick={() => removeItem(item.id, item.selectedSize)} className="text-zinc-900 hover:text-red-500 transition-colors ml-[10px]">
+                        <Trash2 size={16} strokeWidth={1.5} />
                       </button>
+                      </div>
+                    
                     </div>
                   </div>
                   <p className="text-xs font-bold">{formatUSDT(item.price * item.quantity)}</p>
