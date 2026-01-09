@@ -24,34 +24,25 @@ model HomeSlider {
   updatedAt DateTime @updatedAt
 }
 
-
-
 model Product {
-  id            String    @id @default(uuid())
-  name          String
+  id            String           @id @default(uuid())
   description   String?
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  imageUrls     String[]         @default([])
+  isPublished   Boolean          @default(false)
+  name          String
   price         Float
-
-  // Multiple values (no relations)
-  categories    String[]  @default([])         // Example: ["dress", "shoes"]
-  subCategories String[]  @default([])         // Example: ["men", "women"]
-  productTypes  String[]  @default([])         // Example: ["casual", "party"] (for each subCategory)
-  brands        String[]  @default([])         // Example: ["Nike", "Adidas"]
-  sizes         String[]  @default([])         // Example: ["S", "M", "L", "XL"]
-  colors        String[]  @default([])         // Example: ["Red", "Black"]
-  imageUrls     String[]  @default([])         // Store multiple images URLs
-
-  // Sell or Rent
-  saleType      SaleType  @default(SELL)
-
-  // Condition of product
+  brands        String[]         @default([])
+  categories    String[]         @default([])
+  colors        String[]         @default([])
+  sizes         String[]         @default([])
+  subCategories String[]         @default([])
+  saleType      SaleType         @default(SELL)
   condition     ProductCondition @default(NEW)
+  productTypes  String[]         @default([])
 
-  isPublished   Boolean   @default(false)     // Whether product is live
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  @@index([price]) // Optional index for faster price queries
+  @@index([price])
 }
 
 enum SaleType {

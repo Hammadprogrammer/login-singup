@@ -207,9 +207,9 @@ export default function LuxuryProductPage() {
                 <p className="text-[10px] tracking-widest uppercase text-zinc-400 font-bold">Total Amount</p>
                 <p className="text-xl font-medium tracking-tighter">{formatUSDT(cartTotal)}</p>
               </div>
-              <button className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black flex items-center justify-center gap-4 transition-all">
+              <Link href="/checkout"><button  className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.4em] uppercase font-bold hover:bg-black flex items-center justify-center gap-4 transition-all">
                 Proceed to Checkout <ArrowRight size={14} />
-              </button>
+              </button></Link>
             </div>
           )}
         </div>
