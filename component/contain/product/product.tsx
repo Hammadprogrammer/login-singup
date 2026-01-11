@@ -161,7 +161,7 @@ const ProductGrid = () => {
           <div className="relative" ref={dropdownRef}>
             <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 text-[10px] md:text-[11px] uppercase tracking-[0.2em] font-bold">
               <SlidersHorizontal size={14} className={showFilters ? 'rotate-90 transition-transform' : ''} />
-              <span>Sort By</span>
+              {/* <span>Sort By</span> */}
               <ChevronDown size={12} className={`transition-transform duration-300 ${showFilters ? 'rotate-180' : ''}`} />
             </button>
             {showFilters && (
