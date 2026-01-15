@@ -17,7 +17,46 @@ model User {
   id              Int       @id @default(autoincrement())
 
     favorites       Favorite[]
+      kyc             KYC?
+    
+
 }
+
+model KYC {
+  id                Int           @id @default(autoincrement())
+  userId            Int           @unique
+
+  fullName          String
+  fatherName        String?
+  documentType      KycDocumentType
+  documentNumber    String
+  documentExpiry    DateTime?
+  documentFront     String        // Front image of the document
+  documentBack      String        // Back image of the document
+  faceImage         String        // Selfie/live check image
+
+  status            KycStatus     @default(PENDING)
+  rejectionReason   String?
+
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum KycStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum KycDocumentType {
+  CNIC
+  PASSPORT
+  DRIVING_LICENSE
+}
+
+
 
 model HomeSlider {
   id        Int      @id @default(autoincrement())

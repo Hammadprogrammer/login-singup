@@ -1,0 +1,61 @@
+import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { v2 as cloudinary } from "cloudinary";
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { userId, documentFront, documentBack, faceImage, ...rest } = body;
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID is required" }, { status: 400 });
+    }
+
+    const uploadToCloudinary = async (base64: string, folder: string) => {
+      if (!base64 || !base64.startsWith("data:image")) return base64; 
+      
+      const uploadRes = await cloudinary.uploader.upload(base64, {
+        folder: `kyc/${userId}/${folder}`,
+        resource_type: "image",
+      });
+      return uploadRes.secure_url;
+    };
+
+    // Upload all LIVE captures to Cloudinary
+    const [frontUrl, backUrl, faceUrl] = await Promise.all([
+      uploadToCloudinary(documentFront, "documents"),
+      uploadToCloudinary(documentBack, "documents"),
+      uploadToCloudinary(faceImage, "faces"),
+    ]);
+
+    const kycData = {
+      userId: userId,
+      fullName: rest.fullName,
+      fatherName: rest.fatherName,
+      documentType: rest.docType,
+      documentNumber: rest.docNum,
+      documentExpiry: rest.docExpiry ? new Date(rest.docExpiry) : null,
+      documentFront: frontUrl,
+      documentBack: backUrl,
+      faceImage: faceUrl,
+      status: "PENDING",
+    };
+
+    const res = await prisma.kYC.upsert({
+      where: { userId: userId },
+      update: kycData,
+      create: kycData,
+    });
+
+    return NextResponse.json({ success: true, data: res });
+  } catch (error: any) {
+    console.error("KYC Error:", error);
+    return NextResponse.json({ error: error.message || "Failed to process KYC" }, { status: 500 });
+  }
+}
