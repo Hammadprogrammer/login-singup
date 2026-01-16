@@ -92,6 +92,9 @@
 //     return NextResponse.json({ error: "Server Error" }, { status: 500 });
 //   }
 // }
+
+
+
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { KycStatus } from "@prisma/client";
@@ -153,7 +156,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: kyc });
   } catch (error) {
-    console.error(error);
-    return NextResponse.json({ error: "Server Error" }, { status: 500 });
+    console.error("KYC POST ERROR:", error);
+    return NextResponse.json({ error: "Database saving failed" }, { status: 500 });
   }
 }
