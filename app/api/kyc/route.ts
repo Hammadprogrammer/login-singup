@@ -8,7 +8,11 @@ const JWT_SECRET = process.env.JWT_SECRET!;
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    
+    // Agar token nahi hai to 401 Unauthorized bhejien
+    if (!token) {
+      return NextResponse.json({ authenticated: false, error: "Unauthorized" }, { status: 401 });
+    }
 
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
     const kyc = await prisma.kYC.findUnique({
@@ -16,13 +20,13 @@ export async function GET(req: NextRequest) {
       select: { status: true }
     });
 
-    // Hum userId bhi bhej rahe hain folder naming ke liye
     return NextResponse.json({ 
+      authenticated: true,
       status: kyc?.status || "NOT_STARTED",
       userId: decoded.id 
     });
   } catch (error) {
-    return NextResponse.json({ error: "Invalid Session" }, { status: 401 });
+    return NextResponse.json({ authenticated: false, error: "Invalid Session" }, { status: 401 });
   }
 }
 
@@ -63,7 +67,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, data: kyc });
   } catch (error) {
-    console.error("KYC POST ERROR:", error);
     return NextResponse.json({ error: "Database saving failed" }, { status: 500 });
   }
 }

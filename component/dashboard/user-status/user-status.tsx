@@ -112,6 +112,7 @@ export default function UserStatus() {
             <thead>
               <tr className="text-[11px] uppercase tracking-wider text-slate-500 bg-slate-950/50 border-b border-slate-800">
                 <th className="px-6 py-4 font-bold">User Name</th>
+                <th className="px-6 py-4 font-bold">User ID</th>
                 <th className="px-6 py-4 font-bold">Email Address</th>
                 <th className="px-6 py-4 font-bold">Joined Date</th>
                 <th className="px-6 py-4 font-bold text-center">Reset Code</th>
@@ -131,7 +132,14 @@ export default function UserStatus() {
                       </span>
                     </div>
                   </td>
+                  {/* NEW USER ID COLUMN */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <code className="text-[10px] px-2 py-1 bg-slate-800 text-slate-400 rounded border border-slate-700 font-mono">
+                      {user.id}
+                    </code>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-400">{user.email}</td>
+
                   <td className="px-6 py-4 whitespace-nowrap text-xs text-slate-500">
                     {new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </td>
