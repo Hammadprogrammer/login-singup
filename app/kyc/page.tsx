@@ -30,7 +30,7 @@ export default function ProfessionalKYC() {
   const uploadToCloudinary = async (base64: string) => {
     try {
       // Frontend pe NEXT_PUBLIC_ zaroori hota hai, isliye fallback rakha hai
-      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME ;
+      const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dbzkqua3f";
       
       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
         method: "POST",
