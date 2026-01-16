@@ -99,7 +99,6 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-// ✅ GET: KYC Status check karne ke liye
 export async function GET(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
@@ -111,69 +110,50 @@ export async function GET(req: NextRequest) {
       select: { status: true }
     });
 
-    return NextResponse.json({ 
-      isLoggedIn: true, 
-      status: kyc?.status || "NOT_STARTED" 
-    });
+    return NextResponse.json({ status: kyc?.status || "NOT_STARTED" });
   } catch (error) {
     return NextResponse.json({ error: "Invalid Session" }, { status: 401 });
   }
 }
 
-// ✅ POST: KYC Data save karne ke liye
 export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
     if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    const userId = decoded.id;
-
     const body = await req.json();
-    
-    // Frontend se direct URLs aur details lenge
-    const { 
-      fullName, 
-      fatherName, 
-      documentType, 
-      documentNumber, 
-      documentExpiry, 
-      documentFront, 
-      documentBack, 
-      faceImage 
-    } = body;
 
-    // Database update or create
     const kyc = await prisma.kYC.upsert({
-      where: { userId },
+      where: { userId: decoded.id },
       update: {
-        fullName,
-        fatherName,
-        documentType,
-        documentNumber,
-        documentExpiry: documentExpiry ? new Date(documentExpiry) : null,
-        documentFront, 
-        documentBack,
-        faceImage,
+        fullName: body.fullName,
+        fatherName: body.fatherName,
+        documentType: body.documentType,
+        documentNumber: body.documentNumber,
+        documentExpiry: body.documentExpiry ? new Date(body.documentExpiry) : null,
+        documentFront: body.documentFront, 
+        documentBack: body.documentBack,
+        faceImage: body.faceImage,
         status: KycStatus.PENDING,
       },
       create: {
-        userId,
-        fullName,
-        fatherName,
-        documentType,
-        documentNumber,
-        documentExpiry: documentExpiry ? new Date(documentExpiry) : null,
-        documentFront,
-        documentBack,
-        faceImage,
+        userId: decoded.id,
+        fullName: body.fullName,
+        fatherName: body.fatherName,
+        documentType: body.documentType,
+        documentNumber: body.documentNumber,
+        documentExpiry: body.documentExpiry ? new Date(body.documentExpiry) : null,
+        documentFront: body.documentFront,
+        documentBack: body.documentBack,
+        faceImage: body.faceImage,
         status: KycStatus.PENDING,
       },
     });
 
     return NextResponse.json({ success: true, data: kyc });
-  } catch (error: any) {
-    console.error("Prisma Error:", error);
-    return NextResponse.json({ error: "Database saving failed" }, { status: 500 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
