@@ -5,6 +5,27 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
+export async function GET(req: NextRequest) {
+  try {
+    const token = req.cookies.get("token")?.value;
+    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+    const kyc = await prisma.kYC.findUnique({
+      where: { userId: decoded.id },
+      select: { status: true }
+    });
+
+    // Hum userId bhi bhej rahe hain folder naming ke liye
+    return NextResponse.json({ 
+      status: kyc?.status || "NOT_STARTED",
+      userId: decoded.id 
+    });
+  } catch (error) {
+    return NextResponse.json({ error: "Invalid Session" }, { status: 401 });
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
@@ -13,46 +34,36 @@ export async function POST(req: NextRequest) {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
     const body = await req.json();
 
-    const { 
-      fullName, fatherName, documentType, documentNumber, 
-      documentExpiry, documentFront, documentBack, faceImage 
-    } = body;
-
-    // Simple Validation
-    if (!fullName || !documentFront || !faceImage) {
-      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
-    }
-
     const kyc = await prisma.kYC.upsert({
       where: { userId: decoded.id },
       update: {
-        fullName,
-        fatherName,
-        documentType,
-        documentNumber,
-        documentExpiry: documentExpiry ? new Date(documentExpiry) : null,
-        documentFront, 
-        documentBack,
-        faceImage,
+        fullName: body.fullName,
+        fatherName: body.fatherName,
+        documentType: body.documentType,
+        documentNumber: body.documentNumber,
+        documentExpiry: body.documentExpiry ? new Date(body.documentExpiry) : null,
+        documentFront: body.documentFront, 
+        documentBack: body.documentBack,
+        faceImage: body.faceImage,
         status: KycStatus.PENDING,
       },
       create: {
         userId: decoded.id,
-        fullName,
-        fatherName,
-        documentType,
-        documentNumber,
-        documentExpiry: documentExpiry ? new Date(documentExpiry) : null,
-        documentFront,
-        documentBack,
-        faceImage,
+        fullName: body.fullName,
+        fatherName: body.fatherName,
+        documentType: body.documentType,
+        documentNumber: body.documentNumber,
+        documentExpiry: body.documentExpiry ? new Date(body.documentExpiry) : null,
+        documentFront: body.documentFront,
+        documentBack: body.documentBack,
+        faceImage: body.faceImage,
         status: KycStatus.PENDING,
       },
     });
 
     return NextResponse.json({ success: true, data: kyc });
   } catch (error) {
-    console.error("KYC_API_ERROR:", error);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
+    console.error("KYC POST ERROR:", error);
+    return NextResponse.json({ error: "Database saving failed" }, { status: 500 });
   }
 }
