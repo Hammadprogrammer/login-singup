@@ -48,34 +48,32 @@ export default function ProfessionalKYC() {
       });
   }, []);
 
-  // ✅ Only Numbers for CNIC
   const handleCnicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ""); 
     if (value.length <= 13) setFormData({ ...formData, documentNumber: value });
   };
 
-  // ✅ Custom Date Input (Only Numbers + Auto Slash)
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, ""); // Remove non-numeric
-    if (value.length > 8) value = value.slice(0, 8); // Max 8 digits (DDMMYYYY)
+    let value = e.target.value.replace(/\D/g, ""); 
+    if (value.length > 8) value = value.slice(0, 8); 
 
-    // Format as DD/MM/YYYY
     let formatted = value;
     if (value.length > 2 && value.length <= 4) {
       formatted = `${value.slice(0, 2)}/${value.slice(2)}`;
     } else if (value.length > 4) {
       formatted = `${value.slice(0, 2)}/${value.slice(2, 4)}/${value.slice(4)}`;
     }
-    
     setFormData({ ...formData, documentExpiry: formatted });
   };
 
+  // ✅ Updated Cloudinary Upload Function
   const uploadToCloudinary = async (base64: string, subFolder: "documents" | "faces") => {
     if (!base64 || base64 === "data:,") return null;
     try {
       const cloudName = "dbzkqua3f"; 
       const uploadPreset = "ml_default"; 
       const folderPath = `kyc/user_${userId}/${subFolder}`;
+
       const data = new FormData();
       data.append("file", base64);
       data.append("upload_preset", uploadPreset);
@@ -85,12 +83,16 @@ export default function ProfessionalKYC() {
         method: "POST",
         body: data,
       });
+
       const resData = await res.json();
       return resData.secure_url || null;
-    } catch (err) { return null; }
+    } catch (err) {
+      console.error("Cloudinary Error:", err);
+      return null;
+    }
   };
 
-  // Camera logic (Same as before)
+  // Camera Logic
   useEffect(() => {
     let streamInstance: MediaStream | null = null;
     if (step === 3 && !capturedFace) {
@@ -120,24 +122,44 @@ export default function ProfessionalKYC() {
     }
   };
 
+  // ✅ Updated Final Submit with Cloudinary Integration
   const handleFinalSubmit = async () => {
     if (!userId) return setShowAuthPopup(true);
     setIsSubmitting(true);
     try {
+      // 1. Parallel Uploads to Cloudinary
       const [frontUrl, backUrl, faceUrl] = await Promise.all([
         uploadToCloudinary(formData.documentFront!, "documents"),
         uploadToCloudinary(formData.documentBack!, "documents"),
         uploadToCloudinary(capturedFace!, "faces")
       ]);
+
+      if (!frontUrl || !backUrl || !faceUrl) {
+        throw new Error("Image upload failed. Please try again.");
+      }
+
+      // 2. Save URLs to Database
       const res = await fetch("/api/kyc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, documentFront: frontUrl, documentBack: backUrl, faceImage: faceUrl }),
+        body: JSON.stringify({ 
+          ...formData, 
+          documentFront: frontUrl, 
+          documentBack: backUrl, 
+          faceImage: faceUrl 
+        }),
       });
-      if (res.ok) setShowSuccessPopup(true);
-      else throw new Error();
-    } catch (err) { alert("Submission error."); } 
-    finally { setIsSubmitting(false); }
+
+      if (res.ok) {
+        setShowSuccessPopup(true);
+      } else {
+        throw new Error("Failed to save KYC record.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Submission error.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) return <div className="h-screen flex items-center justify-center bg-white"><Loader2 className="animate-spin text-pink-500" size={40} /></div>;
@@ -151,7 +173,8 @@ export default function ProfessionalKYC() {
           <div className="bg-white rounded-[2rem] p-8 max-w-sm w-full text-center shadow-2xl">
             <AlertCircle size={48} className="text-red-500 mx-auto mb-4" />
             <h3 className="text-2xl font-black text-gray-900 mb-2">Login Required</h3>
-            <Link href="/login" className="block w-full bg-pink-600 text-white font-black py-4 rounded-xl mt-4 shadow-lg">Go to Login</Link>
+            <p className="text-gray-500 mb-6 text-sm">Please log in to continue your verification.</p>
+            <Link href="/login" className="block w-full bg-pink-600 text-white font-black py-4 rounded-xl shadow-lg">Go to Login</Link>
           </div>
         </div>
       )}
@@ -161,17 +184,14 @@ export default function ProfessionalKYC() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
           <div className="bg-white rounded-[2.5rem] p-10 max-w-md w-full text-center shadow-2xl">
             <CheckCircle2 size={60} className="text-green-500 mx-auto mb-4" />
-         <h2 className="text-3xl font-black text-gray-900 mb-2">
-            Verification Submitted Successfully!
-          </h2>
-          <p className="text-gray-500 mb-8">
-            Your KYC documents have been submitted and are under review. 
-            Your application will be approved within 24 hours.
-          </p>
-         <Link href="/" className="inline-flex items-center justify-center px-8 py-3 text-white font-semibold bg-gray-900 rounded-xl hover:bg-gray-800 transition duration-300 shadow-lg hover:shadow-xl">
-            OK
-          </Link>
-       </div>
+            <h2 className="text-3xl font-black text-gray-900 mb-2">Verification Submitted!</h2>
+            <p className="text-gray-500 mb-8 font-medium">
+              Your application is under review. You will be verified within 24 hours.
+            </p>
+            <Link href="/" className="inline-flex px-12 py-4 text-white font-black bg-gray-900 rounded-2xl hover:bg-gray-800 transition shadow-xl">
+              Back to Home
+            </Link>
+          </div>
         </div>
       )}
 
@@ -180,7 +200,7 @@ export default function ProfessionalKYC() {
         <div className="bg-white rounded-3xl p-5 mb-8 shadow-sm border border-pink-50 flex items-center justify-between">
            {[1, 2, 3].map((s) => (
              <div key={s} className="flex items-center gap-2">
-                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${step >= s ? 'bg-pink-600 text-white shadow-lg' : 'bg-pink-50 text-pink-300'}`}>
+                <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${step >= s ? 'bg-pink-600 text-white shadow-lg shadow-pink-100' : 'bg-pink-50 text-pink-300'}`}>
                   {step > s ? <CheckCircle2 size={16} /> : s}
                 </div>
                 <span className={`hidden md:block text-[10px] font-black uppercase tracking-wider ${step >= s ? 'text-gray-900' : 'text-gray-300'}`}>
@@ -191,35 +211,35 @@ export default function ProfessionalKYC() {
            ))}
         </div>
 
-        <div className="bg-white rounded-[2.5rem] shadow-xl border border-pink-50 p-8 md:p-12">
+        <div className="bg-white rounded-[2.5rem] shadow-xl border border-pink-50 p-8 md:p-12 transition-all">
           {step === 1 && (
             <div className="space-y-6 animate-in fade-in duration-500">
               <h2 className="text-3xl font-black text-gray-900">Identity Details</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input type="text" placeholder="Full Name" className="p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder-gray-400 ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" 
+                <input type="text" placeholder="Full Name" className="p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" 
                   value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
                 
-                <input type="text" placeholder="Father Name" className="p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder-gray-400 ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" 
+                <input type="text" placeholder="Father Name" className="p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" 
                   value={formData.fatherName} onChange={e => setFormData({...formData, fatherName: e.target.value})} />
                 
                 <div className="relative">
-                    <input type="text" placeholder="CNIC (13 Digits)" className={`w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder-gray-400 ring-1 outline-none transition-all ${formData.documentNumber && !isCnicValid ? 'ring-red-400 focus:ring-red-500' : 'ring-gray-100 focus:ring-pink-500'}`} 
+                    <input type="text" placeholder="CNIC (13 Digits)" className={`w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 ring-1 outline-none transition-all ${formData.documentNumber && !isCnicValid ? 'ring-red-400 focus:ring-red-500' : 'ring-gray-100 focus:ring-pink-500'}`} 
                     value={formData.documentNumber} onChange={handleCnicChange} />
-                    <span className="absolute right-4 top-4 text-[10px] text-gray-400">{formData.documentNumber.length}/13</span>
+                    <span className="absolute right-4 top-4 text-[10px] text-gray-400 font-bold">{formData.documentNumber.length}/13</span>
                 </div>
 
                 <div className="relative">
-                    <input type="text" placeholder="Expiry (DD/MM/YYYY)" className={`w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 placeholder-gray-400 ring-1 outline-none transition-all ${formData.documentExpiry && !isDateValid ? 'ring-red-400 focus:ring-red-500' : 'ring-gray-100 focus:ring-pink-500'}`} 
+                    <input type="text" placeholder="Expiry (DD/MM/YYYY)" className={`w-full p-4 bg-gray-50 rounded-2xl font-bold text-gray-800 ring-1 outline-none transition-all ${formData.documentExpiry && !isDateValid ? 'ring-red-400 focus:ring-red-500' : 'ring-gray-100 focus:ring-pink-500'}`} 
                     value={formData.documentExpiry} onChange={handleDateChange} maxLength={10} />
                 </div>
               </div>
-              <button disabled={!isStep1Valid} onClick={() => setStep(2)} className="w-full bg-pink-600 disabled:bg-gray-200 disabled:text-gray-400 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Continue</button>
+              <button disabled={!isStep1Valid} onClick={() => setStep(2)} className="w-full bg-pink-600 disabled:bg-gray-100 disabled:text-gray-300 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Continue</button>
             </div>
           )}
 
           {step === 2 && (
             <div className="space-y-6 animate-in slide-in-from-right duration-500">
-              <button onClick={() => setStep(1)} className="flex items-center gap-2 text-pink-500 font-bold text-xs uppercase hover:translate-x-[-4px] transition-transform"><ArrowLeft size={16} /> Back to Details</button>
+              <button onClick={() => setStep(1)} className="flex items-center gap-2 text-pink-500 font-bold text-xs uppercase hover:-translate-x-1 transition-transform"><ArrowLeft size={16} /> Back</button>
               <h2 className="text-3xl font-black text-gray-900">Upload ID Cards</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {['documentFront', 'documentBack'].map((side) => (
@@ -238,13 +258,13 @@ export default function ProfessionalKYC() {
                   </label>
                 ))}
               </div>
-              <button disabled={!isStep2Valid} onClick={() => setStep(3)} className="w-full bg-pink-600 disabled:bg-gray-200 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Next: Face Verify</button>
+              <button disabled={!isStep2Valid} onClick={() => setStep(3)} className="w-full bg-pink-600 disabled:bg-gray-100 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Next: Face Verify</button>
             </div>
           )}
 
           {step === 3 && (
             <div className="text-center space-y-8 animate-in slide-in-from-right duration-500">
-              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-pink-500 font-bold text-xs uppercase float-left"><ArrowLeft size={16} /> Back to Docs</button>
+              <button onClick={() => setStep(2)} className="flex items-center gap-2 text-pink-500 font-bold text-xs uppercase float-left"><ArrowLeft size={16} /> Back</button>
               <div className="clear-both"></div>
               <h2 className="text-3xl font-black text-gray-900">Live Selfie</h2>
               <div className="relative w-64 h-64 mx-auto rounded-[3.5rem] p-1.5 bg-gradient-to-tr from-pink-500 to-pink-200 shadow-2xl overflow-hidden">
@@ -253,11 +273,11 @@ export default function ProfessionalKYC() {
                 </div>
               </div>
               {!capturedFace ? (
-                <button onClick={capturePhoto} className="w-full bg-gray-950 text-white py-5 rounded-2xl font-black shadow-xl">Take Selfie</button>
+                <button onClick={capturePhoto} className="w-full bg-gray-950 text-white py-5 rounded-2xl font-black shadow-xl hover:bg-black transition-all">Take Selfie</button>
               ) : (
                 <div className="space-y-4">
-                  <button onClick={handleFinalSubmit} disabled={isSubmitting} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl">
-                    {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : "Submit Application"}
+                  <button onClick={handleFinalSubmit} disabled={isSubmitting} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl flex items-center justify-center">
+                    {isSubmitting ? <Loader2 className="animate-spin" /> : "Submit Application"}
                   </button>
                   <button onClick={() => setCapturedFace(null)} className="text-pink-500 font-black text-[10px] uppercase tracking-widest hover:underline">Retake Selfie</button>
                 </div>
