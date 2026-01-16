@@ -168,7 +168,10 @@ export default function ProfessionalKYC() {
             Your KYC documents have been submitted and are under review. 
             Your application will be approved within 24 hours.
           </p>
-          </div>
+         <Link href="/" className="inline-flex items-center justify-center px-8 py-3 text-white font-semibold bg-gray-900 rounded-xl hover:bg-gray-800 transition duration-300 shadow-lg hover:shadow-xl">
+            OK
+          </Link>
+       </div>
         </div>
       )}
 
