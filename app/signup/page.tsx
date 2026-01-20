@@ -184,7 +184,26 @@ export default function SignupForm() {
             >
                 {isLoading ? 'Signing Up...' : 'Sign Up'}
             </motion.button>
-            
+    <motion.button
+  type="button"
+  whileHover={{ scale: 1.01 }}
+  whileTap={{ scale: 0.99 }}
+  onClick={() => {
+    window.location.href = "/api/auth/google";
+  }}
+  disabled={isLoading}
+  className="w-full flex items-center justify-center gap-3 py-3 rounded-lg 
+             border shadow-md transition-all font-medium 
+             disabled:opacity-50 disabled:cursor-not-allowed "
+  style={{
+    color: "black",
+    backgroundColor: "#fff",
+  }}
+>
+  <img src="/google.png" className="w-5 h-5" alt="Google" />
+  Continue with Google
+</motion.button>
+
             {/* Login Link */}
             <div className="text-center text-sm pt-2">
                 <span className="text-gray-600">Already have an account? </span>
