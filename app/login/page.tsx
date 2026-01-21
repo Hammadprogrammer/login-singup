@@ -48,13 +48,7 @@ const LoginPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-start pt-20 px-4 sm:px-6">
 
-      {/* ... (Header/Logo part same rahega) */}
-      <div className="mb-6">
-        <Link href="/" className="text-3xl font-bold tracking-widest text-gray-800">
-          <span className="font-serif">CLOTING</span>
-          <span className={`font-light ${textPink}`}>BRAND</span>
-        </Link>
-      </div>
+    
 
       <div className="bg-white w-full max-w-lg sm:max-w-xl p-10 rounded-xl shadow-xl border border-gray-200 transition-all duration-300">
 
@@ -120,25 +114,25 @@ const LoginPage: React.FC = () => {
 
         {/* ... (Don't have an account? part same rahega) */}
          <motion.button
-  type="button"
-  whileHover={{ scale: 1.01 }}
-  whileTap={{ scale: 0.99 }}
-  onClick={() => {
-    window.location.href = "/api/auth/google";
-  }}
-  disabled={isLoading}
-  className="w-full flex items-center justify-center gap-3 py-3 rounded-lg 
-             border shadow-md transition-all font-medium 
-             disabled:opacity-50 disabled:cursor-not-allowed mt-5"
-  style={{
-    borderColor: primaryPink,
-    color: "black",
-    backgroundColor: "#fff",
-  }}
->
-  <img src="/google.png" className="w-5 h-5" alt="Google" />
-  Continue with Google
-</motion.button>
+            type="button"
+            whileHover={{ scale: 1.01 }}
+            whileTap={{ scale: 0.99 }}
+            onClick={() => {
+              window.location.href = "/api/auth/google";
+            }}
+            disabled={isLoading}
+            className="w-full flex items-center justify-center gap-3 py-3 rounded-lg 
+                      border shadow-md transition-all font-medium 
+                      disabled:opacity-50 disabled:cursor-not-allowed mt-5"
+            style={{
+              borderColor: primaryPink,
+              color: "black",
+              backgroundColor: "#fff",
+            }}
+          >
+            <img src="/google.png" className="w-5 h-5" alt="Google" />
+            Continue with Google
+          </motion.button>
         <div className="text-center text-sm mt-10">
 
 

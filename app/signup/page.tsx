@@ -85,13 +85,13 @@ export default function SignupForm() {
   const errorTextStyle = "text-xs text-red-500 mt-1";
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
+    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4 ">
         <motion.form
             onSubmit={handleSignup}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="w-full max-w-md mx-auto p-8 rounded-lg shadow-xl bg-white space-y-6"
+            className="w-full max-w-[600px] mx-auto p-8 rounded-lg shadow-xl bg-white space-y-6"
         >
             {/* HEADER */}
             <h1 
