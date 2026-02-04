@@ -488,9 +488,9 @@ export default function LuxuryProductPage() {
 
           <div className="flex-1 overflow-y-auto p-6 md:p-8 space-y-6 md:space-y-8 no-scrollbar">
             {cart.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-zinc-300 space-y-4">
+              <div className="h-full flex flex-col items-center justify-center text-zinc-900 space-y-4">
                  <ShoppingBag size={40} strokeWidth={0.5} />
-                 <p className="uppercase tracking-[0.2em] text-[10px]">Your bag is empty</p>
+                 <p className="uppercase tracking-[0.2em] text-[10px]">Your Cart is empty</p>
               </div>
             ) : (
               cart.map((item) => (
@@ -646,10 +646,10 @@ export default function LuxuryProductPage() {
                 className="bg-zinc-900 text-white py-4 md:py-6 text-[9px] md:text-[10px] tracking-[0.3em] md:tracking-[0.4em] uppercase font-black hover:bg-black transition-all flex items-center justify-center gap-3 md:gap-4 disabled:opacity-50"
               >
                 {isUpdating ? <Loader2 className="animate-spin" size={18} /> : (product.saleType === 'rent' ? <Calendar size={18} /> : <ShoppingBag size={18} />)} 
-                {product.saleType === 'rent' ? 'Reserve Now' : 'Add to Bag'}
+                {product.saleType === 'rent' ? 'Reserve Now' : 'Add to Cart'}
               </button>
               <button onClick={() => setIsCartOpen(true)} className="border border-zinc-200 py-4 md:py-6 text-[9px] md:text-[10px] tracking-[0.3em] uppercase font-bold text-zinc-900 bg-white">
-                View Bag ({cart.length})
+                View Cart ({cart.length})
               </button>
             </div>
             
