@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { SlidersHorizontal, Heart, ChevronDown, Check, X, Search, ImageOff, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { SlidersHorizontal, Heart, ChevronDown, Check, X, ImageOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 // --- CONFIGURATION DATA ---
@@ -25,7 +25,7 @@ const COLOR_PALETTE = [
 
 const SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "FREE SIZE"];
 
-// --- GRID ICONS COMPONENTS ---
+// --- GRID ICONS ---
 const GridIcon = ({ cols, active }: { cols: number; active: boolean }) => {
   if (cols === 2) return (
     <div className="flex gap-0.5">
@@ -54,7 +54,7 @@ interface Product {
   categories: string[];
   subCategories: string[];
   productTypes: string[];
-  sizes?: string[]; // Added sizes field
+  sizes?: string[];
   isPublished: boolean;
 }
 
@@ -65,7 +65,7 @@ interface ProductTemplateProps {
   pageTitle: string;
 }
 
-const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType, pageTitle }: ProductTemplateProps) => {
+const ProductTemplate = ({ targetCategory, targetSubCategory, pageTitle }: ProductTemplateProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [cols, setCols] = useState(4);
@@ -75,12 +75,11 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
   const [favorites, setFavorites] = useState<string[]>([]);
   const [processingFavs, setProcessingFavs] = useState<string[]>([]);
   
-  // Filtering States
   const [sortBy, setSortBy] = useState<'default' | 'low-to-high' | 'high-to-low'>('default');
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [selectedSizes, setSelectedSizes] = useState<string[]>([]); // Size filter state
-  const [maxPrice, setMaxPrice] = useState<number>(50000);
+  const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+  const [maxPrice] = useState<number>(100000);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -129,12 +128,10 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
     }
   };
 
-  // --- UPDATED FILTER LOGIC (Included Sizes) ---
   const finalProducts = useMemo(() => {
     let result = products.filter(p => {
       const brandMatch = selectedBrands.length === 0 || p.brands?.some(b => selectedBrands.includes(b));
       const sizeMatch = selectedSizes.length === 0 || p.sizes?.some(s => selectedSizes.includes(s));
-      // Note: Color filtering requires 'colors' field in product data, currently palette is UI only
       return brandMatch && sizeMatch && p.price <= maxPrice;
     });
 
@@ -144,13 +141,14 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
   }, [products, sortBy, selectedBrands, selectedSizes, maxPrice]);
 
   return (
-    <div className="w-full bg-white text-black min-h-screen font-sans">
-      {/* AUTH MODAL */}
+    <div className="relative w-full bg-white text-black min-h-screen font-sans">
+      
+      {/* 1. AUTH MODAL - Highest Priority */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center px-4"> 
-          <div className="fixed inset-0 bg-black/20 backdrop-blur-md" onClick={() => setShowAuthModal(false)} />
-          <div className="relative bg-white w-full max-w-sm p-10 text-center shadow-2xl rounded-2xl animate-in fade-in zoom-in duration-300 border border-gray-100">
-            <button onClick={() => setShowAuthModal(false)} className="absolute top-5 right-5 text-gray-400 hover:text-black transition-colors">
+        <div className="fixed inset-0 z-[12000] flex items-center justify-center px-4"> 
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-md" onClick={() => setShowAuthModal(false)} />
+          <div className="relative bg-white w-full max-w-sm p-10 text-center shadow-2xl rounded-2xl border border-gray-100">
+            <button onClick={() => setShowAuthModal(false)} className="absolute top-5 right-5 text-gray-400 hover:text-black">
               <X size={22} strokeWidth={1.5} />
             </button>
             <div className="mx-auto mb-6 w-16 h-16 flex items-center justify-center bg-rose-50 rounded-full">
@@ -158,15 +156,15 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
             </div>
             <h2 className="text-[16px] uppercase tracking-[0.2em] font-semibold mb-2">Save to Wishlist</h2>
             <p className="text-[12px] text-gray-400 mb-8 italic">Sign in to keep your favorite pieces.</p>
-            <Link href="/login" className="block w-full bg-black text-white text-[11px] uppercase tracking-widest py-4 rounded-full font-bold hover:bg-zinc-800 transition-all active:scale-95">
+            <Link href="/login" className="block w-full bg-black text-white text-[11px] uppercase tracking-widest py-4 rounded-full font-bold hover:bg-zinc-800 transition-all">
               Sign In Now
             </Link>
           </div>
         </div>
       )}
 
-      {/* SIDEBAR DRAWER (Filters) */}
-      <div className={`fixed inset-0 z-[9999] transition-opacity duration-500 ${showSidebar ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+      {/* 2. SIDEBAR DRAWER - Above everything else */}
+      <div className={`fixed inset-0 z-[11000] transition-opacity duration-500 ${showSidebar ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
         <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={() => setShowSidebar(false)} />
         <aside className={`absolute top-0 right-0 h-full w-full max-w-[400px] bg-white shadow-2xl transition-transform duration-500 ease-out ${showSidebar ? 'translate-x-0' : 'translate-x-full'}`}>
           <div className="flex flex-col h-full uppercase tracking-[0.15em] text-[11px] font-medium">
@@ -176,7 +174,6 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
             </div>
             
             <div className="flex-1 overflow-y-auto px-8 py-6 space-y-12">
-              {/* BRAND FILTER */}
               <div>
                 <h3 className="mb-6 border-l-2 border-black pl-3 font-bold">Designers</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -189,26 +186,24 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                 </div>
               </div>
 
-              {/* SIZE FILTER (Added) */}
               <div>
                 <h3 className="mb-6 border-l-2 border-black pl-3 font-bold">Size</h3>
                 <div className="grid grid-cols-4 gap-2">
                   {SIZES.map(size => (
                     <button key={size} onClick={() => setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size])}
-                      className={`py-3 border text-[10px] text-center transition-all ${selectedSizes.includes(size) ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-400 hover:border-gray-300'}`}>
+                      className={`py-3 border text-[10px] text-center transition-all ${selectedSizes.includes(size) ? 'bg-black text-white border-black' : 'border-gray-100 text-gray-400'}`}>
                       {size}
                     </button>
                   ))}
                 </div>
               </div>
 
-              {/* COLOR PALETTE */}
               <div>
                 <h3 className="mb-6 border-l-2 border-black pl-3 font-bold">Palette</h3>
                 <div className="grid grid-cols-4 gap-4">
                   {COLOR_PALETTE.map(color => (
                     <button key={color.name} onClick={() => setSelectedColors(prev => prev.includes(color.name) ? prev.filter(c => c !== color.name) : [...prev, color.name])}
-                      className={`w-8 h-8 rounded-full border transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-black ring-offset-2' : 'border-gray-200'}`} style={{ backgroundColor: color.hex }} title={color.name} />
+                      className={`w-8 h-8 rounded-full border transition-all ${selectedColors.includes(color.name) ? 'ring-2 ring-black ring-offset-2' : 'border-gray-200'}`} style={{ backgroundColor: color.hex }} />
                   ))}
                 </div>
               </div>
@@ -222,9 +217,9 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
         </aside>
       </div>
 
-      {/* STICKY NAV */}
-      <nav className="sticky top-0 z-[1000] bg-white/90 backdrop-blur-xl border-b border-gray-100">
-        <div className="max-w-[1800px] mx-auto px-6 md:px-12 py-6 flex items-center justify-between">
+      {/* 3. STICKY NAV - Fixed Z-index to stay on top of products but below drawer */}
+      <nav className="sticky top-0 z-[50] bg-white border-b border-gray-100 shadow-sm">
+        <div className="max-w-[1800px] mx-auto px-6 md:px-12 py-6 flex items-center justify-between bg-white/95 backdrop-blur-md">
           <div className="flex items-center gap-8">
             <button onClick={() => setShowSidebar(true)} className="flex items-center gap-3 text-[10px] md:text-[11px] uppercase tracking-widest font-black">
               <SlidersHorizontal size={16} /> Filter
@@ -234,7 +229,7 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                 Sort <ChevronDown size={14} className={showSort ? 'rotate-180 transition-transform' : ''} />
               </button>
               {showSort && (
-                <div className="absolute top-full left-0 mt-5 w-56 bg-white border border-gray-50 shadow-2xl py-2 animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-full left-0 mt-5 w-56 bg-white border border-gray-100 shadow-2xl py-2">
                   {['default', 'low-to-high', 'high-to-low'].map((s) => (
                     <button key={s} onClick={() => {setSortBy(s as any); setShowSort(false);}} className="w-full px-6 py-4 text-left text-[9px] uppercase tracking-[0.2em] hover:bg-gray-50 flex justify-between items-center">
                       {s.replace('-', ' ')} {sortBy === s && <Check size={12} />}
@@ -245,13 +240,16 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
             </div>
           </div>
 
-          <div className="absolute left-1/2 -translate-x-1/2">
-             <h1 className="text-xl md:text-3xl font-light tracking-[0.5em] uppercase font-serif text-center bg-gradient-to-b from-black to-gray-400 bg-clip-text text-transparent">NEW IN</h1>
+          {/* Heading - properly contained */}
+          <div className="absolute left-1/2 -translate-x-1/2 pointer-events-none">
+             <h1 className="text-xl md:text-3xl font-light tracking-[0.5em] uppercase font-serif text-center bg-gradient-to-b from-black to-gray-400 bg-clip-text text-transparent">
+               {pageTitle || "NEW IN"}
+             </h1>
           </div>
 
           <div className="hidden lg:flex items-center gap-8 border-l pl-8 border-gray-100">
             {[6, 4, 2].map(n => (
-              <button key={n} onClick={() => setCols(n)} className="transition-all active:scale-95">
+              <button key={n} onClick={() => setCols(n)} className="hover:scale-110 transition-transform">
                 <GridIcon cols={n} active={cols === n} />
               </button>
             ))}
@@ -259,15 +257,15 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
         </div>
       </nav>
 
-      {/* PRODUCT GRID */}
-      <main className="max-w-[1800px] mx-auto px-4 md:px-12 py-12">
+      {/* PRODUCT GRID - Stays behind navbar */}
+      <main className="relative z-0 max-w-[1800px] mx-auto px-4 md:px-12 py-12">
         {loading ? (
            <div className="grid grid-cols-2 lg:grid-cols-4 gap-12 animate-pulse">
              {[...Array(8)].map((_, i) => <div key={i} className="aspect-[3/4] bg-gray-50 rounded-sm" />)}
            </div>
         ) : finalProducts.length === 0 ? (
           <div className="text-center py-40">
-            <p className="text-gray-400 uppercase tracking-widest text-[11px]">No products found matching your filters.</p>
+            <p className="text-gray-400 uppercase tracking-widest text-[11px]">No items found matching your selection.</p>
           </div>
         ) : (
           <div className={`grid transition-all duration-700 ease-in-out ${
@@ -287,13 +285,13 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                           <img 
                             src={p.imageUrls[0]} 
                             alt={p.name} 
-                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ease-in-out ${p.imageUrls[1] ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
+                            className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${p.imageUrls[1] ? 'group-hover:opacity-0' : 'group-hover:scale-105'}`} 
                           />
                           {p.imageUrls[1] && (
                             <img 
                               src={p.imageUrls[1]} 
                               alt={p.name} 
-                              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-700 ease-in-out scale-105 group-hover:scale-100" 
+                              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-all duration-700 scale-105 group-hover:scale-100" 
                             />
                           )}
                         </>
@@ -302,11 +300,10 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                       )}
                     </Link>
                     
-                    {/* FAVORITE BUTTON WITH LOADING STATE */}
                     <button 
                       onClick={(e) => toggleFavorite(e, p.id)}
                       disabled={isProcessing}
-                      className={`absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-all duration-300 ${isProcessing ? 'opacity-70' : 'active:scale-90 hover:bg-white'}`}
+                      className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-white/80 backdrop-blur-sm shadow-sm transition-transform active:scale-90"
                     >
                       {isProcessing ? (
                         <Loader2 size={16} className="animate-spin text-gray-400" />
