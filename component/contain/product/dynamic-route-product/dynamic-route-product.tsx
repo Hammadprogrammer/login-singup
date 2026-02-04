@@ -464,11 +464,11 @@ export default function LuxuryProductPage() {
     });
   };
 
-  if (loading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin text-zinc-200" size={40} /></div>;
+  if (loading) return <div className="flex h-screen items-center justify-center bg-white"><Loader2 className="animate-spin text-pink-300" size={40} /></div>;
   if (!product) return <div className="text-center py-40 font-bold tracking-widest uppercase">Product Not Found</div>;
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 selection:bg-zinc-900 selection:text-white">
+    <div className="min-h-screen bg-[#FDFDFD] text-zinc-900 selection:bg-zinc-900 selection:text-white mt-[150px]">
       
       {/* --- BAG DRAWER --- */}
       <div 

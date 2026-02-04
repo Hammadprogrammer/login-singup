@@ -12,13 +12,13 @@ export default function ClientLayout({
   const pathname = usePathname();
 
   // Pages jahan Navbar & Footer nahi dikhana
-  const hideLayoutPaths = ["/login", "/signup" , "/dashboard"];
+  const hideLayoutPaths = ["/login", "/signup" , "/dashboard" , "/cart"];
 
   const hideLayout = hideLayoutPaths.includes(pathname);
 
   return (
     <>
-      {/* {!hideLayout && <Navbar />} */}
+      {!hideLayout && <Navbar />}
       {children}
       {!hideLayout && <Footer />}
     </>
