@@ -4,7 +4,6 @@ import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-// Helper to verify user
 function getAuthUser(req: NextRequest) {
   try {
     const token = req.cookies.get("token")?.value;
@@ -13,7 +12,6 @@ function getAuthUser(req: NextRequest) {
   } catch { return null; }
 }
 
-// GET: Fetch all items
 export async function GET(req: NextRequest) {
   const user = getAuthUser(req);
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -26,17 +24,20 @@ export async function GET(req: NextRequest) {
   return NextResponse.json(items);
 }
 
-// POST: Add or Increment
 export async function POST(req: NextRequest) {
   try {
     const user = getAuthUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const body = await req.json(); // Pehle JSON parse karein
-    const { productId, quantity, size } = body;
+    const { productId, quantity, size } = await req.json();
 
-    const existing = await prisma.cart.findUnique({
-      where: { userId_productId: { userId: user.id, productId } }
+    // Size-specific check: logic updated to handle multiple sizes of same product
+    const existing = await prisma.cart.findFirst({
+      where: { 
+        userId: user.id, 
+        productId: productId,
+        size: size 
+      }
     });
 
     if (existing) {
@@ -57,12 +58,10 @@ export async function POST(req: NextRequest) {
     });
     return NextResponse.json(newItem, { status: 201 });
   } catch (err: any) {
-    console.error("API POST ERROR:", err.message);
-    return NextResponse.json({ error: "Server Error", details: err.message }, { status: 500 });
+    return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }
 
-// PATCH: Update quantity
 export async function PATCH(req: NextRequest) {
   try {
     const { cartItemId, quantity } = await req.json();
@@ -74,7 +73,6 @@ export async function PATCH(req: NextRequest) {
   } catch { return NextResponse.json({ error: "Update failed" }, { status: 500 }); }
 }
 
-// DELETE: Remove item
 export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
