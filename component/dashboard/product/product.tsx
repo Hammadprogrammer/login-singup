@@ -5,142 +5,215 @@ import {
   AlertCircle, Sparkles, Image as ImageIcon, Ruler, Pipette, CheckCircle2, ChevronDown
 } from 'lucide-react';
 
-const CONFIG = {
-  categories: ["Dress", "Accessories"] as const,
+// const CONFIG = {
+//   categories: ["Dress", "Accessories"] as const,
 
   
+//   subCategories: {
+// "Dress": [
+//   "Shalwar Kameez",
+//   "Maxi",
+//   "Kurti",
+//   "Kurta",
+//   "Kurta Pajama",
+//   "Lehenga",
+//   "Gown",
+//   "Abaya",
+//   "Jumpsuit",
+//   "Frock",
+//   "Anarkali",
+//   "Saree",
+//   "Sharara",
+//   "Gharara",
+//   "Palazzo Suit",
+//   "Pant Suit",
+//   "Kaftan",
+//   "Cape Dress",
+//   "Co-Ord Set",
+//   "Skirt",
+//   "Blouse",
+//   "Peplum Top",
+//   "Tunics",
+//   "Bridal Dress",
+//   "Party Wear Dress",
+//   "Casual Dress",
+//   "Formal Dress"
+// ],
+//     "Accessories": ["Handbags", "Jewelry", "Watches", "Heels", "Clutches"]
+//   } as Record<string, string[]>,
+// subCategoryTypes: {
+//   // Dress
+//   "Shalwar Kameez": ["Stitched", "Unstitched", "Semi-Stitched"],
+//   "Maxi": ["Party Wear", "Bridal", "Casual", "Formal"],
+//   "Kurti": ["Cotton", "Lawn", "Silk", "Embroidered"],
+//   "Kurta": ["Cotton", "Linen", "Printed", "Embroidered"],
+//   "Kurta Pajama": ["Casual", "Festive", "Wedding Wear"],
+//   "Lehenga": ["Bridal Wear", "Party Wear", "Formal"],
+//   "Gown": ["Evening Gown", "Bridal Gown", "Party Gown"],
+//   "Abaya": ["Front Open", "Butterfly Style", "Kaftan", "Closed"],
+//   "Jumpsuit": ["Casual", "Party Wear", "Formal"],
+//   "Frock": ["Casual", "Party Wear", "Kids Wear"],
+//   "Anarkali": ["Bridal", "Party Wear", "Formal"],
+//   "Saree": ["Banarasi", "Silk", "Chiffon", "Net", "Ready to Wear"],
+//   "Sharara": ["Bridal", "Party Wear", "Festive"],
+//   "Gharara": ["Traditional", "Bridal", "Party Wear"],
+//   "Palazzo Suit": ["Casual", "Formal", "Party Wear"],
+//   "Pant Suit": ["Office Wear", "Formal", "Casual"],
+//   "Kaftan": ["Casual", "Resort Wear", "Party Wear"],
+//   "Cape Dress": ["Party Wear", "Formal"],
+//   "Co-Ord Set": ["Casual", "Lounge Wear", "Party Wear"],
+//   "Skirt": ["Mini", "Midi", "Maxi"],
+//   "Blouse": ["Sleeveless", "Full Sleeve", "Back Open"],
+//   "Peplum Top": ["Casual", "Party Wear"],
+//   "Tunics": ["Cotton", "Printed", "Embroidered"],
+//   "Bridal Dress": ["Lehenga Style", "Gown Style", "Traditional"],
+//   "Party Wear Dress": ["Western", "Eastern", "Fusion"],
+//   "Casual Dress": ["Daily Wear", "Summer Wear"],
+//   "Formal Dress": ["Office Wear", "Evening Wear"],
+
+//   // Accessories
+//   "Handbags": ["Tote Bag", "Crossbody", "Shoulder Bag", "Backpack"],
+//   "Jewelry": ["Necklace Set", "Earrings", "Bangles", "Rings"],
+//   "Watches": ["Analog", "Digital", "Automatic", "Smart Watch"],
+//   "Heels": ["Stilettos", "Block Heels", "Pumps", "Wedges"],
+//   "Clutches": ["Bridal Clutch", "Box Clutch", "Envelope Clutch"]
+// } as Record<string, string[]>,
+
+
+
+
+
+//   brands: {
+  //   "Dress": ["Khaadi",
+  // "Sana Safinaz",
+  // "Maria.B",
+  // "Sapphire",
+  // "Gul Ahmed",
+  // "Elan",
+  // "Asim Jofa",
+  // "Nishat Linen",
+  // "Bonanza Satrangi",
+  // "Alkaram Studio",
+  // "Bareeze",
+  // "Ethnic by Outfitters",
+  // "Limelight",
+  // "J.",
+  // "Generation",
+  // "Zellbury",
+  // "Beechtree",
+  // "Cross Stitch",
+  // "Charizma",
+  // "Saya",
+  // "Motifz",
+  // "Rang Rasiya",
+  // "Iznik",
+  // "Bin Saeed",
+  // "Anaya by Kiran Chaudhry",
+  // "Qalamkar",
+  // "Noor by Saadia Asad",
+  // "Faraz Manan",
+  // "HSY",
+  // "Republic by Omar Farooq",
+  // "Zara Shahjahan",
+  // "Sanam Chaudhri",
+  // "Firdous",
+  // "Kayseria",
+  // "Sobia Nazir",
+  // "Tena Durrani",
+//   "Faiza Saqlain"],
+//     "Accessories": ["Gucci", "Rolex", "Charles & Keith", "Hublot", "Pandora", "Aldo"]
+//   } as Record<string, string[]>,
+//   conditions: ["NEW", "OLD"] as const,
+//   saleTypes: ["SELL", "RENT"] as const,
+//   sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+// colors: [
+//   { name: "Red", hex: "#FF0000" },
+//   { name: "Orange", hex: "#FFA500" },
+//   { name: "Yellow", hex: "#FFFF00" },
+//   { name: "Green", hex: "#008000" },
+//   { name: "Blue", hex: "#0000FF" },
+//   { name: "Purple", hex: "#800080" },
+//   { name: "Pink", hex: "#FFC0CB" },
+//   { name: "Brown", hex: "#A52A2A" },
+//   { name: "Black", hex: "#000000" },
+//   { name: "White", hex: "#FFFFFF" },
+//   { name: "Gray", hex: "#808080" },
+//   { name: "Navy", hex: "#000080" }
+// ]
+  
+// };
+
+
+const CONFIG = {
+  // Added "NEW IN" as the first category
+  categories: ["NEW IN", "READY TO WEAR", "COUTURE", "WINTER EDIT", "UNSTITCHED", "ACCESSORIES"] as const,
+
   subCategories: {
-"Dress": [
-  "Shalwar Kameez",
-  "Maxi",
-  "Kurti",
-  "Kurta",
-  "Kurta Pajama",
-  "Lehenga",
-  "Gown",
-  "Abaya",
-  "Jumpsuit",
-  "Frock",
-  "Anarkali",
-  "Saree",
-  "Sharara",
-  "Gharara",
-  "Palazzo Suit",
-  "Pant Suit",
-  "Kaftan",
-  "Cape Dress",
-  "Co-Ord Set",
-  "Skirt",
-  "Blouse",
-  "Peplum Top",
-  "Tunics",
-  "Bridal Dress",
-  "Party Wear Dress",
-  "Casual Dress",
-  "Formal Dress"
-],
-    "Accessories": ["Handbags", "Jewelry", "Watches", "Heels", "Clutches"]
+    "NEW IN": ["LATEST ARRIVALS"],
+    "READY TO WEAR": ["EVERYDAY", "OCCASION WEAR", "ALL"],
+    "COUTURE": ["BRIDAL", "SEMI-FORMAL"],
+    "WINTER EDIT": ["SEASONAL PICKS"],
+    "UNSTITCHED": ["Lawn", "Silk", "Cotton", "Embroidered"],
+    "ACCESSORIES": ["Handbags", "Jewelry", "Watches", "Heels", "Clutches"]
   } as Record<string, string[]>,
-subCategoryTypes: {
-  // Dress
-  "Shalwar Kameez": ["Stitched", "Unstitched", "Semi-Stitched"],
-  "Maxi": ["Party Wear", "Bridal", "Casual", "Formal"],
-  "Kurti": ["Cotton", "Lawn", "Silk", "Embroidered"],
-  "Kurta": ["Cotton", "Linen", "Printed", "Embroidered"],
-  "Kurta Pajama": ["Casual", "Festive", "Wedding Wear"],
-  "Lehenga": ["Bridal Wear", "Party Wear", "Formal"],
-  "Gown": ["Evening Gown", "Bridal Gown", "Party Gown"],
-  "Abaya": ["Front Open", "Butterfly Style", "Kaftan", "Closed"],
-  "Jumpsuit": ["Casual", "Party Wear", "Formal"],
-  "Frock": ["Casual", "Party Wear", "Kids Wear"],
-  "Anarkali": ["Bridal", "Party Wear", "Formal"],
-  "Saree": ["Banarasi", "Silk", "Chiffon", "Net", "Ready to Wear"],
-  "Sharara": ["Bridal", "Party Wear", "Festive"],
-  "Gharara": ["Traditional", "Bridal", "Party Wear"],
-  "Palazzo Suit": ["Casual", "Formal", "Party Wear"],
-  "Pant Suit": ["Office Wear", "Formal", "Casual"],
-  "Kaftan": ["Casual", "Resort Wear", "Party Wear"],
-  "Cape Dress": ["Party Wear", "Formal"],
-  "Co-Ord Set": ["Casual", "Lounge Wear", "Party Wear"],
-  "Skirt": ["Mini", "Midi", "Maxi"],
-  "Blouse": ["Sleeveless", "Full Sleeve", "Back Open"],
-  "Peplum Top": ["Casual", "Party Wear"],
-  "Tunics": ["Cotton", "Printed", "Embroidered"],
-  "Bridal Dress": ["Lehenga Style", "Gown Style", "Traditional"],
-  "Party Wear Dress": ["Western", "Eastern", "Fusion"],
-  "Casual Dress": ["Daily Wear", "Summer Wear"],
-  "Formal Dress": ["Office Wear", "Evening Wear"],
 
-  // Accessories
-  "Handbags": ["Tote Bag", "Crossbody", "Shoulder Bag", "Backpack"],
-  "Jewelry": ["Necklace Set", "Earrings", "Bangles", "Rings"],
-  "Watches": ["Analog", "Digital", "Automatic", "Smart Watch"],
-  "Heels": ["Stilettos", "Block Heels", "Pumps", "Wedges"],
-  "Clutches": ["Bridal Clutch", "Box Clutch", "Envelope Clutch"]
-} as Record<string, string[]>,
+  subCategoryTypes: {
+    // NEW IN types
+    // "LATEST ARRIVALS": ["Pre-order", "In Stock", "Limited Edition"],
+    // "TRENDING NOW": ["Social Media Hits", "Best Sellers"],
+    // "SEASONAL SPECIAL": ["Summer Collection", "Winter Drops"],
 
+    // READY TO WEAR types
+    "EVERYDAY": ["Tunics & Kurtas", "Jackets", "Kaftans", "Tops", "Matching Sets", "Pants", "All"],
+    "OCCASION WEAR": ["Kurta sets", "Kaftans", "Jackets", "Anarkalis", "Saree Set", "All"],
+    "ALL": ["Kaftans", "Tunics & Kurtas", "Tops", "Jackets", "Matching Sets", "Pants", "Kurta sets", "Anarkalis", "Saree Set"],
 
+    // COUTURE types
+    "BRIDAL": ["Luxury Bridal", "Destination Wedding", "Consultation"],
+    "SEMI-FORMAL": ["Evening Wear", "Party Wear", "View All"],
 
+    // WINTER EDIT types
+    "SEASONAL PICKS": ["Shawls & Wraps", "Woolen Kurta", "Velvet Collection"],
 
+    // UNSTITCHED types
+    "Lawn": ["2 Piece", "3 Piece"],
+    "Silk": ["Printed", "Embroidered"],
+
+    // ACCESSORIES types
+    "Handbags": ["Tote Bag", "Crossbody", "Shoulder Bag", "Backpack"],
+    "Jewelry": ["Necklace Set", "Earrings", "Bangles", "Rings"],
+    "Watches": ["Analog", "Digital", "Automatic", "Smart Watch"],
+    "Heels": ["Stilettos", "Block Heels", "Pumps", "Wedges"],
+    "Clutches": ["Bridal Clutch", "Box Clutch", "Envelope Clutch"]
+  } as Record<string, string[]>,
 
   brands: {
-    "Dress": ["Khaadi",
-  "Sana Safinaz",
-  "Maria.B",
-  "Sapphire",
-  "Gul Ahmed",
-  "Elan",
-  "Asim Jofa",
-  "Nishat Linen",
-  "Bonanza Satrangi",
-  "Alkaram Studio",
-  "Bareeze",
-  "Ethnic by Outfitters",
-  "Limelight",
-  "J.",
-  "Generation",
-  "Zellbury",
-  "Beechtree",
-  "Cross Stitch",
-  "Charizma",
-  "Saya",
-  "Motifz",
-  "Rang Rasiya",
-  "Iznik",
-  "Bin Saeed",
-  "Anaya by Kiran Chaudhry",
-  "Qalamkar",
-  "Noor by Saadia Asad",
-  "Faraz Manan",
-  "HSY",
-  "Republic by Omar Farooq",
-  "Zara Shahjahan",
-  "Sanam Chaudhri",
-  "Firdous",
-  "Kayseria",
-  "Sobia Nazir",
-  "Tena Durrani",
-  "Faiza Saqlain"],
-    "Accessories": ["Gucci", "Rolex", "Charles & Keith", "Hublot", "Pandora", "Aldo"]
+    "NEW IN": ["Khaadi", "Sana Safinaz", "Maria.B", "Sapphire"], // Quick access to top brands
+    "READY TO WEAR": ["Khaadi", "Sana Safinaz", "Maria.B", "Sapphire", "Gul Ahmed", "Limelight", "J.", "Generation"],
+    "COUTURE": ["Elan", "Asim Jofa", "Faraz Manan", "HSY", "Zara Shahjahan", "Faiza Saqlain", "Tena Durrani"],
+    "WINTER EDIT": ["Bareeze", "Nishat Linen", "Bonanza Satrangi", "Alkaram Studio"],
+    "UNSTITCHED": ["Kayseria", "Firdous", "Bin Saeed", "Zellbury"],
+    "ACCESSORIES": ["Gucci", "Rolex", "Charles & Keith", "Hublot", "Pandora", "Aldo"]
   } as Record<string, string[]>,
+
   conditions: ["NEW", "OLD"] as const,
   saleTypes: ["SELL", "RENT"] as const,
   sizes: ["XS", "S", "M", "L", "XL", "XXL"],
-colors: [
-  { name: "Red", hex: "#FF0000" },
-  { name: "Orange", hex: "#FFA500" },
-  { name: "Yellow", hex: "#FFFF00" },
-  { name: "Green", hex: "#008000" },
-  { name: "Blue", hex: "#0000FF" },
-  { name: "Purple", hex: "#800080" },
-  { name: "Pink", hex: "#FFC0CB" },
-  { name: "Brown", hex: "#A52A2A" },
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
-  { name: "Gray", hex: "#808080" },
-  { name: "Navy", hex: "#000080" }
-]
   
+  colors: [
+    { name: "Red", hex: "#FF0000" },
+    { name: "Orange", hex: "#FFA500" },
+    { name: "Yellow", hex: "#FFFF00" },
+    { name: "Green", hex: "#008000" },
+    { name: "Blue", hex: "#0000FF" },
+    { name: "Purple", hex: "#800080" },
+    { name: "Pink", hex: "#FFC0CB" },
+    { name: "Brown", hex: "#A52A2A" },
+    { name: "Black", hex: "#000000" },
+    { name: "White", hex: "#FFFFFF" },
+    { name: "Gray", hex: "#808080" },
+    { name: "Navy", hex: "#000080" }
+  ]
 };
 
 // Custom Styled Select Component
