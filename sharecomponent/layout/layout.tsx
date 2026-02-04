@@ -18,7 +18,7 @@ export default function ClientLayout({
 
   return (
     <>
-      {!hideLayout && <Navbar />}
+      {/* {!hideLayout && <Navbar />} */}
       {children}
       {!hideLayout && <Footer />}
     </>

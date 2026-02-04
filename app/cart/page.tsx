@@ -4,42 +4,83 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   ShoppingBag, ArrowRight, Minus, Plus, Trash2, 
-  ChevronLeft, ShieldCheck, CreditCard, Tag, RefreshCw
+  ChevronLeft, ShieldCheck, CreditCard, Tag
 } from 'lucide-react';
 
-// Updated Interface to include condition and listingType
 interface Product {
-  id: string;
+  id: number;
   name: string;
   description: string;
   price: number;
   brands: string[];
-  sizes: string[]; 
   imageUrls: string[];
-  condition?: 'New' | 'Used' | 'Old'; // API field
-  listingType?: 'Sell' | 'Rent';       // API field
 }
 
-interface CartItem extends Product {
-  selectedSize: string;
+interface CartItem {
+  id: number; 
+  productId: number;
   quantity: number;
+  size?: string;
+  product: Product; 
 }
 
 export default function LuxuryCartPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const savedCart = localStorage.getItem('luxury_cart');
-    if (savedCart) {
-      try { setCart(JSON.parse(savedCart)); } catch (e) { console.error(e); }
+  // 1. Fetch Cart from API
+  const fetchCart = async () => {
+    try {
+      const res = await fetch('/api/cart');
+      if (res.ok) {
+        const data = await res.json();
+        setCart(data);
+      }
+    } catch (error) {
+      console.error("Fetch Error:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  }, []);
+  };
 
   useEffect(() => {
-    if (!loading) localStorage.setItem('luxury_cart', JSON.stringify(cart));
-  }, [cart, loading]);
+    fetchCart();
+  }, []);
+
+  // 2. Update Quantity via API (PATCH)
+  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
+    if (newQuantity < 1) return;
+
+    // Optimistic UI update (pehle frontend update kar do for speed)
+    setCart(prev => prev.map(item => 
+      item.id === cartItemId ? { ...item, quantity: newQuantity } : item
+    ));
+
+    try {
+      await fetch('/api/cart', {
+        method: 'PATCH',
+        body: JSON.stringify({ cartItemId, quantity: newQuantity }),
+      });
+    } catch (error) {
+      console.error("Update failed:", error);
+      fetchCart(); // Error aane pe wapas DB wala data le aao
+    }
+  };
+
+  // 3. Remove Item via API (DELETE)
+  const removeItem = async (cartItemId: number) => {
+    // Optimistic UI update
+    setCart(prev => prev.filter(item => item.id !== cartItemId));
+
+    try {
+      await fetch(`/api/cart?id=${cartItemId}`, {
+        method: 'DELETE',
+      });
+    } catch (error) {
+      console.error("Delete failed:", error);
+      fetchCart();
+    }
+  };
 
   const formatUSDT = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -48,26 +89,13 @@ export default function LuxuryCartPage() {
     }).format(amount).replace('$', 'USDT ');
   };
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  const cartTotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
 
-  const updateQuantity = (productId: string, size: string, delta: number) => {
-    setCart(prev => prev.map(item => 
-      (item.id === productId && item.selectedSize === size) 
-      ? { ...item, quantity: Math.max(1, item.quantity + delta) } 
-      : item
-    ));
-  };
-
-  const removeItem = (productId: string, size: string) => {
-    setCart(prev => prev.filter(item => !(item.id === productId && item.selectedSize === size)));
-  };
-
-  const handleProcessOrder = () => {
-    console.log("Processing Order:", cart);
-    alert("Redirecting to Secure Payment & Order Verification...");
-  };
-
-  if (loading) return null;
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center">
+       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-zinc-900"></div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-white text-zinc-900 font-sans antialiased pb-32 md:pb-12">
@@ -102,36 +130,30 @@ export default function LuxuryCartPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
-            
             <div className="lg:col-span-8">
               <div className="border-t border-zinc-900 pt-2">
                 {cart.map((item) => (
-                  <div key={`${item.id}-${item.selectedSize}`} className="flex flex-col md:flex-row gap-6 md:gap-10 py-10 border-b border-zinc-100 items-start">
+                  <div key={item.id} className="flex flex-col md:flex-row gap-6 md:gap-10 py-10 border-b border-zinc-100 items-start">
                     <div className="relative w-full md:w-56 aspect-[3/4] bg-zinc-50 overflow-hidden flex-shrink-0 border border-zinc-100 group">
-                      <img src={item.imageUrls[0]} alt={item.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <img src={item.product.imageUrls[0]} alt={item.product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
                     </div>
 
                     <div className="flex-1 flex flex-col justify-between self-stretch">
                       <div className="space-y-4">
                         <div className="flex justify-between items-start">
-                          <h4 className="text-[12px] tracking-[0.3em] uppercase font-black text-zinc-800">{item.brands[0]}</h4>
-                          <button onClick={() => removeItem(item.id, item.selectedSize)} className="text-zinc-400 hover:text-red-600 transition-colors p-1">
+                          <h4 className="text-[12px] tracking-[0.3em] uppercase font-black text-zinc-800">{item.product.brands?.[0] || 'Luxury Brand'}</h4>
+                          <button onClick={() => removeItem(item.id)} className="text-zinc-400 hover:text-red-600 transition-colors p-1">
                             <Trash2 size={20} />
                           </button>
                         </div>
-                        <h3 className="text-2xl md:text-3xl font-light tracking-tight text-zinc-900 leading-tight">{item.name}</h3>
+                        <h3 className="text-2xl md:text-3xl font-light tracking-tight text-zinc-900 leading-tight">{item.product.name}</h3>
                         
                         <div className="flex flex-wrap items-center gap-3 pt-2">
                           <span className="text-[10px] border border-zinc-900 px-4 py-1.5 uppercase tracking-widest font-black text-zinc-900">
-                            Size: {item.selectedSize}
+                            Size: {item.size || 'M'}
                           </span>
-                          
-                          {/* New Status Badges: Replacing ID with Condition and Listing Type */}
                           <span className="flex items-center gap-1.5 text-[10px] text-zinc-600 font-bold uppercase tracking-widest bg-zinc-100 px-3 py-1.5">
-                            <Tag size={12} /> {item.condition || 'New'}
-                          </span>
-                          <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1.5 ${item.listingType === 'Rent' ? 'bg-amber-50 text-amber-700' : 'bg-blue-50 text-blue-700'}`}>
-                            For {item.listingType || 'Sell'}
+                            <Tag size={12} /> Authentic
                           </span>
                         </div>
                       </div>
@@ -140,19 +162,16 @@ export default function LuxuryCartPage() {
                         <div className="space-y-3">
                           <p className="text-[9px] uppercase tracking-widest text-zinc-400 font-bold">Adjust Quantity</p>
                           <div className="flex items-center border border-zinc-200 rounded-sm overflow-hidden">
-                            <button onClick={() => updateQuantity(item.id, item.selectedSize, -1)} className="p-3 hover:bg-zinc-50 text-zinc-900"><Minus size={14} /></button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-3 hover:bg-zinc-50 text-zinc-900"><Minus size={14} /></button>
                             <span className="w-12 text-center text-sm font-black border-x border-zinc-100">{item.quantity}</span>
-                            <button onClick={() => updateQuantity(item.id, item.selectedSize, 1)} className="p-3 hover:bg-zinc-50 text-zinc-900"><Plus size={14} /></button>
+                            <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-3 hover:bg-zinc-50 text-zinc-900"><Plus size={14} /></button>
                           </div>
                         </div>
                         
                         <div className="text-right">
                           <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-black mb-1">Item Subtotal</p>
                           <p className="text-2xl md:text-3xl font-black tracking-tighter text-zinc-900">
-                            {formatUSDT(item.price * item.quantity)}
-                          </p>
-                          <p className="text-[10px] text-zinc-400 font-medium italic mt-1">
-                            {formatUSDT(item.price)} {item.listingType === 'Rent' ? '/ period' : 'total'}
+                            {formatUSDT(item.product.price * item.quantity)}
                           </p>
                         </div>
                       </div>
@@ -166,7 +185,6 @@ export default function LuxuryCartPage() {
             <div className="lg:col-span-4">
               <div className="bg-zinc-50 p-8 md:p-12 sticky top-12 border border-zinc-100 shadow-sm">
                 <h3 className="text-[13px] tracking-[0.4em] uppercase font-black text-zinc-900 mb-10 border-b-2 border-zinc-900 pb-4">Order Summary</h3>
-                
                 <div className="space-y-6 mb-12">
                   <div className="flex justify-between items-center">
                     <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500">Subtotal</span>
@@ -176,60 +194,27 @@ export default function LuxuryCartPage() {
                     <span className="text-[11px] uppercase tracking-[0.2em] font-bold text-zinc-500">Shipping</span>
                     <span className="text-emerald-700 font-black tracking-widest uppercase text-[10px] bg-emerald-50 px-2 py-1">Complimentary</span>
                   </div>
-                  
                   <div className="pt-10 mt-6 border-t border-zinc-200">
-                    <div className="flex justify-between items-end mb-8">
-                       <div>
-                          <p className="text-[11px] tracking-[0.3em] uppercase font-black text-zinc-400 mb-1">Total Payable</p>
-                          <p className="text-4xl font-black tracking-tighter text-zinc-900 leading-none">
-                            {formatUSDT(cartTotal)}
-                          </p>
-                       </div>
-                    </div>
-
-                    <button 
-                      onClick={handleProcessOrder}
-                      className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.5em] uppercase font-black hover:bg-black transition-all flex items-center justify-center shadow-2xl active:scale-[0.98]"
-                    >
-                      Proceed to Checkout <ArrowRight size={13} />
+                    <p className="text-[11px] tracking-[0.3em] uppercase font-black text-zinc-400 mb-1">Total Payable</p>
+                    <p className="text-4xl font-black tracking-tighter text-zinc-900 leading-none mb-8">
+                      {formatUSDT(cartTotal)}
+                    </p>
+                    <button className="w-full bg-zinc-900 text-white py-6 text-[10px] tracking-[0.5em] uppercase font-black hover:bg-black transition-all flex items-center justify-center shadow-2xl active:scale-[0.98]">
+                      Proceed to Checkout <ArrowRight size={13} className="ml-2" />
                     </button>
                   </div>
                 </div>
-
-                <div className="grid grid-cols-1 gap-6 pt-8 border-t border-zinc-200">
+                <div className="grid grid-cols-1 gap-4 pt-4 border-t border-zinc-200">
                   <div className="flex items-center gap-4">
-                    <ShieldCheck size={20} className="text-zinc-900" />
-                    <p className="text-[10px] uppercase tracking-widest font-black text-zinc-900">Secure SSL Encryption</p>
-                  </div>
-                  <div className="flex items-center gap-4">
-                    <CreditCard size={20} className="text-zinc-900" />
-                    <p className="text-[10px] uppercase tracking-widest font-black text-zinc-900">Verified Luxury Source</p>
+                    <ShieldCheck size={18} className="text-zinc-900" />
+                    <p className="text-[9px] uppercase tracking-widest font-black text-zinc-900">Secure SSL Encryption</p>
                   </div>
                 </div>
               </div>
             </div>
-
           </div>
         )}
       </main>
-
-      {/* MOBILE BAR */}
-      {cart.length > 0 && (
-        <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t-2 border-zinc-900 p-6 z-[100] shadow-[0_-20px_50px_rgba(0,0,0,0.1)]">
-          <div className="flex items-center justify-between gap-6">
-            <div>
-              <p className="text-[9px] uppercase tracking-widest text-zinc-500 font-black mb-1">Total</p>
-              <p className="text-2xl font-black tracking-tighter text-zinc-900 leading-none">{formatUSDT(cartTotal)}</p>
-            </div>
-            <button 
-              onClick={handleProcessOrder}
-              className="flex-1 bg-zinc-900 text-white py-5 px-6 text-[11px] tracking-[0.3em] uppercase font-black flex items-center justify-center gap-3 rounded-sm active:scale-95 transition-transform"
-            >
-           Proceed to Checkout
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
