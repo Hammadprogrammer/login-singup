@@ -1,11 +1,11 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
-import { FaTimes, FaShoppingBag, FaSearch, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTimes, FaShoppingBag, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import Link from "next/link";
 import style from "./navbar.module.scss";
 import { useRouter, usePathname } from "next/navigation";
 
-// --- Menu Data (No Changes) ---
+// --- Updated Menu Data with Unique Images ---
 const menuItems = [
   { name: "NEW IN", href: "/new-in", dropdown: null },
   {
@@ -50,7 +50,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/aaa.webp",
+      imageUrl: "/ready-to-wear-nav.webp", // Unique Image
       imageLink: "/ready-to-wear",
     },
   },
@@ -77,7 +77,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/aaa.webp",
+      imageUrl: "/couture-nav.webp", // Unique Image
       imageLink: "/couture",
     },
   },
@@ -96,7 +96,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/aaa.webp",
+      imageUrl: "/winter-nav.webp", // Unique Image
       imageLink: "/winter-edit",
     },
   },
@@ -116,8 +116,11 @@ const Navbar: React.FC = () => {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   const handleHamburgerClick = () => setIsOpen(true);
-  const handleCloseClick = () => {
+  
+  // Closes everything (Mobile & Desktop dropdown)
+  const closeAllMenus = () => {
     setIsOpen(false);
+    setHoveredLink(null);
     setActiveMobileSub(null);
   };
 
@@ -136,7 +139,7 @@ const Navbar: React.FC = () => {
   };
 
   const handleLoginClick = () => {
-    handleCloseClick();
+    closeAllMenus();
     router.push("/login");
   };
 
@@ -145,7 +148,7 @@ const Navbar: React.FC = () => {
       const res = await fetch("/api/auth/logout", { method: "POST" });
       if (res.ok) {
         setIsLoggedIn(false);
-        handleCloseClick();
+        closeAllMenus();
         router.push("/login");
       }
     } catch (err) {
@@ -160,7 +163,7 @@ const Navbar: React.FC = () => {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (isOpen && drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
-        handleCloseClick();
+        closeAllMenus();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -175,10 +178,10 @@ const Navbar: React.FC = () => {
 
   const ShopSellToggle = ({ isMobile = false }) => (
     <div className={`${style.toggleContainer} ${isMobile ? style.mobileToggle : style.desktopToggle}`}>
-      <Link href="/" onClick={handleCloseClick} className={`${style.toggleBtn} ${pathname === "/" ? style.activeToggle : ""}`}>
+      <Link href="/" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/" ? style.activeToggle : ""}`}>
         SHOP
       </Link>
-      <Link href="/sell" onClick={handleCloseClick} className={`${style.toggleBtn} ${pathname === "/sell" ? style.activeToggle : ""}`}>
+      <Link href="/sell" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/sell" ? style.activeToggle : ""}`}>
         SELL
       </Link>
     </div>
@@ -194,11 +197,10 @@ const Navbar: React.FC = () => {
         <div className={style.leftSection}>
           <div className={style.hamburger} onClick={handleHamburgerClick}>☰</div>
           <ShopSellToggle isMobile={false} />
-          {/* <FaSearch size={18} className={style.searchIcon} /> */}
         </div>
 
         <div className={style.brandCenter}>
-          <Link href="/" onClick={handleCloseClick}>
+          <Link href="/" onClick={closeAllMenus}>
             <div className={style.logoText}>
               <span className={style.misha}>CLothing</span>
               <span className={style.lakhani}>Brand</span>
@@ -207,10 +209,9 @@ const Navbar: React.FC = () => {
         </div>
 
         <div className={style.rightSection}>
-          <Link href="/cart" className={style.icon}>
+          <Link href="/cart" className={style.icon} onClick={closeAllMenus}>
             <FaShoppingBag size={20} />
           </Link>
-          {/* DESKTOP LOGOUT/LOGIN */}
           <div
             className={`${style.loginButton} ${style.desktopOnlyIcon}`}
             onClick={isLoggedIn ? handleLogoutClick : handleLoginClick}
@@ -223,7 +224,7 @@ const Navbar: React.FC = () => {
         <div className={style.desktopNavLinks} onMouseLeave={() => setHoveredLink(null)}>
           {menuItems.map((item) => (
             <div key={item.name} className={style.desktopNavLinkItem} onMouseEnter={() => setHoveredLink(item.name)}>
-              <Link href={item.href} onClick={() => setHoveredLink(null)}>{item.name}</Link>
+              <Link href={item.href} onClick={closeAllMenus}>{item.name}</Link>
               {item.dropdown && (
                 <div className={`${style.dropdownMenu} ${hoveredLink === item.name ? style.menuVisible : ""}`}>
                   <div className={style.dropdownContent}>
@@ -232,15 +233,20 @@ const Navbar: React.FC = () => {
                         <div key={cat.title} className={style.categoryColumn}>
                           <h4 className={style.categoryTitle}>{cat.title}</h4>
                           {cat.links.map((link) => (
-                            <Link key={link.label} href={link.href} className={style.dropdownLink} onClick={handleCloseClick}>
+                            <Link 
+                              key={link.label} 
+                              href={link.href} 
+                              className={style.dropdownLink} 
+                              onClick={closeAllMenus} // Closes menu when link is clicked
+                            >
                               {link.label}
                             </Link>
                           ))}
                         </div>
                       ))}
                     </div>
-                    <Link href={item.dropdown.imageLink} className={style.dropdownImage}>
-                      <img src={item.dropdown.imageUrl} alt="nav" />
+                    <Link href={item.dropdown.imageLink} className={style.dropdownImage} onClick={closeAllMenus}>
+                      <img src={item.dropdown.imageUrl} alt={item.name} />
                     </Link>
                   </div>
                 </div>
@@ -251,7 +257,7 @@ const Navbar: React.FC = () => {
 
         {/* --- MOBILE DRAWER --- */}
         <div ref={drawerRef} className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}>
-          <div className={style.closeIcon} onClick={handleCloseClick}>
+          <div className={style.closeIcon} onClick={closeAllMenus}>
             <FaTimes size={24} color="black" />
           </div>
 
@@ -273,7 +279,7 @@ const Navbar: React.FC = () => {
                         <div key={cat.title}>
                           <p style={{ fontSize: '11px', fontWeight: 'bold', padding: '10px 0 5px', color: '#888' }}>{cat.title}</p>
                           {cat.links.map((link) => (
-                            <Link key={link.label} href={link.href} className={style.mobileSubLink} onClick={handleCloseClick}>
+                            <Link key={link.label} href={link.href} className={style.mobileSubLink} onClick={closeAllMenus}>
                               {link.label}
                             </Link>
                           ))}
@@ -282,7 +288,7 @@ const Navbar: React.FC = () => {
                     </div>
                   </>
                 ) : (
-                  <Link href={item.href} className={style.mobileMainLink} onClick={handleCloseClick}>
+                  <Link href={item.href} className={style.mobileMainLink} onClick={closeAllMenus}>
                     {item.name}
                   </Link>
                 )}
@@ -291,7 +297,6 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className={style.mobileFooter}>
-            {/* MOBILE LOGOUT/LOGIN */}
             <div onClick={isLoggedIn ? handleLogoutClick : handleLoginClick} className={style.mobileAccount}>
               {isLoggedIn ? "LOGOUT" : "LOGIN / REGISTER"}
             </div>
@@ -299,7 +304,7 @@ const Navbar: React.FC = () => {
         </div>
       </nav>
 
-      {isOpen && <div className={style.backdrop} onClick={handleCloseClick}></div>}
+      {isOpen && <div className={style.backdrop} onClick={closeAllMenus}></div>}
     </div>
   );
 };
