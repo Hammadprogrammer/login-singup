@@ -2,7 +2,7 @@ import ProductTemplate from '../../component/contain/ProductTemplate/ProductTemp
 
 export default function NewIn() {
   return (
-    <div className='mt-[200px]'>
+    <div className='mt-[150px] md:mt-[200px]'>
     <ProductTemplate 
       targetCategory="NEW IN" 
       pageTitle="New In"

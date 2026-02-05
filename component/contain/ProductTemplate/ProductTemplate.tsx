@@ -326,7 +326,7 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
       </nav>
 
       {/* MAIN CONTENT */}
-      <main className="max-w-[1800px] mx-auto px-2 md:px-12 py-8">
+      <main className="max-w-[1800px] mx-auto px-2 md:px-12 py-4">
         {loading ? (
            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
              {[...Array(8)].map((_, i) => <div key={i} className="aspect-[3/4] bg-gray-50 rounded-sm" />)}
