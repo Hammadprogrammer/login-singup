@@ -50,7 +50,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/ready-to-wear-nav.webp", // Unique Image
+      imageUrl: "/aaa.webp", // Unique Image
       imageLink: "/ready-to-wear",
     },
   },
@@ -61,23 +61,26 @@ const menuItems = [
       isMegaMenu: false,
       categories: [
         {
-          title: "BRIDAL",
+          title: "BRIDAL & SEMI-FORMAL",
           links: [
             { label: "Luxury Bridal", href: "/couture/bridal/luxury" },
             { label: "Destination Wedding", href: "/couture/bridal/destination" },
             { label: "Consultation", href: "/couture/bridal/consultation" },
+            { label: "Evening Wear", href: "/couture/bridal/evening" },
+            { label: "Party Wear", href: "/couture/bridal/party" },
+            { label: "View All", href: "/couture/bridal/all" },
           ],
         },
-        {
-          title: "SEMI-FORMAL",
-          links: [
-            { label: "Evening Wear", href: "/couture/semi-formal/evening" },
-            { label: "Party Wear", href: "/couture/semi-formal/party" },
-            { label: "View All", href: "/couture/semi-formal/all" },
-          ],
-        },
+        // {
+        //   title: "SEMI-FORMAL",
+        //   links: [
+        //     { label: "Evening Wear", href: "/couture/semi-formal/evening" },
+        //     { label: "Party Wear", href: "/couture/semi-formal/party" },
+        //     { label: "View All", href: "/couture/semi-formal/all" },
+        //   ],
+        // },
       ],
-      imageUrl: "/couture-nav.webp", // Unique Image
+      imageUrl: "/aaa.webp", // Unique Image
       imageLink: "/couture",
     },
   },
@@ -96,7 +99,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/winter-nav.webp", // Unique Image
+      imageUrl: "/aaa.webp", // Unique Image
       imageLink: "/winter-edit",
     },
   },

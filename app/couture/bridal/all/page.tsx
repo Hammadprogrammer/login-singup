@@ -5,8 +5,7 @@ export default function Page() {
     <div className="mt-[150px] md:mt-[200px]">
       <ProductTemplate 
         targetCategory="COUTURE" 
-        targetSubCategory="SEMI-FORMAL" 
-        pageTitle="All Semi-Formal" 
+        pageTitle="All BRIDAL & Semi-Formal" 
       />
     </div>
   );
