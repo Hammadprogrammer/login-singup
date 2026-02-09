@@ -33,7 +33,6 @@ const COLORS = [
 ];
 
 const SIZES = ["XXS", "XS", "S", "M", "L", "XL", "XXL", "FREE SIZE"];
-const ITEMS_PER_PAGE = 12;
 
 const GridIcon = ({ cols, active }: { cols: number; active: boolean }) => {
   if (cols === 2) return <Square size={18} className={active ? 'text-black' : 'text-gray-300'} />;
@@ -84,7 +83,14 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
   const [currentPage, setCurrentPage] = useState(1);
   const sortRef = useRef<HTMLDivElement>(null);
 
-  // --- CLOSE SORT DROPDOWN ON OUTSIDE CLICK ---
+  // --- DYNAMIC ITEMS PER PAGE LOGIC ---
+  const itemsPerPage = useMemo(() => {
+    if (cols === 2) return 16;
+    if (cols === 4) return 20;
+    if (cols === 6) return 30;
+    return 12;
+  }, [cols]);
+
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
@@ -145,23 +151,20 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
     fetchData();
   }, [targetCategory, targetSubCategory, targetProductType]);
 
+  // Reset to page 1 if filters or layout changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [selectedBrands, selectedSizes, selectedColors, sortBy]);
+  }, [selectedBrands, selectedSizes, selectedColors, sortBy, cols]);
 
-  // --- UPDATED FILTER LOGIC (OR Logic within Groups) ---
   const filteredAndSortedProducts = useMemo(() => {
     let result = products.filter(p => {
-      // Agar koi filter select nahi hai, to true (show all)
       const noFilters = selectedBrands.length === 0 && selectedSizes.length === 0 && selectedColors.length === 0;
       if (noFilters) return true;
 
-      // Check if matches any active category (Flexible Logic)
       const brandMatch = selectedBrands.length > 0 && p.brands?.some(b => selectedBrands.includes(b));
       const sizeMatch = selectedSizes.length > 0 && p.sizes?.some(s => selectedSizes.includes(s));
       const colorMatch = selectedColors.length > 0 && p.colors?.some(c => selectedColors.includes(c));
 
-      // Show product if it matches ANY of the active filter groups
       return brandMatch || sizeMatch || colorMatch;
     });
 
@@ -170,8 +173,8 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
     return result;
   }, [products, sortBy, selectedBrands, selectedSizes, selectedColors]);
 
-  const totalPages = Math.max(1, Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE));
-  const currentItems = filteredAndSortedProducts.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  const totalPages = Math.max(1, Math.ceil(filteredAndSortedProducts.length / itemsPerPage));
+  const currentItems = filteredAndSortedProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const handlePageChange = (page: number) => {
     if (page < 1 || page > totalPages) return;
@@ -234,7 +237,6 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
             </div>
             
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-10">
-              {/* Designers */}
               <div>
                 <h3 className="mb-4 border-l-2 border-black pl-3 font-bold">Designers</h3>
                 <div className="grid grid-cols-2 gap-2">
@@ -247,7 +249,6 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                 </div>
               </div>
 
-              {/* Color */}
               <div>
                 <h3 className="mb-4 border-l-2 border-black pl-3 font-bold">Color</h3>
                 <div className="grid grid-cols-4 gap-3">
@@ -262,7 +263,6 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                 </div>
               </div>
 
-              {/* Size */}
               <div>
                 <h3 className="mb-4 border-l-2 border-black pl-3 font-bold">Size</h3>
                 <div className="grid grid-cols-4 gap-2">
@@ -293,7 +293,6 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
               <span className="hidden md:inline">Filter</span>
             </button>
 
-            {/* SORT DROPDOWN WITH OUTSIDE CLICK CLOSE */}
             <div className="relative" ref={sortRef}>
               <button onClick={() => setShowSort(!showSort)} className="text-[11px] uppercase tracking-widest font-black flex items-center gap-1.5">
                 <ChevronDown size={18} className={`transition-transform duration-300 ${showSort ? 'rotate-180' : ''}`} />
@@ -317,7 +316,7 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
 
           <div className="hidden md:flex items-center gap-6 border-l pl-8 border-gray-100">
              {[6, 4, 2].map(n => (
-              <button key={n} onClick={() => setCols(n)} className={`transition-all duration-300 ${cols === n ? 'scale-110 opacity-1000' : 'opacity-1000 hover:opacity-700'}`}>
+              <button key={n} onClick={() => setCols(n)} className={`transition-all duration-300 ${cols === n ? 'scale-110 opacity-100' : 'opacity-100 hover:opacity-70'}`}>
                 <GridIcon cols={n} active={cols === n} />
               </button>
             ))}
@@ -373,7 +372,7 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
             ) : (
               <div className="flex flex-col items-center justify-center py-40 space-y-4">
                 <span className="text-[10px] uppercase tracking-[0.4em] text-gray-400">No products found</span>
-                <button onClick={() => {setSelectedBrands([]); setSelectedSizes([]); setSelectedColors([]);}} className="text-[11px] underline tracking-widest uppercase font-bold">Clear Filters</button>
+                {/* <button onClick={() => {setSelectedBrands([]); setSelectedSizes([]); setSelectedColors([]);}} className="text-[11px] underline tracking-widest uppercase font-bold">Clear Filters</button> */}
               </div>
             )}
 
@@ -394,7 +393,7 @@ const ProductTemplate = ({ targetCategory, targetSubCategory, targetProductType,
                   <span className="hidden sm:inline">Next</span> <ChevronRight size={16} />
                 </button>
               </div>
-              <p className="text-[10px] tracking-[0.3em] uppercase text-gray-900 font-medium">Showing {currentItems.length} of {filteredAndSortedProducts.length} Results</p>
+              <p className="text-[10px] tracking-[0.3em] uppercase text-gray-900 font-medium">Showing {currentItems.length} of {filteredAndSortedProducts.length} Results ({itemsPerPage} per page)</p>
             </div>
           </>
         )}
