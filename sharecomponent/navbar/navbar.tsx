@@ -10,7 +10,7 @@ const menuItems = [
   { name: "NEW IN", href: "/new-in", dropdown: null },
   {
     name: "READY TO WEAR",
-    href: "/ready-to-wear",
+    href: "",
     dropdown: {
       isMegaMenu: true,
       categories: [
@@ -56,7 +56,7 @@ const menuItems = [
   },
   {
     name: "COUTURE",
-    href: "/couture",
+    href: "",
     dropdown: {
       isMegaMenu: false,
       categories: [
@@ -83,7 +83,7 @@ const menuItems = [
   },
   {
     name: "WINTER EDIT",
-    href: "/winter-edit",
+    href: "",
     dropdown: {
       isMegaMenu: false,
       categories: [
