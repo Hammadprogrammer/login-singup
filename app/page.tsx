@@ -1,11 +1,14 @@
 import React from 'react'
 import FullScreenImageSlider from '@/component/contain/homeSlider/homeSlider'
 import ProductsDashboard from '@/component/contain/product/product'
+import KycStatusBanner from './kyc-user/page'
 
 
 const page = () => {
   return (
     <div>
+            <KycStatusBanner />
+
       <FullScreenImageSlider/>
             <ProductsDashboard/>
          
