@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation";
 import Navbar from "@/sharecomponent/navbar/navbar";
 import Footer from "@/sharecomponent/footer/footer";
+import KycStatusManager from "@/app/kyc-user/page";
 
 export default function ClientLayout({
   children,
@@ -11,15 +12,20 @@ export default function ClientLayout({
 }) {
   const pathname = usePathname();
 
-  // Pages jahan Navbar & Footer nahi dikhana
-  const hideLayoutPaths = ["/login", "/signup" , "/dashboard" , "/cart"];
-
+  const hideLayoutPaths = ["/login", "/signup", "/dashboard", "/cart" , "/admin/kyc", "/kyc"];
   const hideLayout = hideLayoutPaths.includes(pathname);
+
+  const kycPath = ["/kyc", "/login", "/signup"]; 
+  const isKycPage = kycPath.includes(pathname);
 
   return (
     <>
+      {!isKycPage && <KycStatusManager />}
+
       {!hideLayout && <Navbar />}
-      {children}
+      
+      <main>{children}</main>
+      
       {!hideLayout && <Footer />}
     </>
   );
