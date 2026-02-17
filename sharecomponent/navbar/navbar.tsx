@@ -84,26 +84,27 @@ const menuItems = [
       imageLink: "/couture",
     },
   },
-  {
-    name: "WINTER EDIT",
-    href: "",
-    dropdown: {
-      isMegaMenu: false,
-      categories: [
-        {
-          title: "SEASONAL PICKS",
-          links: [
-            { label: "Shawls & Wraps", href: "/winter-edit/shawls" },
-            { label: "Woolen Kurta", href: "/winter-edit/woolen-kurta" },
-            { label: "Velvet Collection", href: "/winter-edit/velvet" },
-          ],
-        },
-      ],
-      imageUrl: "/aaa.webp", // Unique Image
-      imageLink: "/winter-edit",
-    },
-  },
+  // {
+  //   name: "WINTER EDIT",
+  //   href: "",
+  //   dropdown: {
+  //     isMegaMenu: false,
+  //     categories: [
+  //       {
+  //         title: "SEASONAL PICKS",
+  //         links: [
+  //           { label: "Shawls & Wraps", href: "/winter-edit/shawls" },
+  //           { label: "Woolen Kurta", href: "/winter-edit/woolen-kurta" },
+  //           { label: "Velvet Collection", href: "/winter-edit/velvet" },
+  //         ],
+  //       },
+  //     ],
+  //     imageUrl: "/aaa.webp", // Unique Image
+  //     imageLink: "/winter-edit",
+  //   },
+  // },
   { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
+
 ];
 
 const Navbar: React.FC = () => {
