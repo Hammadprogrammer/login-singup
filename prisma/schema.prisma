@@ -16,6 +16,7 @@ model User {
   resetCodeExpiry DateTime?
   id              Int        @id @default(autoincrement())
   provider        String     @default("credentials")
+  role            String     @default("USER")
   carts           Cart[]
   favorites       Favorite[]
   kyc             KYC?
