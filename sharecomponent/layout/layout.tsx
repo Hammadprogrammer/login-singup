@@ -20,7 +20,7 @@ export default function ClientLayout({
 
   return (
     <>
-      {!isKycPage && <KycStatusManager />}
+      {/* {!isKycPage && <KycStatusManager />} */}
 
       {!hideLayout && <Navbar />}
       
