@@ -154,9 +154,11 @@
 //   );
 // }
 
+
+
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation"; // Added usePathname
+import { useRouter } from "next/navigation";
 import { 
   ShieldAlert, 
   Clock, 
@@ -168,17 +170,10 @@ import {
 
 export default function KycStatusManager() {
   const router = useRouter();
-  const pathname = usePathname(); // Current URL track karne ke liye
-  
   const [kyc, setKyc] = useState({ status: "", reason: "" });
   const [loading, setLoading] = useState(true);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-
-  // --- CONFIGURATION ---
-  // Woh pages jahan user popup ko CLOSE KAR SAKTA HAI
-  const allowCloseOnPages = ["/", "/contact", "/about"]; 
-  const canClose = allowCloseOnPages.includes(pathname);
 
   useEffect(() => {
     const checkAuthAndKyc = async () => {
@@ -213,7 +208,7 @@ export default function KycStatusManager() {
     };
 
     checkAuthAndKyc();
-  }, [pathname]); // Path badalne par check reset ho sakta hai
+  }, []);
 
   const configs: Record<string, any> = {
     REJECTED: { 
@@ -221,21 +216,24 @@ export default function KycStatusManager() {
       title: "Action Required",
       desc: kyc.reason || "Your documents were rejected. Please resubmit valid identification.", 
       btnText: "Re-submit KYC",
-      link: "/kyc"
+      link: "/kyc",
+      showClose: false // Rejected me cross nahi dikhega
     },
     PENDING: { 
       icon: <Clock size={36} className="text-amber-500" />, 
       title: "Under Review", 
       desc: "We're currently checking your documents. This usually takes 24-48 hours.",
       btnText: "Check Progress",
-      link: "/kyc"
+      link: "/kyc",
+      showClose: true // Under Review me cross dikhega
     },
     NOT_STARTED: { 
       icon: <ShieldAlert size={36} className="text-indigo-500" />, 
       title: "Verify Identity", 
       desc: "Complete your KYC verification to unlock all premium features.", 
       btnText: "Start Verification",
-      link: "/kyc"
+      link: "/kyc",
+      showClose: false // Starting me cross nahi dikhega
     } 
   };
 
@@ -250,8 +248,8 @@ export default function KycStatusManager() {
 
   return (
     <div className="font-sans">
-      {/* FLOATING TOGGLE - Only show if closing is allowed and it's currently closed */}
-      {!isOpen && canClose && (
+      {/* FLOATING TOGGLE BUTTON - Only visible if closed and close is allowed for this state */}
+      {!isOpen && config.showClose && (
         <button
           onClick={() => setIsOpen(true)}
           className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-[9998] flex items-center gap-3 bg-white border border-slate-200 shadow-2xl p-2 pr-5 rounded-2xl hover:bg-slate-50 transition-all active:scale-95 animate-in fade-in slide-in-from-bottom-5"
@@ -269,6 +267,7 @@ export default function KycStatusManager() {
           <div className="relative w-full max-w-[380px] bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden animate-in zoom-in-95 duration-300">
             
             <div className="p-8 sm:p-10 flex flex-col items-center">
+              {/* ICON */}
               <div className={`mb-6 w-20 h-20 rounded-[2rem] flex items-center justify-center border animate-in zoom-in-50 duration-500 
                 ${kyc.status === 'REJECTED' ? 'bg-red-50 border-red-100' : 
                   kyc.status === 'PENDING' ? 'bg-amber-50 border-amber-100' : 
@@ -277,6 +276,7 @@ export default function KycStatusManager() {
                 {config.icon}
               </div>
 
+              {/* TEXT */}
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-black text-slate-900 mb-3 tracking-tight">
                   {config.title}
@@ -286,6 +286,7 @@ export default function KycStatusManager() {
                 </p>
               </div>
 
+              {/* ACTION BUTTON */}
               <button 
                 onClick={handleAction}
                 className="w-full py-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-bold text-[16px] transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-xl shadow-slate-200"
@@ -295,8 +296,8 @@ export default function KycStatusManager() {
               </button>
             </div>
 
-            {/* CONDITIONAL CLOSE BUTTON: Only shows on specific pages */}
-            {canClose && (
+            {/* CONDITIONAL CLOSE BUTTON (X) */}
+            {config.showClose && (
               <button 
                 onClick={() => setIsOpen(false)}
                 className="absolute top-6 right-6 p-2 text-slate-300 hover:text-slate-900 transition-colors"
