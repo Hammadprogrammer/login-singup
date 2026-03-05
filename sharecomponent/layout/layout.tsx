@@ -15,8 +15,8 @@ export default function ClientLayout({
   const hideLayoutPaths = ["/login", "/signup", "/dashboard", "/cart" , "/admin/kyc", "/kyc"];
   const hideLayout = hideLayoutPaths.includes(pathname);
 
-  const kycPath = ["/kyc", "/login", "/signup"]; 
-  const isKycPage = kycPath.includes(pathname);
+  // const kycPath = ["/kyc", "/login", "/signup"]; 
+  // const isKycPage = kycPath.includes(pathname);
 
   return (
     <>

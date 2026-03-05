@@ -103,7 +103,8 @@ const menuItems = [
   //     imageLink: "/winter-edit",
   //   },
   // },
-  { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
+   { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
+   { name: "ACCESSORIES", href: "/accessories", dropdown: null },
 
 ];
 
@@ -185,7 +186,7 @@ const Navbar: React.FC = () => {
       <Link href="/" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/" ? style.activeToggle : ""}`}>
         SHOP
       </Link>
-      <Link href="/sell" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/sell" ? style.activeToggle : ""}`}>
+      <Link href="/sell_product" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/sell_product" ? style.activeToggle : ""}`}>
         SELL
       </Link>
     </div>
