@@ -217,7 +217,7 @@ export default function KycStatusManager() {
       desc: kyc.reason || "Your documents were rejected. Please resubmit valid identification.", 
       btnText: "Re-submit KYC",
       link: "/kyc",
-      showClose: false // Rejected me cross nahi dikhega
+      showClose: true // Rejected me cross nahi dikhega
     },
     PENDING: { 
       icon: <Clock size={36} className="text-amber-500" />, 
@@ -233,7 +233,7 @@ export default function KycStatusManager() {
       desc: "Complete your KYC verification to unlock all premium features.", 
       btnText: "Start Verification",
       link: "/kyc",
-      showClose: false // Starting me cross nahi dikhega
+      showClose: true // Starting me cross nahi dikhega
     } 
   };
 
