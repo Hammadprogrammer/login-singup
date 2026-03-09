@@ -5,7 +5,7 @@ export default function Page() {
     <div className="mt-[150px] md:mt-[200px]">
       <ProductTemplate 
         targetCategory="ACCESSORIES" 
-        pageTitle="ACCESSORIES" 
+        pageTitle="ALL  ACCESSORIES" 
       />
     </div>
   );

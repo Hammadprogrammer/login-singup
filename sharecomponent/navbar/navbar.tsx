@@ -5,8 +5,8 @@ import Link from "next/link";
 import style from "./navbar.module.scss";
 import { useRouter, usePathname } from "next/navigation";
 
-// --- Updated Menu Data with Unique Images ---
-const menuItems = [
+// --- SHOP MENU DATA (Original Links) ---
+const shopMenuItems = [
   { name: "NEW IN", href: "/new-in", dropdown: null },
   {
     name: "READY TO WEAR",
@@ -50,7 +50,7 @@ const menuItems = [
           ],
         },
       ],
-      imageUrl: "/aaa.webp", // Unique Image
+      imageUrl: "/aaa.webp",
       imageLink: "/ready-to-wear",
     },
   },
@@ -71,41 +71,22 @@ const menuItems = [
             { label: "View All", href: "/couture/bridal/all" },
           ],
         },
-        // {
-        //   title: "SEMI-FORMAL",
-        //   links: [
-        //     { label: "Evening Wear", href: "/couture/semi-formal/evening" },
-        //     { label: "Party Wear", href: "/couture/semi-formal/party" },
-        //     { label: "View All", href: "/couture/semi-formal/all" },
-        //   ],
-        // },
       ],
-      imageUrl: "/aaa.webp", // Unique Image
+      imageUrl: "/aaa.webp",
       imageLink: "/couture",
     },
   },
-  // {
-  //   name: "WINTER EDIT",
-  //   href: "",
-  //   dropdown: {
-  //     isMegaMenu: false,
-  //     categories: [
-  //       {
-  //         title: "SEASONAL PICKS",
-  //         links: [
-  //           { label: "Shawls & Wraps", href: "/winter-edit/shawls" },
-  //           { label: "Woolen Kurta", href: "/winter-edit/woolen-kurta" },
-  //           { label: "Velvet Collection", href: "/winter-edit/velvet" },
-  //         ],
-  //       },
-  //     ],
-  //     imageUrl: "/aaa.webp", // Unique Image
-  //     imageLink: "/winter-edit",
-  //   },
-  // },
-   { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
-   { name: "ACCESSORIES", href: "/accessories", dropdown: null },
+  { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
+  { name: "ACCESSORIES", href: "/accessories", dropdown: null },
+];
 
+// --- SELL MENU DATA (Different Links for Selling Section) ---
+const sellMenuItems = [
+  { name: "DASHBOARD", href: "/sell_product/dashboard", dropdown: null },
+  { name: "LIST AN ITEM", href: "/sell_product/add", dropdown: null },
+  { name: "ACTIVE LISTINGS", href: "/sell_product/active", dropdown: null },
+  { name: "MY SALES", href: "/sell_product/sales", dropdown: null },
+  { name: "SELLER GUIDE", href: "/sell_product/guide", dropdown: null },
 ];
 
 const Navbar: React.FC = () => {
@@ -120,9 +101,12 @@ const Navbar: React.FC = () => {
 
   const drawerRef = useRef<HTMLDivElement>(null);
 
+  // LOGIC: Determine which menu to show based on current URL
+  const isSellPage = pathname.startsWith("/sell_product");
+  const currentMenu = isSellPage ? sellMenuItems : shopMenuItems;
+
   const handleHamburgerClick = () => setIsOpen(true);
   
-  // Closes everything (Mobile & Desktop dropdown)
   const closeAllMenus = () => {
     setIsOpen(false);
     setHoveredLink(null);
@@ -133,7 +117,6 @@ const Navbar: React.FC = () => {
     setActiveMobileSub(activeMobileSub === name ? null : name);
   };
 
-  // --- Auth Functions ---
   const checkLoginStatus = async () => {
     try {
       const res = await fetch("/api/auth/check-token");
@@ -183,10 +166,18 @@ const Navbar: React.FC = () => {
 
   const ShopSellToggle = ({ isMobile = false }) => (
     <div className={`${style.toggleContainer} ${isMobile ? style.mobileToggle : style.desktopToggle}`}>
-      <Link href="/" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/" ? style.activeToggle : ""}`}>
+      <Link 
+        href="/" 
+        onClick={closeAllMenus} 
+        className={`${style.toggleBtn} ${!isSellPage ? style.activeToggle : ""}`}
+      >
         SHOP
       </Link>
-      <Link href="/sell_product" onClick={closeAllMenus} className={`${style.toggleBtn} ${pathname === "/sell_product" ? style.activeToggle : ""}`}>
+      <Link 
+        href="/sell_product" 
+        onClick={closeAllMenus} 
+        className={`${style.toggleBtn} ${isSellPage ? style.activeToggle : ""}`}
+      >
         SELL
       </Link>
     </div>
@@ -225,9 +216,9 @@ const Navbar: React.FC = () => {
           </div>
         </div>
 
-        {/* --- DESKTOP NAVIGATION --- */}
+        {/* --- DYNAMIC DESKTOP NAVIGATION --- */}
         <div className={style.desktopNavLinks} onMouseLeave={() => setHoveredLink(null)}>
-          {menuItems.map((item) => (
+          {currentMenu.map((item) => (
             <div key={item.name} className={style.desktopNavLinkItem} onMouseEnter={() => setHoveredLink(item.name)}>
               <Link href={item.href} onClick={closeAllMenus}>{item.name}</Link>
               {item.dropdown && (
@@ -242,7 +233,7 @@ const Navbar: React.FC = () => {
                               key={link.label} 
                               href={link.href} 
                               className={style.dropdownLink} 
-                              onClick={closeAllMenus} // Closes menu when link is clicked
+                              onClick={closeAllMenus}
                             >
                               {link.label}
                             </Link>
@@ -260,7 +251,7 @@ const Navbar: React.FC = () => {
           ))}
         </div>
 
-        {/* --- MOBILE DRAWER --- */}
+        {/* --- DYNAMIC MOBILE DRAWER --- */}
         <div ref={drawerRef} className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}>
           <div className={style.closeIcon} onClick={closeAllMenus}>
             <FaTimes size={24} color="black" />
@@ -271,7 +262,7 @@ const Navbar: React.FC = () => {
               <ShopSellToggle isMobile={true} />
             </div>
 
-            {menuItems.map((item) => (
+            {currentMenu.map((item) => (
               <div key={item.name}>
                 {item.dropdown ? (
                   <>
