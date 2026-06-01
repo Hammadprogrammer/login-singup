@@ -82,11 +82,9 @@ const shopMenuItems = [
 
 // --- SELL MENU DATA (Different Links for Selling Section) ---
 const sellMenuItems = [
-  { name: "DASHBOARD", href: "/sell_product/dashboard", dropdown: null },
-  { name: "LIST AN ITEM", href: "/sell_product/add", dropdown: null },
-  { name: "ACTIVE LISTINGS", href: "/sell_product/active", dropdown: null },
-  { name: "MY SALES", href: "/sell_product/sales", dropdown: null },
-  { name: "SELLER GUIDE", href: "/sell_product/guide", dropdown: null },
+  { name: "SELL", href: "/sell_product", dropdown: null },
+  { name: "ADD PRODUCT", href: "/add-product", dropdown: null },
+  { name: "MY PRODUCTS", href: "/my-products", dropdown: null },
 ];
 
 const Navbar: React.FC = () => {
@@ -102,8 +100,18 @@ const Navbar: React.FC = () => {
   const drawerRef = useRef<HTMLDivElement>(null);
 
   // LOGIC: Determine which menu to show based on current URL
-  const isSellPage = pathname.startsWith("/sell_product");
+  const isSellPage = pathname.startsWith("/sell_product") || 
+                     pathname === "/add-product" || 
+                     pathname === "/my-products";
   const currentMenu = isSellPage ? sellMenuItems : shopMenuItems;
+  
+  // Sell page uses same theme as shop (pink theme)
+  const sellTheme = {
+    background: '#fff5f9',
+    text: '#000000',
+    border: '#eee',
+    hover: '#f5d7e3'
+  };
 
   const handleHamburgerClick = () => setIsOpen(true);
   
@@ -184,7 +192,10 @@ const Navbar: React.FC = () => {
   );
 
   return (
-    <div className={`${style.main} ${scrolled ? style.scrolled : ""}`}>
+    <div 
+      className={`${style.main} ${scrolled ? style.scrolled : ""} ${isSellPage ? style.sellTheme : ""}`}
+      style={isSellPage ? { backgroundColor: sellTheme.background, borderBottom: `1px solid ${sellTheme.border}` } : {}}
+    >
       <div className={style.topBanner}>
         <p className={style.text}>NEW DROP EVERY WEDNESDAY</p>
       </div>
@@ -217,7 +228,11 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* --- DYNAMIC DESKTOP NAVIGATION --- */}
-        <div className={style.desktopNavLinks} onMouseLeave={() => setHoveredLink(null)}>
+        <div 
+          className={style.desktopNavLinks} 
+          onMouseLeave={() => setHoveredLink(null)}
+          style={isSellPage ? { backgroundColor: sellTheme.background, borderBottom: `1px solid ${sellTheme.border}` } : {}}
+        >
           {currentMenu.map((item) => (
             <div key={item.name} className={style.desktopNavLinkItem} onMouseEnter={() => setHoveredLink(item.name)}>
               <Link href={item.href} onClick={closeAllMenus}>{item.name}</Link>
@@ -252,7 +267,11 @@ const Navbar: React.FC = () => {
         </div>
 
         {/* --- DYNAMIC MOBILE DRAWER --- */}
-        <div ref={drawerRef} className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}>
+        <div 
+          ref={drawerRef} 
+          className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}
+          style={isSellPage && isOpen ? { backgroundColor: sellTheme.background } : {}}
+        >
           <div className={style.closeIcon} onClick={closeAllMenus}>
             <FaTimes size={24} color="black" />
           </div>
@@ -293,6 +312,16 @@ const Navbar: React.FC = () => {
           </div>
 
           <div className={style.mobileFooter}>
+            {isLoggedIn && (
+              <Link
+                href="/my-products"
+                className={style.mobileAccount}
+                onClick={closeAllMenus}
+                style={{ marginBottom: '10px', backgroundColor: '#4f46e5' }}
+              >
+                MY PRODUCTS
+              </Link>
+            )}
             <div onClick={isLoggedIn ? handleLogoutClick : handleLoginClick} className={style.mobileAccount}>
               {isLoggedIn ? "LOGOUT" : "LOGIN / REGISTER"}
             </div>

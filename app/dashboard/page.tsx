@@ -2,10 +2,7 @@ import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
 
-import { HomeSliderCRUD } from "@/component/dashboard/homeSlider/slider";
-import ProductDashboard from "@/component/dashboard/product/product";
-import LogoutDashboard from "@/component/dashboard/logout/logout";
-import UserStatus from "@/component/dashboard/user-status/user-status";
+import DashboardClient from "@/component/dashboard/dashboard-client";
 
 export default async function DashboardPage() {
   const cookieStore = await cookies();
@@ -27,13 +24,5 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  return (
-    <div>
-      <LogoutDashboard />
-      <HomeSliderCRUD />
-      <ProductDashboard />
-      <UserStatus/>
-
-    </div>
-  );
+  return <DashboardClient />;
 }

@@ -2,8 +2,111 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Trash2, Edit, Plus, X, Loader2, Package, 
-  AlertCircle, Sparkles, Image as ImageIcon, Ruler, Pipette, CheckCircle2, ChevronDown
+  AlertCircle, Sparkles, Image as ImageIcon, Ruler, Pipette, CheckCircle2, ChevronDown,
+  Users, ChevronRight, User
 } from 'lucide-react';
+
+// User Product Group Component
+const UserProductGroup = ({ group, onEdit, onDelete }: { group: any, onEdit: (p: any) => void, onDelete: (id: string) => void }) => {
+  const [isExpanded, setIsExpanded] = useState(true);
+  const { user, products } = group;
+
+  return (
+    <div className="bg-[#0f172a] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+      {/* User Header */}
+      <button 
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full p-6 flex items-center justify-between bg-gradient-to-r from-blue-600/10 to-purple-600/10 hover:from-blue-600/20 hover:to-purple-600/20 transition-all"
+      >
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-blue-600/20 rounded-2xl">
+            <User className="w-6 h-6 text-blue-400" />
+          </div>
+          <div className="text-left">
+            <h3 className="font-bold text-white text-lg">{user.name === 'Unknown User' ? 'Admin' : user.name}</h3>
+            <p className="text-slate-400 text-sm">{user.email || 'System Admin'}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="px-4 py-2 bg-white/5 rounded-xl text-sm font-bold text-slate-300">
+            {products.length} Products
+          </span>
+          <ChevronRight 
+            className={`w-6 h-6 text-slate-400 transition-transform ${isExpanded ? 'rotate-90' : ''}`} 
+          />
+        </div>
+      </button>
+
+      {/* Products Table */}
+      {isExpanded && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left min-w-[800px]">
+            <thead className="bg-white/5 text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 border-b border-white/5">
+              <tr>
+                <th className="px-6 py-4">Product</th>
+                <th className="px-6 py-4">Type</th>
+                <th className="px-6 py-4">Brand</th>
+                <th className="px-6 py-4">Size/Color</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Price</th>
+                <th className="px-6 py-4 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {products.map((p: any) => (
+                <tr key={p.id} className="group hover:bg-white/[0.02] transition-all">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-10 rounded-lg bg-slate-800 overflow-hidden border border-white/5">
+                        {p.imageUrls?.[0] ? (
+                          <img src={p.imageUrls[0]} className="h-full w-full object-cover" alt="" />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-slate-600"><ImageIcon size={16}/></div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-bold text-white text-sm">{p.name}</div>
+                        <div className="text-[10px] text-slate-500">{p.description?.substring(0, 30)}...</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-[10px] font-black text-blue-500">{p.categories?.[0]}</span>
+                      <span className="text-xs text-slate-300">{p.subCategories?.[0]}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase bg-white/5 px-2 py-1 rounded">
+                      {p.brands?.[0]}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1 max-w-[80px]">
+                      {p.sizes?.map((s: string) => <span key={s} className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-300">{s}</span>)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-[9px] font-bold px-2 py-1 rounded ${p.condition === 'NEW' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                      {p.condition}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 font-bold text-white">${p.price}</td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <button onClick={() => onEdit(p)} className="p-2 bg-white/5 hover:bg-blue-600 rounded-lg transition-all"><Edit size={14}/></button>
+                      <button onClick={() => onDelete(p.id)} className="p-2 bg-white/5 hover:bg-red-600 rounded-lg transition-all"><Trash2 size={14}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
 
 // const CONFIG = {
 //   categories: ["Dress", "Accessories"] as const,
@@ -351,9 +454,34 @@ export default function LuxuryAdminPro() {
     finally { setDeleteLoading(false); }
   };
 
+  // Group products by user
+  const groupProductsByUser = (products: any[]) => {
+    const grouped: { [key: string]: { user: any, products: any[] } } = {};
+    
+    products.forEach((p) => {
+      const isAdmin = !p.user;
+      const userId = p.user?.id || 'admin';
+      const userName = isAdmin ? 'Admin' : (p.user?.name || p.user?.email || 'Unknown User');
+      const userEmail = isAdmin ? 'System Administrator' : (p.user?.email || '');
+      
+      if (!grouped[userId]) {
+        grouped[userId] = {
+          user: { id: userId, name: userName, email: userEmail },
+          products: []
+        };
+      }
+      grouped[userId].products.push(p);
+    });
+    
+    return Object.values(grouped);
+  };
+
+  const groupedProducts = groupProductsByUser(products);
+  const [viewMode, setViewMode] = useState<'all' | 'byUser'>('all');
+
   return (
     <div className="min-h-screen bg-[#020617] text-slate-100 p-3 md:p-10">
-      <div className="mx-auto ">
+      <div className="mx-auto max-w-7xl">
        
         {/* Header - Stack on mobile, Row on Desktop */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 md:mb-10 gap-6 bg-[#0f172a] p-6 md:p-8 rounded-3xl md:rounded-[2.5rem] border border-white/5 shadow-2xl">
@@ -363,116 +491,166 @@ export default function LuxuryAdminPro() {
             </div>
             <span>Product Management <span className="text-blue-500 font-light block md:inline text-sm md:text-3xl">ADMIN</span></span>
           </h1>
+          <div className="flex items-center gap-4">
+            <div className="text-sm text-slate-400">
+              <span className="font-bold text-white">{products.length}</span> products from <span className="font-bold text-white">{groupedProducts.length}</span> users
+            </div>
+            <button
+              onClick={() => {
+                setForm({id:'', name:'', price:'', description:'', saleType:'SELL', condition:'NEW', cat:'', subCat:'', productType: '', brand:'', sizes:[], colors:[], imageUrls:[]});
+                setSelectedFiles([]); setError(null); setIsModal(true);
+              }}
+              className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-600/20"
+            >
+              <Plus size={20}/> ADD PRODUCT
+            </button>
+          </div>
+        </div>
+
+        {/* View Tabs */}
+        <div className="flex gap-2 mb-6">
           <button
-            onClick={() => {
-              setForm({id:'', name:'', price:'', description:'', saleType:'SELL', condition:'NEW', cat:'', subCat:'', productType: '', brand:'', sizes:[], colors:[], imageUrls:[]});
-              setSelectedFiles([]); setError(null); setIsModal(true);
-            }}
-            className="w-full md:w-auto bg-blue-600 hover:bg-blue-500 px-8 py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-xl shadow-blue-600/20"
+            onClick={() => setViewMode('all')}
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+              viewMode === 'all' 
+                ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
           >
-            <Plus size={20}/> ADD PRODUCT
+            <Package size={16} className="inline mr-2" />
+            All Products
+          </button>
+          <button
+            onClick={() => setViewMode('byUser')}
+            className={`px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+              viewMode === 'byUser' 
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' 
+                : 'bg-white/5 text-slate-400 hover:bg-white/10'
+            }`}
+          >
+            <Users size={16} className="inline mr-2" />
+            Products by User
           </button>
         </div>
 
-        {/* Table - Responsive Container */}
-        <div className="bg-[#0f172a] rounded-3xl md:rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl relative">
-          {loading && (
-             <div className="absolute inset-0 bg-[#0f172a]/80 backdrop-blur-sm z-10 flex items-center justify-center">
-                <Loader2 className="animate-spin text-blue-500" size={40} />
-             </div>
-          )}
-          <div className="overflow-x-auto scrollbar-hide">
-            <table className="w-full text-left min-w-[800px] md:min-w-full">
-              <thead className="bg-white/5 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 border-b border-white/5">
-                <tr>
-                  <th className="px-6 md:px-8 py-6">Product</th>
-                  <th className="px-6 md:px-8 py-6">All Product type</th>
-                  <th className="px-6 md:px-8 py-6">Brand</th>
-                  <th className="px-6 md:px-8 py-6">Color and Size</th>
-                  <th className="px-6 md:px-8 py-6">Status</th>
-                  <th className="px-6 md:px-8 py-6">Price</th>
-                  <th className="px-6 md:px-8 py-6 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/5">
-                {products.map((p) => (
-                  <tr key={p.id} className="group hover:bg-white/[0.02] transition-all">
-                    <td className="px-6 md:px-8 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="h-12 w-9 md:h-14 md:w-11 rounded-lg bg-slate-800 overflow-hidden border border-white/5 shadow-lg flex-shrink-0">
-                          {p.imageUrls?.[0] ? (
-                            <img src={p.imageUrls[0]} className="h-full w-full object-cover" alt="product" />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-slate-600"><ImageIcon size={18}/></div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <div className="font-bold text-white text-sm group-hover:text-blue-400 transition-colors uppercase truncate max-w-[120px] md:max-w-none">{p.name}</div>
-                          <div className="text-[10px] text-slate-500 mt-0.5 uppercase tracking-tighter line-clamp-1">{p.description}</div>
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 md:px-8 py-5">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-[10px] font-black text-blue-500 uppercase tracking-tight">{p.categories?.[0]}</span>
-                        <span className="text-xs text-slate-300 font-medium">{p.subCategories?.[0]}</span>
-                        <span className="text-[9px] bg-blue-500/10 text-blue-300 px-1.5 py-0.5 rounded border border-blue-500/20 w-fit">{p.productTypes?.[0] || "No Type"}</span>
-                      </div>
-                    </td>
-
-                    <td className="px-6 md:px-8 py-5">
-                      <div className="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-lg border border-white/5 w-fit">
-                        {p.brands?.[0]}
-                      </div>
-                    </td>
-
-                    <td className="px-6 md:px-8 py-5">
-                      <div className="flex flex-col gap-2">
-                        <div className="flex flex-wrap gap-1 max-w-[100px]">
-                          {p.sizes?.map((s: string) => <span key={s} className="text-[9px] font-black bg-white/5 px-1.5 py-0.5 rounded text-slate-300 border border-white/10">{s}</span>)}
-                        </div>
-                        <div className="flex flex-wrap gap-1.5">
-                          {p.colors?.map((c: string) => {
-                             const colorObj = CONFIG.colors.find(co => co.name === c);
-                             return <div key={c} className="w-3 h-3 rounded-full border border-white/20 shadow-sm" style={{backgroundColor: colorObj?.hex || c}} />
-                          })}
-                        </div>
-                      </div>
-                    </td>
-
-                    <td className="px-6 md:px-8 py-5">
-                      <div className="flex flex-col gap-1.5">
-                        <span className={`text-[9px] font-bold px-2 py-0.5 rounded w-fit border ${p.condition === 'NEW' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'}`}>{p.condition}</span>
-                        <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded border border-purple-500/20 w-fit">{p.saleType}</span>
-                      </div>
-                    </td>
-
-                    <td className="px-6 md:px-8 py-5 font-black text-white text-base md:text-lg">${p.price}</td>
-
-                    <td className="px-6 md:px-8 py-5 text-right">
-                      <div className="flex justify-end gap-2">
-                        <button onClick={() => {
-                          setForm({
-                             ...p,
-                             cat: p.categories?.[0] || '',
-                             subCat: p.subCategories?.[0] || '',
-                             brand: p.brands?.[0] || '',
-                             productType: p.productTypes?.[0] || ''
-                          });
-                          setError(null);
-                          setIsModal(true);
-                        }} className="p-2.5 bg-white/5 hover:bg-blue-600 rounded-xl transition-all"><Edit size={16}/></button>
-                        <button onClick={() => setIsDelModal({ open: true, id: p.id })} className="p-2.5 bg-white/5 hover:bg-red-600 rounded-xl transition-all"><Trash2 size={16}/></button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {/* Loading State */}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="animate-spin text-blue-500" size={40} />
           </div>
-        </div>
-      </div>
+        ) : viewMode === 'byUser' ? (
+          /* Products Grouped by User */
+          <div className="space-y-6">
+            {groupedProducts.map((group) => (
+              <UserProductGroup 
+                key={group.user.id} 
+                group={group}
+                onEdit={(p: any) => {
+                  setForm({
+                    ...p,
+                    cat: p.categories?.[0] || '',
+                    subCat: p.subCategories?.[0] || '',
+                    brand: p.brands?.[0] || '',
+                    productType: p.productTypes?.[0] || ''
+                  });
+                  setError(null);
+                  setIsModal(true);
+                }}
+                onDelete={(id: string) => setIsDelModal({ open: true, id })}
+              />
+            ))}
+          </div>
+        ) : (
+          /* All Products - Simple Table View */
+          <div className="bg-[#0f172a] rounded-3xl border border-white/5 overflow-hidden shadow-2xl">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left min-w-[900px]">
+                <thead className="bg-white/5 text-[10px] md:text-[11px] font-black uppercase tracking-[0.2em] text-slate-500 border-b border-white/5">
+                  <tr>
+                    <th className="px-6 py-5">Product</th>
+                    <th className="px-6 py-5">Seller</th>
+                    <th className="px-6 py-5">Category</th>
+                    <th className="px-6 py-5">Brand</th>
+                    <th className="px-6 py-5">Size/Color</th>
+                    <th className="px-6 py-5">Status</th>
+                    <th className="px-6 py-5">Price</th>
+                    <th className="px-6 py-5 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5">
+                  {products.map((p) => (
+                    <tr key={p.id} className="group hover:bg-white/[0.02] transition-all">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <div className="h-12 w-10 rounded-lg bg-slate-800 overflow-hidden border border-white/5">
+                            {p.imageUrls?.[0] ? (
+                              <img src={p.imageUrls[0]} className="h-full w-full object-cover" alt="" />
+                            ) : (
+                              <div className="h-full w-full flex items-center justify-center text-slate-600"><ImageIcon size={16}/></div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="font-bold text-white text-sm">{p.name}</div>
+                            <div className="text-[10px] text-slate-500">{p.description?.substring(0, 30)}...</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-blue-600/20 rounded-full flex items-center justify-center">
+                            <User size={12} className="text-blue-400" />
+                          </div>
+                          <span className="text-sm text-slate-300">{p.user?.name || p.user?.email || 'Admin'}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-black text-blue-500">{p.categories?.[0]}</span>
+                          <span className="text-xs text-slate-300">{p.subCategories?.[0]}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase bg-white/5 px-2 py-1 rounded">
+                          {p.brands?.[0]}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-wrap gap-1 max-w-[80px]">
+                          {p.sizes?.map((s: string) => <span key={s} className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-slate-300">{s}</span>)}
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="flex flex-col gap-1">
+                          <span className={`text-[9px] font-bold px-2 py-0.5 rounded w-fit ${p.condition === 'NEW' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                            {p.condition}
+                          </span>
+                          <span className="text-[9px] font-bold px-2 py-0.5 bg-purple-500/10 text-purple-500 rounded w-fit">{p.saleType}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5 font-bold text-white">${p.price}</td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex justify-end gap-2">
+                          <button onClick={() => {
+                            setForm({
+                              ...p,
+                              cat: p.categories?.[0] || '',
+                              subCat: p.subCategories?.[0] || '',
+                              brand: p.brands?.[0] || '',
+                              productType: p.productTypes?.[0] || ''
+                            });
+                            setError(null);
+                            setIsModal(true);
+                          }} className="p-2 bg-white/5 hover:bg-blue-600 rounded-lg transition-all"><Edit size={14}/></button>
+                          <button onClick={() => setIsDelModal({ open: true, id: p.id })} className="p-2 bg-white/5 hover:bg-red-600 rounded-lg transition-all"><Trash2 size={14}/></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
       {/* Main Modal - Mobile Friendly */}
       {isModal && (
@@ -633,6 +811,7 @@ export default function LuxuryAdminPro() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

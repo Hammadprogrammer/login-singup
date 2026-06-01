@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import prisma from '@/lib/prisma';
+import { cookies } from 'next/headers';
+import jwt from 'jsonwebtoken';
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -19,9 +21,53 @@ async function uploadToCloudinary(file: File) {
   return result.secure_url;
 }
 
-export async function GET() {
+async function getUserFromToken() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('token')?.value;
+  if (!token) return null;
+  
   try {
-    const products = await prisma.product.findMany({ orderBy: { createdAt: 'desc' } });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as { id: number; email: string; role: string };
+    return decoded;
+  } catch {
+    return null;
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const userId = searchParams.get('userId');
+    const myProducts = searchParams.get('myProducts');
+    
+    let whereClause: any = {};
+    
+    if (userId) {
+      whereClause.userId = parseInt(userId);
+    }
+    
+    // If myProducts=true, get products for current logged-in user
+    if (myProducts === 'true') {
+      const user = await getUserFromToken();
+      if (!user) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+      whereClause.userId = user.id;
+    }
+    
+    const products = await prisma.product.findMany({
+      where: whereClause,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
     return NextResponse.json(products);
   } catch (error) {
     return NextResponse.json({ error: 'Fetch failed' }, { status: 500 });
@@ -30,6 +76,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
+    // Get user from token
+    const user = await getUserFromToken();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized - Please login' }, { status: 401 });
+    }
+    
     const formData = await req.formData();
     const files = formData.getAll('images') as File[];
     const imageUrls = await Promise.all(
@@ -45,12 +97,13 @@ export async function POST(req: NextRequest) {
         condition: formData.get('condition') as any,
         categories: formData.get('cat')?.toString().split(',').filter(Boolean) || [],
         subCategories: formData.get('subCat')?.toString().split(',').filter(Boolean) || [],
-        productTypes: formData.get('types')?.toString().split(',').filter(Boolean) || [], // New
+        productTypes: formData.get('types')?.toString().split(',').filter(Boolean) || [],
         brands: formData.get('brand')?.toString().split(',').filter(Boolean) || [],
         sizes: formData.get('sizes')?.toString().split(',').filter(Boolean) || [],
         colors: formData.get('colors')?.toString().split(',').filter(Boolean) || [],
         imageUrls,
         isPublished: true,
+        userId: user.id, // Link product to the user who created it
       },
     });
     return NextResponse.json(product, { status: 201 });

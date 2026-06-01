@@ -17,6 +17,90 @@ $hover-link-color: #000000;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
+// Sell page theme - Same pink theme as shop
+.sellTheme {
+  background-color: $light-background !important;
+  
+  .topBanner {
+    background: $banner-background;
+    color: #000;
+  }
+  
+  .desktopNavLinks {
+    background: $light-background !important;
+    border-bottom: 1px solid #eee;
+    
+    a {
+      color: $primary-text-color;
+      font-weight: 500;
+      
+      &:hover {
+        color: $hover-link-color;
+        text-decoration: underline;
+      }
+    }
+  }
+  
+  .desktopNavLinkItem a {
+    color: $primary-text-color;
+  }
+  
+  .hamburger {
+    color: #000;
+  }
+  
+  .logoText {
+    .misha, .lakhani {
+      color: #000;
+    }
+  }
+  
+  .loginButton {
+    color: $primary-text-color;
+    border-color: $primary-text-color;
+    
+    &:hover {
+      background-color: $primary-text-color;
+      color: #fff;
+    }
+  }
+  
+  .rightSection .icon {
+    color: #000;
+  }
+  
+  .searchIcon {
+    color: #000;
+  }
+  
+  // Mobile menu sell theme - same pink
+  .navbarLinks {
+    background: $light-background;
+    
+    .mobileMainLink {
+      color: #000;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .mobileSubMenu {
+      background: #fafafa;
+    }
+    
+    .mobileSubLink {
+      color: #555;
+    }
+    
+    .mobileToggleWrapper {
+      border-bottom: 1px solid #f0f0f0;
+    }
+  }
+  
+  .mobileAccount {
+    background: $banner-background;
+    color: #000;
+  }
+}
+
 .topBanner {
   background: $banner-background;
   color: black; 

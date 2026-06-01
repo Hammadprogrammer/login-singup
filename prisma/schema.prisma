@@ -20,6 +20,7 @@ model User {
   carts           Cart[]
   favorites       Favorite[]
   kyc             KYC?
+  products        Product[]
 }
 
 model KYC {
@@ -64,10 +65,13 @@ model Product {
   saleType      SaleType         @default(SELL)
   condition     ProductCondition @default(NEW)
   productTypes  String[]         @default([])
+  userId        Int?
+  user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   carts         Cart[]
   favorites     Favorite[]
 
   @@index([price])
+  @@index([userId])
 }
 
 model Favorite {
