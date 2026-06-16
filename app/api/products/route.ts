@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
         colors: formData.get('colors')?.toString().split(',').filter(Boolean) || [],
         imageUrls,
         isPublished: true,
-        userId: user.id, // Link product to the user who created it
+        userId: user.id,
       },
     });
     return NextResponse.json(product, { status: 201 });

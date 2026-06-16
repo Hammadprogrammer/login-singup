@@ -30,15 +30,15 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* 2. Links Section (Mobile Side-by-Side) */}
-          <div className="grid grid-cols-2 gap-4 lg:col-span-1">
+          {/* 2. Links Section */}
+          <div className="grid grid-cols-3 gap-4 lg:col-span-1">
             {/* Shop Links */}
             <div>
               <h3 className="text-[13px] font-black mb-8 uppercase tracking-[0.15em] text-black">Shop</h3>
               <ul className="space-y-4 text-[14px]">
                 {['New In', 'Ready To Wear', 'Couture', 'Unstitched'].map((item) => (
                   <li key={item}>
-                    <Link href={`/${item.toLowerCase()}`} className="group relative py-1 font-bold text-black transition-all duration-300 hover:font-black">
+                    <Link href={`/${item.toLowerCase().replace(/ /g, '-')}`} className="group relative py-1 font-bold text-black transition-all duration-300 hover:font-black">
                       {item}
                       <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
                     </Link>
@@ -55,6 +55,21 @@ export default function Footer() {
                   <li key={item}>
                     <Link href={`/${item.toLowerCase()}`} className="group relative py-1 font-bold text-black transition-all duration-300 hover:font-black">
                       {item}
+                      <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Company Links */}
+            <div>
+              <h3 className="text-[13px] font-black mb-8 uppercase tracking-[0.15em] text-black">Company</h3>
+              <ul className="space-y-4 text-[14px]">
+                {[{ label: 'About Us', href: '/about' }, { label: 'Sell With Us', href: '/sell_product' }, { label: 'My Products', href: '/my-products' }].map(({ label, href }) => (
+                  <li key={label}>
+                    <Link href={href} className="group relative py-1 font-bold text-black transition-all duration-300 hover:font-black">
+                      {label}
                       <span className="absolute bottom-0 left-0 w-0 h-[2px] bg-black transition-all duration-300 group-hover:w-full"></span>
                     </Link>
                   </li>
