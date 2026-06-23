@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { ImageOff, SlidersHorizontal, Heart, ChevronDown, Check, X } from 'lucide-react';
 import Link from 'next/link';
+import { StaggerGroup, StaggerItem } from '@/sharecomponent/anim/Reveal';
 
 interface Product {
   id: string;
@@ -213,7 +214,7 @@ const ProductGrid = () => {
         {loading ? (
           <LoadingSkeleton />
         ) : (
-          <div className={`grid transition-all duration-700 ease-in-out ${
+          <StaggerGroup className={`grid transition-all duration-700 ease-in-out ${
             cols === 6 
             ? 'grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-x-2 gap-y-8 md:gap-x-4 md:gap-y-12'
             : cols === 4 
@@ -225,7 +226,7 @@ const ProductGrid = () => {
               const isFavorited = favorites.includes(product.id);
 
               return (
-                <div key={product.id} className="group flex flex-col relative">
+                <StaggerItem key={product.id} className="group flex flex-col relative">
                   <Link href={`/product/${product.id}`} className="relative aspect-[3/4] overflow-hidden bg-[#f9f9f9]">
                     {product.imageUrls?.[0] ? (
                       <>
@@ -259,10 +260,10 @@ const ProductGrid = () => {
                     <h3 className="text-[10px] md:text-[12px] tracking-widest uppercase font-light text-gray-800 line-clamp-1">{product.name}</h3>
                     <p className="mt-3 text-[11px] md:text-[14px] font-medium italic text-gray-600">{product.price} USDT</p>
                   </div>
-                </div>
+                </StaggerItem>
               );
             })}
-          </div>
+          </StaggerGroup>
         )}
       </main>
     </div>

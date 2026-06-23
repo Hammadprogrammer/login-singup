@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
+import Reveal from '@/sharecomponent/anim/Reveal';
 
 interface Testimonial {
   id: number;
@@ -38,7 +39,7 @@ const Testimonials: React.FC = () => {
 
   return (
     <section className="bg-[#9a8478] py-20 md:py-24">
-      <div className="max-w-3xl mx-auto px-6 text-center text-white">
+      <Reveal className="max-w-3xl mx-auto px-6 text-center text-white">
         <div className="text-5xl font-serif leading-none mb-6 opacity-40">&ldquo;</div>
         <p key={active.id} className="text-lg md:text-2xl font-light leading-relaxed italic transition-opacity duration-500">
           {active.quote}
@@ -60,7 +61,7 @@ const Testimonials: React.FC = () => {
             ))}
           </div>
         )}
-      </div>
+      </Reveal>
     </section>
   );
 };

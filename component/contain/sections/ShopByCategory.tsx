@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Reveal, { StaggerGroup, StaggerItem } from '@/sharecomponent/anim/Reveal';
 
 interface Category {
   id: number;
@@ -38,12 +39,15 @@ const ShopByCategory: React.FC = () => {
 
   return (
     <section className="max-w-[1200px] mx-auto px-4 py-16">
-      <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
-        Shop by Category
-      </h2>
-      <div className="flex flex-wrap justify-center gap-x-8 gap-y-10 md:gap-x-12">
+      <Reveal>
+        <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
+          Shop by Category
+        </h2>
+      </Reveal>
+      <StaggerGroup className="flex flex-wrap justify-center gap-x-8 gap-y-10 md:gap-x-12">
         {items.map((c) => (
-          <Link key={c.id} href={c.link || '/'} className="group flex flex-col items-center w-20 md:w-24">
+          <StaggerItem key={c.id}>
+          <Link href={c.link || '/'} className="group flex flex-col items-center w-20 md:w-24">
             <div className="w-20 h-20 md:w-24 md:h-24 rounded-full overflow-hidden bg-zinc-100 ring-1 ring-zinc-200 transition-all duration-300 group-hover:ring-2 group-hover:ring-zinc-900">
               {c.image ? (
                 <img src={c.image} alt={c.name} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
@@ -55,8 +59,9 @@ const ShopByCategory: React.FC = () => {
               {c.name}
             </span>
           </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
     </section>
   );
 };

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
+import { StaggerGroup, StaggerItem } from '@/sharecomponent/anim/Reveal';
 
 interface PromoBanner {
   id: number;
@@ -54,16 +55,14 @@ const PromoGrid: React.FC = () => {
 
   return (
     <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[260px]">
+      <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 auto-rows-[260px]">
         {banners.map((b) => {
           const isLarge = b.size === 'large';
           return (
+            <StaggerItem key={b.id} className={isLarge ? 'md:row-span-2' : ''}>
             <Link
-              key={b.id}
               href={b.link || '/'}
-              className={`group relative overflow-hidden rounded-sm flex flex-col justify-between p-7 ${
-                isLarge ? 'md:row-span-2' : ''
-              }`}
+              className="group relative overflow-hidden rounded-sm flex flex-col justify-between p-7 h-full"
               style={!b.image ? { backgroundColor: b.bgColor || '#9a8478' } : undefined}
             >
               {/* Background image + overlay */}
@@ -100,9 +99,10 @@ const PromoGrid: React.FC = () => {
                 </div>
               )}
             </Link>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerGroup>
     </section>
   );
 };

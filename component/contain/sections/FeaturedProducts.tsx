@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ImageOff, ArrowRight } from 'lucide-react';
+import Reveal, { StaggerGroup, StaggerItem } from '@/sharecomponent/anim/Reveal';
 
 interface FeaturedProduct {
   id: number;
@@ -45,12 +46,15 @@ const FeaturedProducts: React.FC = () => {
 
   return (
     <section className="max-w-[1400px] mx-auto px-4 md:px-8 py-16">
-      <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
-        Featured Products
-      </h2>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-8 md:gap-y-16">
+      <Reveal>
+        <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
+          Featured Products
+        </h2>
+      </Reveal>
+      <StaggerGroup className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-8 md:gap-y-16">
         {products.map((p) => (
-          <Link key={p.id} href={p.link || '/'} className="group flex flex-col">
+          <StaggerItem key={p.id}>
+          <Link href={p.link || '/'} className="group flex flex-col">
             <div className="relative aspect-[3/4] overflow-hidden bg-[#f7f7f7]">
               {p.image ? (
                 <img src={p.image} alt={p.title} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -64,18 +68,19 @@ const FeaturedProducts: React.FC = () => {
               {p.price && <p className="mt-2 text-[11px] md:text-[14px] font-medium italic text-zinc-600">{p.price}</p>}
             </div>
           </Link>
+          </StaggerItem>
         ))}
-      </div>
+      </StaggerGroup>
 
       {/* See all products button */}
-      <div className="flex justify-center mt-12">
+      <Reveal className="flex justify-center mt-12" delay={0.15}>
         <Link
           href="/new-in"
           className="inline-flex items-center gap-2 rounded-full border border-zinc-300 px-7 py-3 text-[11px] font-semibold uppercase tracking-[0.15em] text-zinc-800 transition-colors hover:border-pink-500 hover:text-pink-600"
         >
           See all products <ArrowRight size={14} />
         </Link>
-      </div>
+      </Reveal>
     </section>
   );
 };

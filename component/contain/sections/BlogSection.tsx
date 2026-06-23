@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight, User } from 'lucide-react';
+import Reveal, { StaggerGroup, StaggerItem } from '@/sharecomponent/anim/Reveal';
 
 interface BlogPost {
   id: number;
@@ -40,15 +41,17 @@ const BlogSection: React.FC = () => {
 
   return (
     <section className="max-w-[1200px] mx-auto px-4 md:px-8 py-16">
-      <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
-        From the Blog
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <Reveal>
+        <h2 className="text-center text-[22px] md:text-[26px] font-semibold tracking-tight text-zinc-900 mb-12">
+          From the Blog
+        </h2>
+      </Reveal>
+      <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {posts.map((post) => {
           const date = formatDate(post.createdAt);
           return (
+            <StaggerItem key={post.id}>
             <Link
-              key={post.id}
               href={post.link || '/'}
               className="group flex h-[200px] md:h-[230px] bg-white border border-zinc-100 shadow-sm hover:shadow-md transition-shadow rounded-sm overflow-hidden"
             >
@@ -90,9 +93,10 @@ const BlogSection: React.FC = () => {
                 </span>
               </div>
             </Link>
+            </StaggerItem>
           );
         })}
-      </div>
+      </StaggerGroup>
     </section>
   );
 };
