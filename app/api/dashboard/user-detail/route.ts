@@ -35,39 +35,49 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User not found" }, { status: 404 });
   }
 
-  const [orders, searches, views, products] = await Promise.all([
-    prisma.order.findMany({
-      where: { userId },
-      include: { items: true },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-    prisma.searchLog.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-    }),
-    prisma.productView.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      take: 50,
-      include: {
-        product: { select: { id: true, name: true, price: true, imageUrls: true } },
-      },
-    }),
-    prisma.product.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        price: true,
-        imageUrls: true,
-        isPublished: true,
-        createdAt: true,
-      },
-    }),
-  ]);
+  let orders: any[] = [];
+  let searches: any[] = [];
+  let views: any[] = [];
+  let products: any[] = [];
+
+  try {
+    [orders, searches, views, products] = await Promise.all([
+      prisma.order.findMany({
+        where: { userId },
+        include: { items: true },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      prisma.searchLog.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+      }),
+      prisma.productView.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        take: 50,
+        include: {
+          product: { select: { id: true, name: true, price: true, imageUrls: true } },
+        },
+      }),
+      prisma.product.findMany({
+        where: { userId },
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          price: true,
+          imageUrls: true,
+          isPublished: true,
+          createdAt: true,
+        },
+      }),
+    ]);
+  } catch (err) {
+    console.error("[user-detail] Prisma query error:", err);
+    return NextResponse.json({ error: "Failed to load user activity data" }, { status: 500 });
+  }
 
   const totalSpent = orders.reduce(
     (acc: number, o: { totalAmount: number }) => acc + o.totalAmount,

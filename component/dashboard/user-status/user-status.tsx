@@ -167,6 +167,8 @@ export default function UserStatus() {
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     {user.role === "ADMIN" ? (
                       <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">ADMIN</span>
+                    ) : user.role === "SUBADMIN" ? (
+                      <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/20">SUBADMIN</span>
                     ) : (
                       <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700/50">USER</span>
                     )}
@@ -183,10 +185,10 @@ export default function UserStatus() {
                         Details
                       </button>
                       <button
-                        disabled={deleting === user.id || user.role === "ADMIN"}
+                        disabled={deleting === user.id || user.role === "ADMIN" || user.role === "SUBADMIN"}
                         onClick={() => handleDeleteUser(user.id)}
                         className={`px-3 py-1 rounded-md text-xs font-semibold ${
-                          user.role === "ADMIN"
+                          user.role === "ADMIN" || user.role === "SUBADMIN"
                             ? "bg-slate-800 text-slate-600 cursor-not-allowed"
                             : deleting === user.id
                             ? "bg-red-700 text-white cursor-not-allowed"

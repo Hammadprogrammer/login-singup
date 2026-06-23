@@ -26,9 +26,9 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Protect other admin accounts from deletion.
-    if (target.role === "ADMIN") {
-      return NextResponse.json({ error: "Admin accounts cannot be deleted" }, { status: 403 });
+    // Protect admin and subadmin accounts from deletion.
+    if (target.role === "ADMIN" || target.role === "SUBADMIN") {
+      return NextResponse.json({ error: "Admin and SubAdmin accounts cannot be deleted" }, { status: 403 });
     }
 
     await prisma.user.delete({ where: { id: userId } });

@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
   }
 
   const normalizedEmail = String(email).trim().toLowerCase();
-  const finalRole = role === "ADMIN" ? "ADMIN" : "USER";
+  const finalRole = role === "ADMIN" ? "ADMIN" : role === "SUBADMIN" ? "SUBADMIN" : "USER";
 
   const existing = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existing) {
