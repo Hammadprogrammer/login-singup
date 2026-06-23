@@ -8,7 +8,16 @@ import {
   ImageIcon, 
   ShieldCheck,
   TrendingUp,
-  Activity
+  Activity,
+  ShoppingBag,
+  BarChart3,
+  LayoutGrid,
+  Shapes,
+  Star,
+  Megaphone,
+  Images,
+  Newspaper,
+  Quote
 } from "lucide-react";
 
 interface Stats {
@@ -189,24 +198,34 @@ export default function OverviewTab({ onTabChange }: { onTabChange: (tab: string
         ))}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions - all tabs */}
       <div className="bg-[#161f32] rounded-2xl border border-slate-800 p-6">
         <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-4 flex items-center gap-2">
           <Activity size={14} /> Quick Navigation
         </h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
           {[
-            { label: "Manage Products", tab: "products", color: "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20" },
-            { label: "User Directory", tab: "users", color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" },
-            { label: "Home Sliders", tab: "sliders", color: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" },
-            { label: "KYC Verification", tab: "kyc", color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" },
+            { label: "Products", tab: "products", icon: Package, color: "bg-purple-500/10 text-purple-400 hover:bg-purple-500/20" },
+            { label: "Orders", tab: "orders", icon: ShoppingBag, color: "bg-rose-500/10 text-rose-400 hover:bg-rose-500/20" },
+            { label: "Analytics", tab: "analytics", icon: BarChart3, color: "bg-cyan-500/10 text-cyan-400 hover:bg-cyan-500/20" },
+            { label: "Home Sliders", tab: "sliders", icon: ImageIcon, color: "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20" },
+            { label: "Promo Banners", tab: "promos", icon: LayoutGrid, color: "bg-fuchsia-500/10 text-fuchsia-400 hover:bg-fuchsia-500/20" },
+            { label: "Categories", tab: "categories", icon: Shapes, color: "bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20" },
+            { label: "Featured", tab: "featured", icon: Star, color: "bg-yellow-500/10 text-yellow-400 hover:bg-yellow-500/20" },
+            { label: "Sale Banner", tab: "saleBanner", icon: Megaphone, color: "bg-orange-500/10 text-orange-400 hover:bg-orange-500/20" },
+            { label: "Inspiration", tab: "inspiration", icon: Images, color: "bg-pink-500/10 text-pink-400 hover:bg-pink-500/20" },
+            { label: "Blog", tab: "blog", icon: Newspaper, color: "bg-teal-500/10 text-teal-400 hover:bg-teal-500/20" },
+            { label: "Testimonials", tab: "testimonials", icon: Quote, color: "bg-violet-500/10 text-violet-400 hover:bg-violet-500/20" },
+            { label: "Users", tab: "users", icon: Users, color: "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20" },
+            { label: "KYC", tab: "kyc", icon: ShieldCheck, color: "bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20" },
           ].map((action) => (
             <button
               key={action.tab}
               onClick={() => onTabChange(action.tab)}
-              className={`p-4 rounded-xl text-xs font-bold transition-all ${action.color}`}
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl text-xs font-bold transition-all ${action.color}`}
             >
-              {action.label}
+              <action.icon size={20} />
+              <span className="text-center">{action.label}</span>
             </button>
           ))}
         </div>

@@ -1,26 +1,16 @@
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
 
+import { getAuthUser } from "@/lib/auth";
 import DashboardClient from "@/component/dashboard/dashboard-client";
 
 export default async function DashboardPage() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get("token")?.value;
+  const user = await getAuthUser();
 
-  if (!token) {
+  if (!user) {
     redirect("/login");
   }
 
-  let decoded: any;
-
-  try {
-    decoded = jwt.verify(token, process.env.JWT_SECRET!);
-  } catch (error) {
-    redirect("/login");
-  }
-
-  if (decoded.role !== "ADMIN") {
+  if (user.role !== "ADMIN") {
     redirect("/");
   }
 

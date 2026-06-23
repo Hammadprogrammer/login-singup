@@ -9,6 +9,13 @@ import {
   ShieldCheck,
   ShoppingBag,
   BarChart3,
+  LayoutGrid,
+  Shapes,
+  Star,
+  Megaphone,
+  Images,
+  Newspaper,
+  Quote,
   LogOut,
   Menu,
   X
@@ -21,10 +28,12 @@ import KYCTab from "./tabs/kyc-tab";
 import OrdersTab from "./tabs/orders-tab";
 import AnalyticsTab from "./tabs/analytics-tab";
 import { HomeSliderCRUD } from "./homeSlider/slider";
+import { PromoBannerCRUD } from "./promo/promo";
+import { CategoryCRUD, SaleBannerCRUD, InspirationCRUD, BlogCRUD, TestimonialCRUD, FeaturedProductsCRUD } from "./sections/panels";
 import ProductDashboard from "./product/product";
 import UserStatus from "./user-status/user-status";
 
-type TabKey = "overview" | "products" | "orders" | "analytics" | "sliders" | "users" | "kyc";
+type TabKey = "overview" | "products" | "orders" | "analytics" | "sliders" | "promos" | "categories" | "featured" | "saleBanner" | "inspiration" | "blog" | "testimonials" | "users" | "kyc";
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
@@ -32,6 +41,13 @@ const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "orders", label: "Orders", icon: ShoppingBag },
   { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "sliders", label: "Home Sliders", icon: ImageIcon },
+  { key: "promos", label: "Promo Banners", icon: LayoutGrid },
+  { key: "categories", label: "Categories", icon: Shapes },
+  { key: "featured", label: "Featured", icon: Star },
+  { key: "saleBanner", label: "Sale Banner", icon: Megaphone },
+  { key: "inspiration", label: "Inspiration", icon: Images },
+  { key: "blog", label: "Blog", icon: Newspaper },
+  { key: "testimonials", label: "Testimonials", icon: Quote },
   { key: "users", label: "Users", icon: Users },
   { key: "kyc", label: "KYC", icon: ShieldCheck },
 ];
@@ -67,6 +83,20 @@ export default function DashboardClient() {
         return <AnalyticsTab />;
       case "sliders":
         return <HomeSliderCRUD />;
+      case "promos":
+        return <PromoBannerCRUD />;
+      case "categories":
+        return <CategoryCRUD />;
+      case "featured":
+        return <FeaturedProductsCRUD />;
+      case "saleBanner":
+        return <SaleBannerCRUD />;
+      case "inspiration":
+        return <InspirationCRUD />;
+      case "blog":
+        return <BlogCRUD />;
+      case "testimonials":
+        return <TestimonialCRUD />;
       case "users":
         return <UserStatus />;
       case "kyc":

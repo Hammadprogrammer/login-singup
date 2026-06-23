@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "create-admin": "tsx scripts/create-admin.ts"
+    "create-admin": "tsx scripts/create-admin.ts",
+    "seed-home": "tsx scripts/seed-homepage.ts"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",

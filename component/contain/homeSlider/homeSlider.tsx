@@ -78,12 +78,19 @@ const FullScreenImageSlider: React.FC = () => {
 
   return (
     <div className={style.sliderWrapper}>
-      <img
-        src={imageUrls[currentIndex]}
-        alt="Slider Image"
-        className={style.sliderImage}
-        key={currentIndex}
-      />
+      <div
+        className={style.track}
+        style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+      >
+        {imageUrls.map((url, index) => (
+          <img
+            key={index}
+            src={url}
+            alt={`Slider Image ${index + 1}`}
+            className={style.slide}
+          />
+        ))}
+      </div>
 
       <div className={style.dotsWrapper}>
         {imageUrls.map((_, index) => (

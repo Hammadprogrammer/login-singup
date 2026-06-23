@@ -1,19 +1,27 @@
 import React from 'react'
 import FullScreenImageSlider from '@/component/contain/homeSlider/homeSlider'
 import ProductsDashboard from '@/component/contain/product/product'
+import PromoGrid from '@/component/contain/promo/PromoGrid'
+import ShopByCategory from '@/component/contain/sections/ShopByCategory'
+import FeaturedProducts from '@/component/contain/sections/FeaturedProducts'
+import SaleShowcase from '@/component/contain/sections/SaleShowcase'
+import BlogSection from '@/component/contain/sections/BlogSection'
+import Testimonials from '@/component/contain/sections/Testimonials'
 import KycStatusBanner from './kyc-user/page'
 
 
 const page = () => {
   return (
     <div>
-            <KycStatusBanner />
-
+      <KycStatusBanner />
       <FullScreenImageSlider/>
-            <ProductsDashboard/>
-         
-
-      
+      <PromoGrid />
+      <ShopByCategory />
+      <FeaturedProducts />
+      <SaleShowcase />
+      <ProductsDashboard/>
+      <BlogSection />
+      <Testimonials />
     </div>
   )
 }

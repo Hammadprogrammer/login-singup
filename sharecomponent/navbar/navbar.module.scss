@@ -1,20 +1,65 @@
 $primary-text-color: #000000;
-$light-background: #fff5f9;
-$banner-background: #f5d7e3;
-$hover-link-color: #000000; 
+$light-background: #ffffff;
+$banner-background: #1c1c1c;
+$hover-link-color: #c75d80; 
 
 .main {
   width: 100%;
   position: fixed;
   top: 0;
   z-index: 1000;
-  background-color: $light-background;
+  background-color: #ffffff;
   border-bottom: 1px solid #eee;
-  transition: 0.3s ease;
+  transition: background-color 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
 }
 
 .scrolled {
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+
+/* ===== TRANSPARENT OVERLAY (over hero, top of page) ===== */
+.transparent {
+  background-color: transparent;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+
+  .topBanner {
+    background: transparent;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  .navbar { color: #ffffff; }
+
+  .hamburger,
+  .searchIcon,
+  .rightSection .icon { color: #ffffff; }
+
+  .logoText .misha,
+  .logoText .lakhani { color: #ffffff; }
+
+  .loginButton {
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.7);
+    &:hover { background-color: #ffffff; color: #1c1c1c; }
+  }
+
+  .desktopNavLinks {
+    background: transparent;
+    border-bottom: none;
+    a { color: #ffffff; }
+  }
+
+  .desktopNavLinkItem a {
+    color: #ffffff;
+    &::after { background: #ffffff; }
+  }
+
+  .toggleContainer {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+  }
+  .toggleBtn { color: rgba(255, 255, 255, 0.8); }
+  .toggleBtn.activeToggle { background: #ffffff; color: #1c1c1c; }
 }
 
 // Sell page theme - Same pink theme as shop
@@ -103,22 +148,24 @@ $hover-link-color: #000000;
 
 .topBanner {
   background: $banner-background;
-  color: black; 
+  color: #ffffff; 
   text-align: center;
-  padding: 12px 0;
-  letter-spacing: 1px;
-  font-weight: bold;
+  padding: 9px 0;
+  letter-spacing: 2px;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
 }
 
-.text { margin: 0; font-size: 14px; }
+.text { margin: 0; font-size: 11px; }
 
 .navbar {
   margin: auto;
-  height: 90px;
+  height: 78px;
   display: flex;
   align-items: center;
   justify-content: space-between;  
-  padding: 0 20px;
+  padding: 0 28px;
   position: relative;
 }
 
@@ -210,24 +257,26 @@ $hover-link-color: #000000;
   flex-direction: column;
   text-align: center;
   cursor: pointer;
-  .misha { font-size: 16px; letter-spacing: 2px; color: black; }
-  .lakhani { font-size: 24px; letter-spacing: 3px; color: black; line-height: 1; }
+  .misha { font-size: 11px; letter-spacing: 4px; color: black; text-transform: uppercase; font-weight: 500; }
+  .lakhani { font-size: 26px; letter-spacing: 4px; color: black; line-height: 1; font-weight: 800; text-transform: uppercase; }
 
   @media (max-width: 768px) {
-    .misha { font-size: 12px; }
-    .lakhani { font-size: 18px; }
+    .misha { font-size: 9px; letter-spacing: 3px; }
+    .lakhani { font-size: 19px; }
   }
 }
 
 .loginButton {
   cursor: pointer;
-  font-size: 12px;
-  font-weight: bold;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: $primary-text-color;
-  padding: 5px 10px;
+  padding: 7px 16px;
   border: 1px solid $primary-text-color;
-  transition: 0.2s;
+  border-radius: 40px;
+  transition: 0.25s ease;
   &:hover { background-color: $primary-text-color; color: white; }
 }
 
@@ -236,32 +285,47 @@ $hover-link-color: #000000;
 /* --- DESKTOP DROPDOWN NAV --- */
 .desktopNavLinks {
   position: absolute;
-  top: 90px; 
+  top: 78px; 
   left: 0;
   width: 100%;
   display: flex;
   justify-content: center;
-  gap: 30px;
-  padding: 10px 0;
+  gap: 38px;
+  padding: 12px 0;
   background: $light-background;
   border-bottom: 1px solid #eee;
+  transition: background-color 0.4s ease, border-color 0.4s ease;
   @media (max-width: 768px) { display: none; }
 }
 
 .desktopNavLinkItem {
   position: relative;
   a {
+    position: relative;
     color: $primary-text-color;
     text-decoration: none;
-    font-size: 13px;
-    font-weight: 500;
-    &:hover { text-decoration: underline; }
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    transition: color 0.3s;
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: -6px;
+      width: 0;
+      height: 1.5px;
+      background: $primary-text-color;
+      transition: width 0.35s ease;
+    }
+    &:hover::after { width: 100%; }
   }
 }
 
 .dropdownMenu {
   position: fixed;
-  top: 180px;
+  top: 168px;
   left: 0;
   width: 100vw;
   background: $light-background;

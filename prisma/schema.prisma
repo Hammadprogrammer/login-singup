@@ -51,6 +51,99 @@ model HomeSlider {
   updatedAt DateTime @updatedAt
 }
 
+model PromoBanner {
+  id         Int      @id @default(autoincrement())
+  title      String
+  subtitle   String?
+  buttonText String?  @default("Shop now")
+  link       String?  @default("/")
+  image      String?
+  bgColor    String?  @default("#9a8478")
+  size       String   @default("normal") // "large" | "normal"
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  image     String?
+  link      String?  @default("/")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model SaleBanner {
+  id         Int      @id @default(autoincrement())
+  image      String?
+  heading    String
+  subheading String?
+  buttonText String?  @default("Shop now")
+  link       String?  @default("/")
+  order      Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([order])
+}
+
+model InspirationImage {
+  id        Int      @id @default(autoincrement())
+  image     String
+  link      String?  @default("/")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model BlogPost {
+  id        Int      @id @default(autoincrement())
+  title     String
+  excerpt   String?
+  image     String?
+  link      String?  @default("/")
+  author    String?  @default("Admin")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model Testimonial {
+  id        Int      @id @default(autoincrement())
+  quote     String
+  author    String
+  brand     String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
+model FeaturedProduct {
+  id        Int      @id @default(autoincrement())
+  image     String?
+  title     String
+  price     String?
+  brand     String?
+  link      String?  @default("/")
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([order])
+}
+
 model Product {
   id            String           @id @default(uuid())
   description   String?
@@ -58,6 +151,7 @@ model Product {
   updatedAt     DateTime         @updatedAt
   imageUrls     String[]         @default([])
   isPublished   Boolean          @default(false)
+  isFeatured    Boolean          @default(false)
   name          String
   price         Float
   brands        String[]         @default([])

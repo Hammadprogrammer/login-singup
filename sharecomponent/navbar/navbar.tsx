@@ -104,6 +104,10 @@ const Navbar: React.FC = () => {
                      pathname === "/add-product" || 
                      pathname === "/my-products";
   const currentMenu = isSellPage ? sellMenuItems : shopMenuItems;
+
+  // Transparent overlay over hero only on the homepage, until the user scrolls.
+  const isHome = pathname === "/";
+  const isTransparent = isHome && !scrolled && !isOpen;
   
   // Sell page uses same theme as shop (pink theme)
   const sellTheme = {
@@ -193,7 +197,7 @@ const Navbar: React.FC = () => {
 
   return (
     <div 
-      className={`${style.main} ${scrolled ? style.scrolled : ""} ${isSellPage ? style.sellTheme : ""}`}
+      className={`${style.main} ${scrolled ? style.scrolled : ""} ${isTransparent ? style.transparent : ""} ${isSellPage ? style.sellTheme : ""}`}
       style={isSellPage ? { backgroundColor: sellTheme.background, borderBottom: `1px solid ${sellTheme.border}` } : {}}
     >
       <div className={style.topBanner}>
