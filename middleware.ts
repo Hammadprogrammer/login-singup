@@ -2,23 +2,40 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
-export function middleware(request: NextRequest) {
-  // 1. Check karein ke kya user Sell section mein ja raha hai
-  if (request.nextUrl.pathname.startsWith('/sell_product')) {
-    
-    // 2. Cookie se token check karein (Aapki auth api jo cookie set karti hai)
-    const token = request.cookies.get('token'); // 'token' ki jagah apna cookie name likhein
+// Routes that require the user to be logged in (token must be present).
+// NOTE: this only checks for token presence at the edge. Role-based access
+// (e.g. ADMIN-only /dashboard) is still verified server-side where the JWT
+// is cryptographically validated.
+const PROTECTED_PREFIXES = [
+  '/sell_product',
+  '/dashboard',
+  '/my-products',
+  '/add-product',
+  '/checkout',
+];
 
+export function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const needsAuth = PROTECTED_PREFIXES.some((p) => pathname.startsWith(p));
+
+  if (needsAuth) {
+    const token = request.cookies.get('token');
     if (!token) {
-      // 3. Agar token nahi hai, toh login page par redirect kar dein
-      return NextResponse.redirect(new URL('/login', request.url));
+      const loginUrl = new URL('/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
     }
   }
 
   return NextResponse.next();
 }
 
-// Sirf in paths par middleware chalega
 export const config = {
-  matcher: ['/sell_product/:path*'],
+  matcher: [
+    '/sell_product/:path*',
+    '/dashboard/:path*',
+    '/my-products/:path*',
+    '/add-product/:path*',
+    '/checkout/:path*',
+  ],
 };

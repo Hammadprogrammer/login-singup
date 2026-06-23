@@ -50,12 +50,49 @@ const CheckoutPage = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const [placing, setPlacing] = useState(false);
+  const [orderError, setOrderError] = useState<string | null>(null);
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (paymentMethod === 'card') {
-      alert("Stripe Checkout Initializing... (Aapko yahan stripe.confirmCardPayment call karna hoga)");
-    } else {
-      alert("Redirecting to Crypto Gateway...");
+    setOrderError(null);
+
+    if (cart.length === 0) {
+      setOrderError("Your bag is empty.");
+      return;
+    }
+
+    setPlacing(true);
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          paymentMethod,
+          ...formData,
+          items: cart,
+        }),
+      });
+
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+
+      const data = await res.json();
+      if (!res.ok) {
+        setOrderError(data.error || "Failed to place order.");
+        return;
+      }
+
+      // Order persisted — clear the local cart and confirm.
+      localStorage.removeItem("luxury_cart");
+      setCart([]);
+      alert(`Order placed successfully! Order #${data.id.slice(0, 8)}`);
+    } catch {
+      setOrderError("Network error. Please try again.");
+    } finally {
+      setPlacing(false);
     }
   };
 
@@ -197,12 +234,18 @@ const CheckoutPage = () => {
                 </div>
               </div>
 
+              {orderError && (
+                <p className="mt-6 text-[11px] font-bold uppercase tracking-widest text-red-600 text-center">
+                  {orderError}
+                </p>
+              )}
+
               <button 
                 type="submit"
-                disabled={cart.length === 0}
+                disabled={cart.length === 0 || placing}
                 className="w-full bg-zinc-900 text-white py-6 mt-10 text-[11px] font-black uppercase tracking-[0.4em] hover:bg-black transition-all flex items-center justify-center gap-3 shadow-xl active:scale-[0.98] disabled:opacity-50"
               >
-                {paymentMethod === 'card' ? 'Authorize Payment' : 'Proceed to Crypto'} <ChevronRight size={16} />
+                {placing ? 'Placing Order...' : paymentMethod === 'card' ? 'Authorize Payment' : 'Proceed to Crypto'} <ChevronRight size={16} />
               </button>
 
               <div className="mt-8 flex items-center justify-center gap-4 opacity-40">

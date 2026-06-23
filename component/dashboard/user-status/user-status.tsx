@@ -1,20 +1,31 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { UserPlus } from "lucide-react";
+import UserDetailModal from "./user-detail-modal";
+import AddUserModal from "./add-user-modal";
 
 export default function UserStatus() {
   const [data, setData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<number | null>(null);
+  const [selectedUserId, setSelectedUserId] = useState<number | null>(null);
+  const [showAddUser, setShowAddUser] = useState(false);
 
   const fetchData = async () => {
     setIsLoading(true);
     try {
       const res = await fetch("/api/dashboard/user-stats");
-      const data = await res.json();
+      if (!res.ok) {
+        setData({ totalUsers: 0, todayUsers: 0, recentUsers: [] });
+        return;
+      }
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : { totalUsers: 0, todayUsers: 0, recentUsers: [] };
       setData(data);
     } catch (err) {
       console.error(err);
+      setData({ totalUsers: 0, todayUsers: 0, recentUsers: [] });
     } finally {
       setIsLoading(false);
     }
@@ -24,7 +35,7 @@ export default function UserStatus() {
     fetchData();
   }, []);
 
-  const handleDeleteUser = async (userId: string) => {
+  const handleDeleteUser = async (userId: number) => {
     if (!confirm("Are you sure you want to delete this user?")) return;
 
     try {
@@ -64,13 +75,22 @@ export default function UserStatus() {
   return (
     <div className="p-4 md:p-8 space-y-8 bg-slate-950 min-h-screen text-slate-200">
       {/* Heading */}
-      <div className="border-b border-slate-800 pb-6">
-        <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-          <span className="text-blue-500">👥</span> User Management
-        </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          Manage and monitor registered user accounts and system access.
-        </p>
+      <div className="border-b border-slate-800 pb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+            <span className="text-blue-500">👥</span> User Management
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Manage and monitor registered user accounts and system access.
+          </p>
+        </div>
+        <button
+          onClick={() => setShowAddUser(true)}
+          className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl font-semibold text-sm transition-colors shadow-lg shadow-blue-500/20"
+        >
+          <UserPlus size={18} />
+          Add User
+        </button>
       </div>
 
       {/* Stats */}
@@ -115,7 +135,8 @@ export default function UserStatus() {
                 <th className="px-6 py-4 font-bold">User ID</th>
                 <th className="px-6 py-4 font-bold">Email Address</th>
                 <th className="px-6 py-4 font-bold">Joined Date</th>
-                <th className="px-6 py-4 font-bold text-center">Reset Code</th>
+                <th className="px-6 py-4 font-bold text-center">Role</th>
+                <th className="px-6 py-4 font-bold text-center">Listings</th>
                 <th className="px-6 py-4 font-bold text-center">Actions</th>
               </tr>
             </thead>
@@ -144,22 +165,37 @@ export default function UserStatus() {
                     {new Date(user.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    {user.resetCode ? (
-                      <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20">ACTIVE</span>
+                    {user.role === "ADMIN" ? (
+                      <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">ADMIN</span>
                     ) : (
-                      <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-slate-800 text-slate-600 border border-slate-700/50">NONE</span>
+                      <span className="px-3 py-1 rounded-md text-[10px] font-bold bg-slate-800 text-slate-400 border border-slate-700/50">USER</span>
                     )}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center text-slate-400 text-xs">
+                    {user._count?.products ?? 0} listed
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <button
-                      disabled={deleting === user.id}
-                      onClick={() => handleDeleteUser(user.id)}
-                      className={`px-3 py-1 rounded-md text-xs font-semibold ${
-                        deleting === user.id ? "bg-red-700 text-white cursor-not-allowed" : "bg-red-600 hover:bg-red-500 text-white"
-                      }`}
-                    >
-                      {deleting === user.id ? "Deleting..." : "Delete"}
-                    </button>
+                    <div className="flex items-center justify-center gap-2">
+                      <button
+                        onClick={() => setSelectedUserId(user.id)}
+                        className="px-3 py-1 rounded-md text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white"
+                      >
+                        Details
+                      </button>
+                      <button
+                        disabled={deleting === user.id || user.role === "ADMIN"}
+                        onClick={() => handleDeleteUser(user.id)}
+                        className={`px-3 py-1 rounded-md text-xs font-semibold ${
+                          user.role === "ADMIN"
+                            ? "bg-slate-800 text-slate-600 cursor-not-allowed"
+                            : deleting === user.id
+                            ? "bg-red-700 text-white cursor-not-allowed"
+                            : "bg-red-600 hover:bg-red-500 text-white"
+                        }`}
+                      >
+                        {deleting === user.id ? "Deleting..." : "Delete"}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -173,6 +209,20 @@ export default function UserStatus() {
           </div>
         )}
       </div>
+
+      {selectedUserId !== null && (
+        <UserDetailModal
+          userId={selectedUserId}
+          onClose={() => setSelectedUserId(null)}
+        />
+      )}
+
+      {showAddUser && (
+        <AddUserModal
+          onClose={() => setShowAddUser(false)}
+          onCreated={fetchData}
+        />
+      )}
     </div>
   );
 }

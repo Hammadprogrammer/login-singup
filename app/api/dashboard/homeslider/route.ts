@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
-import prisma from '@/lib/prisma'; 
+import prisma from '@/lib/prisma';
+import { getAdminUser } from '@/lib/auth';
+
+const FORBIDDEN = NextResponse.json({ message: 'Forbidden' }, { status: 403 });
 
 // Cloudinary Configuration
 cloudinary.config({
@@ -50,6 +53,7 @@ export async function GET() {
 // ===================================
 export async function POST(req: NextRequest) {
   try {
+    if (!(await getAdminUser())) return FORBIDDEN;
     const formData = await req.formData();
     const files = formData.getAll('images') as File[]; 
 
@@ -81,6 +85,7 @@ export async function POST(req: NextRequest) {
 // 3. PUT (UPDATE) - Handles FormData and JSON
 // ===================================
 export async function PUT(req: NextRequest) {
+    if (!(await getAdminUser())) return FORBIDDEN;
     const contentType = req.headers.get('content-type');
     let id: number;
     let newImageUrls: string[] = [];
@@ -149,6 +154,7 @@ export async function PUT(req: NextRequest) {
 // ===================================
 export async function DELETE(req: NextRequest) {
   try {
+    if (!(await getAdminUser())) return FORBIDDEN;
     const { id } = await req.json(); 
     if (!id) {
         return NextResponse.json({ message: 'ID missing for deletion' }, { status: 400 });

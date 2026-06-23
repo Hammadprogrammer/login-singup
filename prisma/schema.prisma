@@ -21,6 +21,9 @@ model User {
   favorites       Favorite[]
   kyc             KYC?
   products        Product[]
+  orders          Order[]
+  searchLogs      SearchLog[]
+  productViews    ProductView[]
 }
 
 model KYC {
@@ -69,9 +72,71 @@ model Product {
   user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   carts         Cart[]
   favorites     Favorite[]
+  orderItems    OrderItem[]
+  views         ProductView[]
 
   @@index([price])
   @@index([userId])
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  userId          Int
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status          OrderStatus @default(PENDING)
+  paymentMethod   String      @default("card")
+  totalAmount     Float
+  fullName        String
+  email           String
+  address         String
+  city            String
+  country         String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  items           OrderItem[]
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id        Int     @id @default(autoincrement())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  name      String
+  price     Float
+  quantity  Int     @default(1)
+  size      String?
+  imageUrl  String?
+
+  @@index([orderId])
+}
+
+model SearchLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  query     String
+  resultCount Int    @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model ProductView {
+  id        Int      @id @default(autoincrement())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([productId])
+  @@index([createdAt])
 }
 
 model Favorite {
@@ -97,6 +162,14 @@ model Cart {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, productId, size])
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }
 
 enum KycStatus {

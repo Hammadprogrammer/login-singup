@@ -114,8 +114,22 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const user = await getUserFromToken();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized - Please login' }, { status: 401 });
+    }
+
     const formData = await req.formData();
     const id = formData.get('id') as string;
+
+    // Ownership check: only the product owner or an admin can edit.
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    if (existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden - not your product' }, { status: 403 });
+    }
 
     const newFiles = formData.getAll('newImages') as File[];
     const newUploadedUrls = await Promise.all(
@@ -149,7 +163,20 @@ export async function PUT(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const user = await getUserFromToken();
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized - Please login' }, { status: 401 });
+    }
+
     const { id } = await req.json();
+    const existing = await prisma.product.findUnique({ where: { id } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+    }
+    if (existing.userId !== user.id && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Forbidden - not your product' }, { status: 403 });
+    }
+
     await prisma.product.delete({ where: { id } });
     return NextResponse.json({ success: true });
   } catch (error) {

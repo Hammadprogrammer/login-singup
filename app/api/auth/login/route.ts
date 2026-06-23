@@ -1,53 +1,54 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { generateToken, authCookieOptions } from "@/lib/auth";
 
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
 
     // 1. Basic validation
-    if (!email || !password) {
+    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
       return NextResponse.json(
         { error: "Email and password are required" },
         { status: 400 }
       );
     }
 
-    // 2. Admin Logic (Direct check from .env)
-    if (
-      email === process.env.ADMIN_EMAIL &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
-      const token = jwt.sign(
-        { role: "ADMIN" },
-        process.env.JWT_SECRET!,
-        { expiresIn: "7d" }
-      );
+    const normalizedEmail = email.trim().toLowerCase();
 
-      const response = NextResponse.json({
-        message: "Admin login successful",
-        redirect: "/dashboard",
-      });
-
-      response.cookies.set("token", token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-      });
-
-      return response;
-    }
-
-    // 3. User Database Lookup
-    const user = await prisma.user.findUnique({
-      where: { email },
+    // 2. Database lookup (admin is now a normal DB user with role = ADMIN)
+    let user = await prisma.user.findUnique({
+      where: { email: normalizedEmail },
     });
 
-    // Case: User nahi mila
+    // 2a. One-time admin bootstrap.
+    // If the credentials match the ADMIN_EMAIL/ADMIN_PASSWORD from the env,
+    // provision (or upgrade) a real DB admin with a securely HASHED password.
+    // After this, the admin authenticates purely from the database.
+    const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const adminPassword = process.env.ADMIN_PASSWORD;
+    if (
+      adminEmail &&
+      adminPassword &&
+      normalizedEmail === adminEmail &&
+      password === adminPassword
+    ) {
+      const hashed = await bcrypt.hash(password, 12);
+      user = await prisma.user.upsert({
+        where: { email: adminEmail },
+        update: { role: "ADMIN", password: hashed, provider: "credentials" },
+        create: {
+          email: adminEmail,
+          password: hashed,
+          name: "Administrator",
+          role: "ADMIN",
+          provider: "credentials",
+        },
+      });
+    }
+
+    // Generic error to avoid leaking which emails exist.
     if (!user) {
       return NextResponse.json(
         { error: "Invalid email or password" },
@@ -55,50 +56,41 @@ export async function POST(req: Request) {
       );
     }
 
-    // Case: User ne Google se sign up kiya tha (isliye DB mein password nahi hai)
+    // Case: account is linked with Google (no password set).
     if (!user.password && user.provider === "google") {
       return NextResponse.json(
         { error: "This account is linked with Google. Please click 'Continue with Google'." },
-        { status: 403 } 
+        { status: 403 }
       );
     }
 
-    // 4. Password Verification (For Email/Password users)
-    const isMatch = await bcrypt.compare(password, user.password!);
-
-    if (!isMatch) {
+    if (!user.password) {
       return NextResponse.json(
-        { error: "Invalid email or password" }, // Security tip: same error for wrong pass/email
+        { error: "Invalid email or password" },
         { status: 401 }
       );
     }
 
-    // 5. Success - Token Generation
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-        role: user.role || "USER",
-      },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
+    // 3. Password verification
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return NextResponse.json(
+        { error: "Invalid email or password" },
+        { status: 401 }
+      );
+    }
+
+    // 4. Success - issue token. Role comes from the DB, never the request.
+    const role = user.role === "ADMIN" ? "ADMIN" : "USER";
+    const token = generateToken({ id: user.id, email: user.email, role });
 
     const response = NextResponse.json({
       message: "Login successful",
-      redirect: "/",
+      redirect: role === "ADMIN" ? "/dashboard" : "/",
     });
 
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "lax",
-      path: "/",
-      maxAge: 60 * 60 * 24 * 7,
-    });
-
+    response.cookies.set("token", token, authCookieOptions);
     return response;
-
   } catch (error) {
     console.error("LOGIN ERROR:", error);
     return NextResponse.json(

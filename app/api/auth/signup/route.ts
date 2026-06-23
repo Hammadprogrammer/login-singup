@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { generateToken, authCookieOptions } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,8 +15,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    if (typeof password !== "string" || password.length < 8) {
+      return NextResponse.json(
+        { error: "Password must be at least 8 characters long" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+
     const existingUser = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
     });
 
     if (existingUser) {
@@ -26,23 +35,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const fullName = `${firstName} ${lastName}`;
 
+    // role is always forced to USER here — admins are provisioned separately.
     const user = await prisma.user.create({
       data: {
-        email,
+        email: normalizedEmail,
         password: hashedPassword,
-        name: fullName, 
+        name: fullName,
+        role: "USER",
       },
     });
 
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
-    );
+    const token = generateToken({ id: user.id, email: user.email, role: "USER" });
 
     const res = NextResponse.json({
       message: "User created successfully",
@@ -53,11 +60,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    res.cookies.set("token", token, {
-      httpOnly: true,
-      path: "/",
-      maxAge: 7 * 24 * 60 * 60,
-    });
+    res.cookies.set("token", token, authCookieOptions);
 
     return res;
   } catch (error) {

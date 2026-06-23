@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getAdminUser } from "@/lib/auth";
 
 /* GET ALL KYC */
 export async function GET() {
   try {
+    if (!(await getAdminUser())) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const kycs = await prisma.kYC.findMany({
       include: {
         user: {
@@ -32,6 +36,9 @@ export async function GET() {
 /* APPROVE / REJECT */
 export async function PATCH(req: Request) {
   try {
+    if (!(await getAdminUser())) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
     const { id, status, rejectionReason } = await req.json();
 
     const updated = await prisma.kYC.update({

@@ -442,6 +442,12 @@ export default function LuxuryProductPage() {
           setProduct(found);
           setMainImage(found.imageUrls[0]);
           if (found.sizes?.[0]) setSelectedSize(found.sizes[0]);
+          // Best-effort product-view tracking (fire and forget).
+          fetch('/api/track', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'view', productId: found.id }),
+          }).catch(() => {});
         }
         await fetchCart();
       } catch (err) { console.error(err); } finally { setLoading(false); }

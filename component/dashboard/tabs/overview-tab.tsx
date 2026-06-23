@@ -16,6 +16,7 @@ interface Stats {
   todayUsers: number;
   totalProducts: number;
   totalSliders: number;
+  totalOrders: number;
   pendingKYC: number;
   approvedKYC: number;
 }
@@ -26,31 +27,55 @@ export default function OverviewTab({ onTabChange }: { onTabChange: (tab: string
     todayUsers: 0,
     totalProducts: 0,
     totalSliders: 0,
+    totalOrders: 0,
     pendingKYC: 0,
     approvedKYC: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Safely parse a response: returns fallback when the body is empty,
+    // the request failed, or the JSON is invalid. This prevents the
+    // "Unexpected end of JSON input" crash on non-OK / empty responses.
+    const safeJson = async <T,>(res: Response, fallback: T): Promise<T> => {
+      try {
+        if (!res.ok) return fallback;
+        const text = await res.text();
+        if (!text) return fallback;
+        return JSON.parse(text) as T;
+      } catch {
+        return fallback;
+      }
+    };
+
     const fetchStats = async () => {
       try {
-        const [usersRes, productsRes, kycRes] = await Promise.all([
+        const [usersRes, productsRes, kycRes, slidersRes, ordersRes] = await Promise.all([
           fetch("/api/dashboard/user-stats"),
           fetch("/api/products"),
           fetch("/api/admin/kyc"),
+          fetch("/api/dashboard/homeslider"),
+          fetch("/api/dashboard/orders"),
         ]);
 
-        const usersData = await usersRes.json();
-        const productsData = await productsRes.json();
-        const kycData = await kycRes.json();
+        const usersData = await safeJson<any>(usersRes, {});
+        const productsData = await safeJson<any[]>(productsRes, []);
+        const kycData = await safeJson<any[]>(kycRes, []);
+        const slidersData = await safeJson<any[]>(slidersRes, []);
+        const ordersData = await safeJson<any>(ordersRes, {});
 
         setStats({
           totalUsers: usersData.totalUsers || 0,
           todayUsers: usersData.todayUsers || 0,
           totalProducts: Array.isArray(productsData) ? productsData.length : 0,
-          totalSliders: 0,
-          pendingKYC: kycData.filter((k: any) => k.status === "PENDING").length || 0,
-          approvedKYC: kycData.filter((k: any) => k.status === "APPROVED").length || 0,
+          totalSliders: Array.isArray(slidersData) ? slidersData.length : 0,
+          totalOrders: ordersData.stats?.total || 0,
+          pendingKYC: Array.isArray(kycData)
+            ? kycData.filter((k: any) => k.status === "PENDING").length
+            : 0,
+          approvedKYC: Array.isArray(kycData)
+            ? kycData.filter((k: any) => k.status === "APPROVED").length
+            : 0,
         });
       } catch (error) {
         console.error("Failed to fetch stats:", error);
@@ -92,6 +117,16 @@ export default function OverviewTab({ onTabChange }: { onTabChange: (tab: string
       color: "amber",
       gradient: "from-amber-500 to-orange-400",
       onClick: () => onTabChange("sliders"),
+    },
+    {
+      key: "orders",
+      title: "Total Orders",
+      value: stats.totalOrders,
+      subtext: "All time orders",
+      icon: TrendingUp,
+      color: "rose",
+      gradient: "from-rose-500 to-pink-400",
+      onClick: () => onTabChange("orders"),
     },
     {
       key: "kyc",

@@ -7,6 +7,8 @@ import {
   ImageIcon, 
   Users, 
   ShieldCheck,
+  ShoppingBag,
+  BarChart3,
   LogOut,
   Menu,
   X
@@ -16,15 +18,19 @@ import { useRouter } from "next/navigation";
 // Import tabs
 import OverviewTab from "./tabs/overview-tab";
 import KYCTab from "./tabs/kyc-tab";
+import OrdersTab from "./tabs/orders-tab";
+import AnalyticsTab from "./tabs/analytics-tab";
 import { HomeSliderCRUD } from "./homeSlider/slider";
 import ProductDashboard from "./product/product";
 import UserStatus from "./user-status/user-status";
 
-type TabKey = "overview" | "products" | "sliders" | "users" | "kyc";
+type TabKey = "overview" | "products" | "orders" | "analytics" | "sliders" | "users" | "kyc";
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
   { key: "products", label: "Products", icon: Package },
+  { key: "orders", label: "Orders", icon: ShoppingBag },
+  { key: "analytics", label: "Analytics", icon: BarChart3 },
   { key: "sliders", label: "Home Sliders", icon: ImageIcon },
   { key: "users", label: "Users", icon: Users },
   { key: "kyc", label: "KYC", icon: ShieldCheck },
@@ -55,6 +61,10 @@ export default function DashboardClient() {
         return <OverviewTab onTabChange={handleTabChange} />;
       case "products":
         return <ProductDashboard />;
+      case "orders":
+        return <OrdersTab />;
+      case "analytics":
+        return <AnalyticsTab />;
       case "sliders":
         return <HomeSliderCRUD />;
       case "users":
