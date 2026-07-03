@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Trash2, Edit, X, Loader2, Image as ImageIcon,
-  CheckCircle, AlertTriangle,
+  CheckCircle, AlertTriangle, Eye, EyeOff,
 } from 'lucide-react';
 
 export type FieldType = 'text' | 'textarea' | 'number' | 'image';
@@ -132,6 +132,20 @@ export default function EntityCRUD({ title, description, apiPath, fields, card, 
     }
   };
 
+  const toggleActive = async (row: any) => {
+    const next = row.isActive === false; // currently hidden -> activate
+    try {
+      const data = new FormData();
+      data.append('id', String(row.id));
+      data.append('isActive', String(next));
+      const res = await fetch(apiPath, { method: 'PUT', body: data });
+      if (!res.ok) throw new Error('Failed to update status');
+      await fetchRows();
+    } catch (e: any) {
+      setError(e.message || 'Failed to update status');
+    }
+  };
+
   const executeDelete = async () => {
     if (!toDelete) return;
     const id = toDelete.id;
@@ -245,9 +259,17 @@ export default function EntityCRUD({ title, description, apiPath, fields, card, 
                 </div>
               )}
               <div className="p-4">
-                <h4 className="font-bold text-white line-clamp-1">{row[card.title]}</h4>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-bold text-white line-clamp-1">{row[card.title]}</h4>
+                  <span className={`shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${row.isActive === false ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                    {row.isActive === false ? 'Hidden' : 'Active'}
+                  </span>
+                </div>
                 {card.subtitle && <p className="text-xs text-slate-400 line-clamp-2 mt-1">{row[card.subtitle] || '—'}</p>}
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800">
+                  <button onClick={() => toggleActive(row)} title={row.isActive === false ? 'Show on website' : 'Hide from website'} className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition ${row.isActive === false ? 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400' : 'bg-slate-800 hover:bg-slate-700 text-amber-400'}`}>
+                    {row.isActive === false ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
                   <button onClick={() => startEdit(row)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition">
                     <Edit size={14} /> Edit
                   </button>

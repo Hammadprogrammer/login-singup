@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Plus, Trash2, Edit, X, Loader2, Image as ImageIcon,
-  CheckCircle, AlertTriangle, LayoutGrid,
+  CheckCircle, AlertTriangle, LayoutGrid, Eye, EyeOff,
 } from 'lucide-react';
 
 interface PromoBanner {
@@ -16,6 +16,7 @@ interface PromoBanner {
   bgColor: string | null;
   size: string;
   order: number;
+  isActive?: boolean;
   createdAt: string;
 }
 
@@ -144,6 +145,20 @@ export const PromoBannerCRUD = () => {
     }
   };
 
+  const toggleActive = async (b: PromoBanner) => {
+    const next = b.isActive === false;
+    try {
+      const data = new FormData();
+      data.append('id', String(b.id));
+      data.append('isActive', String(next));
+      const res = await fetch('/api/dashboard/promo-banner', { method: 'PUT', body: data });
+      if (!res.ok) throw new Error('Failed to update status');
+      await fetchBanners();
+    } catch (e: any) {
+      setError(e.message || 'Failed to update status');
+    }
+  };
+
   const executeDelete = async () => {
     if (!toDelete) return;
     const id = toDelete.id;
@@ -266,10 +281,18 @@ export const PromoBannerCRUD = () => {
                 <span className="absolute top-2 right-2 text-[9px] font-black uppercase bg-black/70 text-white px-2 py-0.5 rounded-full">#{b.order}</span>
               </div>
               <div className="p-4">
-                <h4 className="font-bold text-white line-clamp-1">{b.title}</h4>
+                <div className="flex items-center justify-between gap-2">
+                  <h4 className="font-bold text-white line-clamp-1">{b.title}</h4>
+                  <span className={`shrink-0 text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${b.isActive === false ? 'bg-slate-700 text-slate-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                    {b.isActive === false ? 'Hidden' : 'Active'}
+                  </span>
+                </div>
                 <p className="text-xs text-slate-400 line-clamp-1">{b.subtitle || '—'}</p>
                 <p className="text-[10px] text-slate-500 mt-1 line-clamp-1">{b.buttonText} → {b.link}</p>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-800">
+                  <button onClick={() => toggleActive(b)} title={b.isActive === false ? 'Show on website' : 'Hide from website'} className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg transition ${b.isActive === false ? 'bg-emerald-950/40 hover:bg-emerald-900/50 text-emerald-400' : 'bg-slate-800 hover:bg-slate-700 text-amber-400'}`}>
+                    {b.isActive === false ? <Eye size={14} /> : <EyeOff size={14} />}
+                  </button>
                   <button onClick={() => startEdit(b)} className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-800 hover:bg-indigo-600 text-slate-300 hover:text-white rounded-lg text-xs font-bold transition">
                     <Edit size={14} /> Edit
                   </button>

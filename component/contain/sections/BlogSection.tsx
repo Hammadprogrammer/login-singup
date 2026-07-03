@@ -13,6 +13,7 @@ interface BlogPost {
   link: string | null;
   author: string | null;
   createdAt?: string | null;
+  isActive?: boolean;
 }
 
 const BlogSection: React.FC = () => {
@@ -22,7 +23,7 @@ const BlogSection: React.FC = () => {
   useEffect(() => {
     fetch('/api/dashboard/blog')
       .then((r) => (r.ok ? r.json() : []))
-      .then(setPosts)
+      .then((data: BlogPost[]) => setPosts(data.filter((p) => p.isActive !== false)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

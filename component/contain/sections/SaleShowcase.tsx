@@ -12,12 +12,14 @@ interface SaleBanner {
   subheading: string | null;
   buttonText: string | null;
   link: string | null;
+  isActive?: boolean;
 }
 
 interface Inspiration {
   id: number;
   image: string;
   link: string | null;
+  isActive?: boolean;
 }
 
 const SaleShowcase: React.FC = () => {
@@ -31,8 +33,9 @@ const SaleShowcase: React.FC = () => {
       fetch('/api/dashboard/inspiration').then((r) => (r.ok ? r.json() : [])),
     ])
       .then(([banners, insp]) => {
-        setBanner(Array.isArray(banners) && banners.length > 0 ? banners[0] : null);
-        setInspiration(Array.isArray(insp) ? insp : []);
+        const activeBanners = Array.isArray(banners) ? banners.filter((b: SaleBanner) => b.isActive !== false) : [];
+        setBanner(activeBanners.length > 0 ? activeBanners[0] : null);
+        setInspiration(Array.isArray(insp) ? insp.filter((i: Inspiration) => i.isActive !== false) : []);
       })
       .catch(() => {})
       .finally(() => setLoading(false));

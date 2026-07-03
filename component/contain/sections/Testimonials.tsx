@@ -8,6 +8,7 @@ interface Testimonial {
   quote: string;
   author: string;
   brand: string | null;
+  isActive?: boolean;
 }
 
 const Testimonials: React.FC = () => {
@@ -18,7 +19,7 @@ const Testimonials: React.FC = () => {
   useEffect(() => {
     fetch('/api/dashboard/testimonial')
       .then((r) => (r.ok ? r.json() : []))
-      .then(setItems)
+      .then((data: Testimonial[]) => setItems(data.filter((t) => t.isActive !== false)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

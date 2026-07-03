@@ -9,6 +9,7 @@ interface Category {
   name: string;
   image: string | null;
   link: string | null;
+  isActive?: boolean;
 }
 
 const ShopByCategory: React.FC = () => {
@@ -18,7 +19,7 @@ const ShopByCategory: React.FC = () => {
   useEffect(() => {
     fetch('/api/dashboard/category')
       .then((r) => (r.ok ? r.json() : []))
-      .then(setItems)
+      .then((data: Category[]) => setItems(data.filter((c) => c.isActive !== false)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

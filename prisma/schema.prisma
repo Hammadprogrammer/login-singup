@@ -61,6 +61,7 @@ model PromoBanner {
   bgColor    String?  @default("#9a8478")
   size       String   @default("normal") // "large" | "normal"
   order      Int      @default(0)
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -73,6 +74,7 @@ model Category {
   image     String?
   link      String?  @default("/")
   order     Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -87,6 +89,7 @@ model SaleBanner {
   buttonText String?  @default("Shop now")
   link       String?  @default("/")
   order      Int      @default(0)
+  isActive   Boolean  @default(true)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -98,6 +101,7 @@ model InspirationImage {
   image     String
   link      String?  @default("/")
   order     Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -112,6 +116,7 @@ model BlogPost {
   link      String?  @default("/")
   author    String?  @default("Admin")
   order     Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -124,6 +129,7 @@ model Testimonial {
   author    String
   brand     String?
   order     Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -138,6 +144,7 @@ model FeaturedProduct {
   brand     String?
   link      String?  @default("/")
   order     Int      @default(0)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

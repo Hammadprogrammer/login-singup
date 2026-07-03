@@ -76,6 +76,12 @@ export function createCrud(
         data[f.name] = (raw as string) || existing?.[f.name] || (f.default ?? '');
       }
     }
+
+    // Generic active/inactive flag — present on all homepage CMS models.
+    if (formData.has('isActive')) {
+      const v = formData.get('isActive');
+      data.isActive = v === 'true' || v === 'on' || v === '1';
+    }
     return data;
   }
 

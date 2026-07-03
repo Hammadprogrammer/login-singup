@@ -71,6 +71,7 @@ export async function POST(req: NextRequest) {
         bgColor: (formData.get('bgColor') as string) || '#9a8478',
         size: (formData.get('size') as string) || 'normal',
         order: parseInt((formData.get('order') as string) || '0') || 0,
+        isActive: (formData.get('isActive') as string) !== 'false',
       },
     });
 
@@ -124,6 +125,9 @@ export async function PUT(req: NextRequest) {
         bgColor: (formData.get('bgColor') as string) || existing.bgColor,
         size: (formData.get('size') as string) || existing.size,
         order: parseInt((formData.get('order') as string) || `${existing.order}`) || existing.order,
+        isActive: formData.has('isActive')
+          ? formData.get('isActive') === 'true'
+          : existing.isActive,
       },
     });
 

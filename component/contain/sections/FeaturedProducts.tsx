@@ -12,6 +12,7 @@ interface FeaturedProduct {
   image: string | null;
   brand: string | null;
   link: string | null;
+  isActive?: boolean;
 }
 
 const FeaturedProducts: React.FC = () => {
@@ -21,7 +22,7 @@ const FeaturedProducts: React.FC = () => {
   useEffect(() => {
     fetch('/api/dashboard/featured-product')
       .then((r) => (r.ok ? r.json() : []))
-      .then(setProducts)
+      .then((data: FeaturedProduct[]) => setProducts(data.filter((p) => p.isActive !== false)))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);

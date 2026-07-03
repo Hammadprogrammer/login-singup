@@ -15,6 +15,7 @@ interface PromoBanner {
   bgColor: string | null;
   size: string;
   order: number;
+  isActive?: boolean;
 }
 
 const PromoGrid: React.FC = () => {
@@ -27,7 +28,7 @@ const PromoGrid: React.FC = () => {
         const res = await fetch('/api/dashboard/promo-banner');
         if (res.ok) {
           const data: PromoBanner[] = await res.json();
-          setBanners(data);
+          setBanners(data.filter((b) => b.isActive !== false));
         }
       } catch {
         // silent fail — section just won't render
