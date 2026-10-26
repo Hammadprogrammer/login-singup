@@ -3,30 +3,28 @@
 import { usePathname } from "next/navigation";
 import Navbar from "@/sharecomponent/navbar/navbar";
 import Footer from "@/sharecomponent/footer/footer";
-import KycStatusManager from "@/app/kyc-user/page";
+import Toaster from "@/component/ui/Toast";
 
-export default function ClientLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+/** Hides the storefront chrome on auth screens and inside the admin panel. */
+export default function ClientLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const bare = ["/login", "/signup", "/forgot"].includes(pathname) || pathname.startsWith("/dashboard");
 
-  const hideLayoutPaths = ["/login", "/signup", "/dashboard", "/cart" , "/admin/kyc", "/kyc"];
-  const hideLayout = hideLayoutPaths.includes(pathname);
-
-  // const kycPath = ["/kyc", "/login", "/signup"]; 
-  // const isKycPage = kycPath.includes(pathname);
+  if (bare) {
+    return (
+      <>
+        <main>{children}</main>
+        <Toaster />
+      </>
+    );
+  }
 
   return (
     <>
-      {/* {!isKycPage && <KycStatusManager />} */}
-
-      {!hideLayout && <Navbar />}
-      
-      <main>{children}</main>
-      
-      {!hideLayout && <Footer />}
+      <Navbar />
+      <main className="min-h-[70vh] pt-16 lg:pt-[112px]">{children}</main>
+      <Footer />
+      <Toaster />
     </>
   );
 }

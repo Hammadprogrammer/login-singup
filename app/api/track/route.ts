@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getUserFromRequest } from "@/lib/auth";
+import { enforceRateLimit, LIMITS } from "@/lib/rate-limit";
 
 /**
  * POST /api/track — lightweight activity logging.
@@ -13,8 +14,11 @@ import { getUserFromRequest } from "@/lib/auth";
  */
 export async function POST(req: NextRequest) {
   try {
+    const limited = enforceRateLimit(req, "track", LIMITS.track);
+    if (limited) return limited;
+
     const user = getUserFromRequest(req);
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { type } = body;
 
     if (type === "search") {

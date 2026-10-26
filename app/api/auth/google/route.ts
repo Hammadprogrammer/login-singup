@@ -1,31 +1,33 @@
-// import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { randomBytes } from "crypto";
 
-// export async function GET() {
-//   const params = new URLSearchParams({
-//     client_id: process.env.GOOGLE_CLIENT_ID!,
-//     redirect_uri: "http://localhost:3000/api/auth/google/callback",
-//     response_type: "code",
-//     scope: "email profile",
-//   });
+export function GET(req: NextRequest) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (!clientId) {
+    return NextResponse.redirect(new URL("/login?error=google_unavailable", req.url));
+  }
 
-//   return NextResponse.redirect(
-//     "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString()
-//   );
-// }
-import { NextResponse } from "next/server";
-
-export async function GET() {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || req.nextUrl.origin;
+  // Random `state` stored in a short-lived httpOnly cookie protects the
+  // callback against login-CSRF.
+  const state = randomBytes(16).toString("hex");
 
   const params = new URLSearchParams({
-    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_id: clientId,
     redirect_uri: `${baseUrl}/api/auth/google/callback`,
     response_type: "code",
-    scope: "email profile",
+    scope: "openid email profile",
+    state,
+    prompt: "select_account",
   });
 
-  return NextResponse.redirect(
-    "https://accounts.google.com/o/oauth2/v2/auth?" + params.toString()
-  );
+  const res = NextResponse.redirect("https://accounts.google.com/o/oauth2/v2/auth?" + params.toString());
+  res.cookies.set("oauth_state", state, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 10 * 60,
+  });
+  return res;
 }

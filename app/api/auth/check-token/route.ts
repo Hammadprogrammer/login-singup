@@ -1,22 +1,19 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import jwt from "jsonwebtoken";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { getUserFromRequest } from "@/lib/auth";
 
-export async function GET() {
-  try {
-    const cookieStore = await cookies(); // ✅ await here
-    const token = cookieStore.get("token")?.value;
+/** GET /api/auth/check-token — session probe used by the navbar/account UI. */
+export async function GET(req: NextRequest) {
+  const user = getUserFromRequest(req);
+  if (!user) return NextResponse.json({ loggedIn: false }, { status: 401 });
 
-    if (!token) return NextResponse.json({ loggedIn: false }, { status: 401 });
+  // Re-read the role from the DB so a demoted/deleted account loses access
+  // immediately instead of at token expiry.
+  const dbUser = await prisma.user.findUnique({
+    where: { id: user.id },
+    select: { id: true, email: true, name: true, role: true },
+  });
+  if (!dbUser) return NextResponse.json({ loggedIn: false }, { status: 401 });
 
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-      return NextResponse.json({ loggedIn: true, user: decoded }, { status: 200 });
-    } catch {
-      return NextResponse.json({ loggedIn: false }, { status: 401 });
-    }
-  } catch (error) {
-    console.error("Critical Server Error:", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
-  }
+  return NextResponse.json({ loggedIn: true, user: dbUser });
 }

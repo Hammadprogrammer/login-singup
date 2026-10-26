@@ -1,101 +1,83 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { timingSafeEqual } from "crypto";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { generateToken, authCookieOptions } from "@/lib/auth";
+import { enforceRateLimit, LIMITS } from "@/lib/rate-limit";
+import { normalizeEmail, isEmail } from "@/lib/validate";
 
-export async function POST(req: Request) {
+const INVALID = () => NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+
+function safeEqual(a: string, b: string) {
+  const ba = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ba.length === bb.length && timingSafeEqual(ba, bb);
+}
+
+export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const limited = enforceRateLimit(req, "login", LIMITS.login);
+    if (limited) return limited;
 
-    // 1. Basic validation
-    if (!email || !password || typeof email !== "string" || typeof password !== "string") {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    const body = await req.json().catch(() => ({}));
+    const { email, password } = body ?? {};
+
+    if (typeof email !== "string" || typeof password !== "string" || !password) {
+      return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
+    const normalizedEmail = normalizeEmail(email);
+    if (!isEmail(normalizedEmail) || password.length > 128) return INVALID();
 
-    const normalizedEmail = email.trim().toLowerCase();
+    // Second limiter keyed by account, so a distributed brute force on one
+    // mailbox is still throttled.
+    const perEmail = enforceRateLimit(req, "login-email", LIMITS.loginPerEmail, normalizedEmail);
+    if (perEmail) return perEmail;
 
-    // 2. Database lookup (admin is now a normal DB user with role = ADMIN)
-    let user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
+    let user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
 
-    // 2a. One-time admin bootstrap.
-    // If the credentials match the ADMIN_EMAIL/ADMIN_PASSWORD from the env,
-    // provision (or upgrade) a real DB admin with a securely HASHED password.
-    // After this, the admin authenticates purely from the database.
+    // One-time admin bootstrap from env (hashed on first use; DB is the source of truth after).
     const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
     const adminPassword = process.env.ADMIN_PASSWORD;
-    if (
-      adminEmail &&
-      adminPassword &&
-      normalizedEmail === adminEmail &&
-      password === adminPassword
-    ) {
+    if (adminEmail && adminPassword && normalizedEmail === adminEmail && safeEqual(password, adminPassword)) {
       const hashed = await bcrypt.hash(password, 12);
       user = await prisma.user.upsert({
         where: { email: adminEmail },
         update: { role: "ADMIN", password: hashed, provider: "credentials" },
-        create: {
-          email: adminEmail,
-          password: hashed,
-          name: "Administrator",
-          role: "ADMIN",
-          provider: "credentials",
-        },
+        create: { email: adminEmail, password: hashed, name: "Administrator", role: "ADMIN", provider: "credentials" },
       });
     }
 
-    // Generic error to avoid leaking which emails exist.
     if (!user) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    // Case: account is linked with Google (no password set).
-    if (!user.password && user.provider === "google") {
-      return NextResponse.json(
-        { error: "This account is linked with Google. Please click 'Continue with Google'." },
-        { status: 403 }
-      );
+      // Burn comparable time so missing accounts aren't distinguishable by latency.
+      await bcrypt.compare(password, "$2a$12$CwTycUXWue0Thq9StjUM0uJ8Zs0u1QGZ6rXoP0v2zJ7lJ6bN0aOaW");
+      return INVALID();
     }
 
     if (!user.password) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+      if (user.provider === "google") {
+        return NextResponse.json(
+          { error: "This account uses Google sign-in. Please continue with Google." },
+          { status: 403 }
+        );
+      }
+      return INVALID();
     }
 
-    // 3. Password verification
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
+    if (!isMatch) return INVALID();
 
-    // 4. Success - issue token. Role comes from the DB, never the request.
     const role = user.role === "ADMIN" ? "ADMIN" : "USER";
     const token = generateToken({ id: user.id, email: user.email, role });
 
     const response = NextResponse.json({
       message: "Login successful",
       redirect: role === "ADMIN" ? "/dashboard" : "/",
+      user: { id: user.id, email: user.email, name: user.name, role },
     });
-
     response.cookies.set("token", token, authCookieOptions);
     return response;
   } catch (error) {
     console.error("LOGIN ERROR:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

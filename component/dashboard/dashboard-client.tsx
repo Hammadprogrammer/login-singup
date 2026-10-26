@@ -1,240 +1,131 @@
 "use client";
 
-import { useState } from "react";
-import { 
-  LayoutDashboard, 
-  Package, 
-  ImageIcon, 
-  Users, 
-  ShieldCheck,
-  ShoppingBag,
-  BarChart3,
-  LayoutGrid,
-  Shapes,
-  Star,
-  Megaphone,
-  Images,
-  Newspaper,
-  Quote,
-  LogOut,
-  Menu,
-  X
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-// Import tabs
+import { LayoutDashboard, ShoppingBag, Package, Users, Star, ShieldCheck, Image as ImageIcon, Mail, LogOut, Menu, X, ExternalLink } from "lucide-react";
+import { SITE } from "@/lib/site";
 import OverviewTab from "./tabs/overview-tab";
-import KYCTab from "./tabs/kyc-tab";
 import OrdersTab from "./tabs/orders-tab";
-import AnalyticsTab from "./tabs/analytics-tab";
-import { HomeSliderCRUD } from "./homeSlider/slider";
-import { PromoBannerCRUD } from "./promo/promo";
-import { CategoryCRUD, SaleBannerCRUD, InspirationCRUD, BlogCRUD, TestimonialCRUD, FeaturedProductsCRUD } from "./sections/panels";
-import ProductDashboard from "./product/product";
-import UserStatus from "./user-status/user-status";
+import ProductsTab from "./tabs/products-tab";
+import CustomersTab from "./tabs/customers-tab";
+import ReviewsTab from "./tabs/reviews-tab";
+import KYCTab from "./tabs/kyc-tab";
+import HomeContentTab from "./tabs/home-content-tab";
+import MessagesTab from "./tabs/messages-tab";
 
-type TabKey = "overview" | "products" | "orders" | "analytics" | "sliders" | "promos" | "categories" | "featured" | "saleBanner" | "inspiration" | "blog" | "testimonials" | "users" | "kyc";
+export type TabKey = "overview" | "orders" | "products" | "customers" | "reviews" | "kyc" | "home" | "messages";
 
-const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
+const TABS: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "overview", label: "Overview", icon: LayoutDashboard },
-  { key: "products", label: "Products", icon: Package },
   { key: "orders", label: "Orders", icon: ShoppingBag },
-  { key: "analytics", label: "Analytics", icon: BarChart3 },
-  { key: "sliders", label: "Home Sliders", icon: ImageIcon },
-  { key: "promos", label: "Promo Banners", icon: LayoutGrid },
-  { key: "categories", label: "Categories", icon: Shapes },
-  { key: "featured", label: "Featured", icon: Star },
-  { key: "saleBanner", label: "Sale Banner", icon: Megaphone },
-  { key: "inspiration", label: "Inspiration", icon: Images },
-  { key: "blog", label: "Blog", icon: Newspaper },
-  { key: "testimonials", label: "Testimonials", icon: Quote },
-  { key: "users", label: "Users", icon: Users },
+  { key: "products", label: "Inventory", icon: Package },
+  { key: "customers", label: "Customers", icon: Users },
+  { key: "reviews", label: "Reviews", icon: Star },
   { key: "kyc", label: "KYC", icon: ShieldCheck },
+  { key: "messages", label: "Messages", icon: Mail },
+  { key: "home", label: "Home content", icon: ImageIcon },
 ];
 
-export default function DashboardClient() {
-  const [activeTab, setActiveTab] = useState<TabKey>("overview");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function DashboardClient({ adminEmail }: { adminEmail: string }) {
   const router = useRouter();
+  const [tab, setTab] = useState<TabKey>("overview");
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [badges, setBadges] = useState<Partial<Record<TabKey, number>>>({});
 
-  const handleLogout = async () => {
+  useEffect(() => {
+    const hash = window.location.hash.replace("#", "") as TabKey;
+    if (TABS.some((t) => t.key === hash)) setTab(hash);
+  }, []);
+
+  useEffect(() => {
+    window.location.hash = tab;
+    setMobileOpen(false);
+  }, [tab]);
+
+  const refreshBadges = async () => {
     try {
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout failed", error);
-    }
+      const r = await fetch("/api/dashboard/stats", { cache: "no-store" });
+      if (!r.ok) return;
+      const s = await r.json();
+      setBadges({ orders: s.orders?.byStatus?.PENDING, kyc: s.kyc?.pending, reviews: s.pendingReviews, messages: s.unreadMessages });
+    } catch {}
   };
 
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab as TabKey);
-    setMobileMenuOpen(false);
+  useEffect(() => {
+    refreshBadges();
+    const t = setInterval(refreshBadges, 60_000);
+    return () => clearInterval(t);
+  }, [tab]);
+
+  const logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
+    router.refresh();
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case "overview":
-        return <OverviewTab onTabChange={handleTabChange} />;
-      case "products":
-        return <ProductDashboard />;
-      case "orders":
-        return <OrdersTab />;
-      case "analytics":
-        return <AnalyticsTab />;
-      case "sliders":
-        return <HomeSliderCRUD />;
-      case "promos":
-        return <PromoBannerCRUD />;
-      case "categories":
-        return <CategoryCRUD />;
-      case "featured":
-        return <FeaturedProductsCRUD />;
-      case "saleBanner":
-        return <SaleBannerCRUD />;
-      case "inspiration":
-        return <InspirationCRUD />;
-      case "blog":
-        return <BlogCRUD />;
-      case "testimonials":
-        return <TestimonialCRUD />;
-      case "users":
-        return <UserStatus />;
-      case "kyc":
-        return <KYCTab />;
-      default:
-        return <OverviewTab onTabChange={handleTabChange} />;
-    }
-  };
+  const nav = (
+    <ul className="space-y-0.5">
+      {TABS.map((t) => (
+        <li key={t.key}>
+          <button
+            onClick={() => setTab(t.key)}
+            className={`w-full flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${tab === t.key ? "bg-bone text-ink" : "text-bone/70 hover:bg-white/5 hover:text-bone"}`}
+          >
+            <t.icon size={17} strokeWidth={1.6} />
+            <span className="flex-1 text-left">{t.label}</span>
+            {!!badges[t.key] && <span className={`text-[10px] px-1.5 py-0.5 ${tab === t.key ? "bg-ink text-bone" : "bg-brass text-ink"}`}>{badges[t.key]}</span>}
+          </button>
+        </li>
+      ))}
+    </ul>
+  );
 
   return (
-    <div className="min-h-screen bg-[#0b1120]">
-      {/* Top Navigation Bar */}
-      <nav className="sticky top-0 z-50 w-full bg-[#0f172a] border-b border-slate-800 shadow-xl">
-        <div className="mx-auto px-4 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-amber-500/10 rounded-lg">
-                <LayoutDashboard className="text-amber-400 w-6 h-6" />
-              </div>
-              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500">
-                Admin Panel
-              </h1>
-            </div>
-
-            {/* Desktop Logout */}
-            <div className="hidden md:flex items-center">
-              <button
-                onClick={handleLogout}
-                className="group flex items-center gap-2 bg-[#1e293b] hover:bg-red-950/40 border border-slate-700 hover:border-red-500/50 transition-all duration-300 text-slate-300 hover:text-red-400 px-4 py-2 rounded-xl shadow-md"
-              >
-                <LogOut className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-                <span className="text-sm font-semibold uppercase tracking-wide">Logout</span>
-              </button>
-            </div>
-
-            {/* Mobile Menu Button */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </button>
-          </div>
+    <div className="min-h-screen bg-bone text-ink flex">
+      {/* Sidebar */}
+      <aside className="hidden lg:flex flex-col w-64 shrink-0 bg-ink text-bone sticky top-0 h-screen">
+        <div className="px-6 py-6 border-b border-white/10">
+          <p className="font-serif text-2xl tracking-[0.35em]">{SITE.name}</p>
+          <p className="eyebrow text-brass-2 text-[9px] mt-1">Admin panel</p>
         </div>
+        <nav className="flex-1 overflow-y-auto py-4 px-3">{nav}</nav>
+        <div className="p-4 border-t border-white/10 space-y-2">
+          <p className="text-[11px] text-bone/50 truncate px-1">{adminEmail}</p>
+          <Link href="/" target="_blank" className="flex items-center gap-2 px-3 py-2 text-xs text-bone/70 hover:text-bone"><ExternalLink size={14} /> View storefront</Link>
+          <button onClick={logout} className="w-full flex items-center gap-2 px-3 py-2 text-xs text-bone/70 hover:text-bone"><LogOut size={14} /> Sign out</button>
+        </div>
+      </aside>
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-[#0f172a] border-t border-slate-800 p-4 space-y-2">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => handleTabChange(tab.key)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
-                  activeTab === tab.key
-                    ? "bg-indigo-600 text-white"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <tab.icon size={18} />
-                <span className="font-semibold">{tab.label}</span>
-              </button>
-            ))}
-            <div className="border-t border-slate-800 pt-2 mt-2">
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-400 hover:bg-red-950/40 transition-all"
-              >
-                <LogOut size={18} />
-                <span className="font-semibold">Logout</span>
-              </button>
-            </div>
+      {/* Mobile header */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <header className="lg:hidden sticky top-0 z-40 bg-ink text-bone flex items-center justify-between px-4 h-14">
+          <button onClick={() => setMobileOpen(true)} aria-label="Menu"><Menu size={22} /></button>
+          <p className="font-serif tracking-[0.35em]">{SITE.name}</p>
+          <button onClick={logout} aria-label="Sign out"><LogOut size={18} /></button>
+        </header>
+        {mobileOpen && (
+          <div className="lg:hidden fixed inset-0 z-50">
+            <div className="absolute inset-0 bg-ink/60" onClick={() => setMobileOpen(false)} />
+            <aside className="absolute left-0 top-0 h-full w-72 bg-ink text-bone p-4 animate-fade-in">
+              <div className="flex items-center justify-between mb-6 px-2">
+                <p className="font-serif tracking-[0.35em]">{SITE.name}</p>
+                <button onClick={() => setMobileOpen(false)}><X size={20} /></button>
+              </div>
+              {nav}
+            </aside>
           </div>
         )}
-      </nav>
 
-      <div className="flex">
-        {/* Desktop Sidebar */}
-        <aside className="hidden md:flex flex-col w-64 bg-[#0f172a] border-r border-slate-800 min-h-[calc(100vh-64px)] sticky top-16">
-          <div className="p-4 space-y-1">
-            {tabs.map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all ${
-                  activeTab === tab.key
-                    ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
-                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
-                }`}
-              >
-                <tab.icon size={18} />
-                <span className="font-semibold">{tab.label}</span>
-                {tab.key === "kyc" && (
-                  <span className="ml-auto text-[10px] bg-red-500 text-white px-1.5 py-0.5 rounded-full">
-                    NEW
-                  </span>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-auto p-4 border-t border-slate-800">
-            <div className="bg-[#161f32] rounded-xl p-4 border border-slate-800">
-              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">System Status</p>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-xs text-emerald-400 font-bold">OPERATIONAL</span>
-              </div>
-            </div>
-          </div>
-        </aside>
-
-        {/* Main Content Area */}
-        <main className="flex-1 min-h-[calc(100vh-64px)] overflow-auto">
-          {/* Mobile Tab Bar */}
-          <div className="md:hidden bg-[#0f172a] border-b border-slate-800 overflow-x-auto">
-            <div className="flex p-2 gap-1 min-w-max">
-              {tabs.map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
-                    activeTab === tab.key
-                      ? "bg-indigo-600 text-white"
-                      : "text-slate-400 bg-slate-800/50"
-                  }`}
-                >
-                  <tab.icon size={14} />
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Tab Content */}
-          <div className="animate-in fade-in duration-300">
-            {renderTabContent()}
-          </div>
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 max-w-[1500px] w-full mx-auto">
+          {tab === "overview" && <OverviewTab onNavigate={setTab} />}
+          {tab === "orders" && <OrdersTab />}
+          {tab === "products" && <ProductsTab />}
+          {tab === "customers" && <CustomersTab />}
+          {tab === "reviews" && <ReviewsTab />}
+          {tab === "kyc" && <KYCTab />}
+          {tab === "messages" && <MessagesTab />}
+          {tab === "home" && <HomeContentTab />}
         </main>
       </div>
     </div>

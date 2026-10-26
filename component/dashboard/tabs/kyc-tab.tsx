@@ -1,381 +1,167 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { 
-  CheckCircle, 
-  XCircle, 
-  Search,
-  Eye,
-  ShieldCheck,
-  Maximize2,
-  FileText,
-  AlertTriangle,
-  Info,
-  Loader2,
-  Users
-} from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { Search, Eye, CheckCircle, XCircle, Maximize2, Loader2, ShieldCheck } from "lucide-react";
+import { formatDate } from "@/lib/format";
+import { toast } from "@/component/ui/Toast";
+import { PageHeader, StatCard, Spinner, Empty, Modal, Tabs } from "../ui";
 
 interface KYC {
-  id: number;
-  fullName: string;
-  documentType: string;
-  documentNumber: string;
-  documentFront: string;
-  documentBack: string;
-  faceImage: string;
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  rejectionReason?: string;
-  user: {
-    id: number;
-    email: string;
-    name?: string | null;
-  };
+  id: number; fullName: string; fatherName: string | null; documentType: string; documentNumber: string; documentExpiry: string | null;
+  documentFront: string; documentBack: string; faceImage: string; status: "PENDING" | "APPROVED" | "REJECTED"; rejectionReason?: string | null;
+  createdAt: string; updatedAt: string; user: { id: number; email: string; name?: string | null };
 }
+type Filter = "PENDING" | "APPROVED" | "REJECTED" | "ALL";
 
 export default function KYCTab() {
   const [kycs, setKycs] = useState<KYC[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<KYC | null>(null);
   const [reason, setReason] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("ALL");
-  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-  
-  const [notification, setNotification] = useState<{msg: string, type: 'success' | 'error' | 'info'} | null>(null);
+  const [q, setQ] = useState("");
+  const [filter, setFilter] = useState<Filter>("PENDING");
+  const [zoom, setZoom] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const showToast = (msg: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setNotification({ msg, type });
-    setTimeout(() => setNotification(null), 4000);
-  };
-
-  const loadKycs = async () => {
+  const load = useCallback(async () => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/admin/kyc");
-      const data = await res.json();
-      setKycs(data);
-    } catch (error) {
-      showToast("Failed to fetch records", "error");
+      const r = await fetch("/api/admin/kyc", { cache: "no-store" });
+      setKycs(r.ok ? await r.json() : []);
+    } catch {
+      toast.error("Failed to fetch KYC records");
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+  useEffect(() => {
+    load();
+  }, [load]);
 
-  useEffect(() => { loadKycs(); }, []);
-
-  const updateStatus = async (status: "APPROVED" | "REJECTED") => {
+  const decide = async (status: "APPROVED" | "REJECTED") => {
     if (!selected) return;
-    
-    if (status === "REJECTED" && !reason.trim()) {
-      showToast("Please provide a rejection reason before proceeding.", "error");
-      return;
-    }
-
+    if (status === "REJECTED" && reason.trim().length < 3) return toast.error("Please give a rejection reason");
+    setBusy(true);
     try {
-      const res = await fetch("/api/admin/kyc", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: selected.id, status, rejectionReason: reason }),
-      });
-
-      if (res.ok) {
-        showToast(`Application #${selected.user.id} ${status.toLowerCase()} successfully`, "success");
-        setSelected(null);
-        setReason("");
-        loadKycs();
-      } else {
-        throw new Error();
-      }
-    } catch {
-      showToast("System error: Could not update status", "error");
+      const r = await fetch("/api/admin/kyc", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: selected.id, status, rejectionReason: reason }) });
+      const d = await r.json();
+      if (!r.ok) return toast.error(d.error || "Update failed");
+      toast.success(`${selected.fullName} ${status.toLowerCase()}`);
+      setSelected(null);
+      setReason("");
+      load();
+    } finally {
+      setBusy(false);
     }
   };
 
-  const filteredKycs = kycs.filter(k => {
-    const matchesSearch = k.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          k.user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          k.user.id.toString().includes(searchTerm);
-    const matchesStatus = statusFilter === "ALL" || k.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  const term = q.trim().toLowerCase();
+  const visible = kycs.filter((k) => (filter === "ALL" || k.status === filter) && (!term || k.fullName.toLowerCase().includes(term) || k.user.email.toLowerCase().includes(term) || k.documentNumber.includes(term) || String(k.user.id) === term));
+  const count = (s: Filter) => (s === "ALL" ? kycs.length : kycs.filter((k) => k.status === s).length);
 
-  const stats = {
-    total: kycs.length,
-    pending: kycs.filter(k => k.status === "PENDING").length,
-    approved: kycs.filter(k => k.status === "APPROVED").length,
-    rejected: kycs.filter(k => k.status === "REJECTED").length,
-  };
+  const tone = (s: KYC["status"]) => (s === "APPROVED" ? "border-success/40 text-success" : s === "PENDING" ? "border-brass text-[#7a5f2a]" : "border-oxblood/40 text-oxblood");
 
   return (
-    <div className="min-h-screen bg-[#0b1120] text-white p-4 md:p-8 font-sans selection:bg-indigo-500/30">
-      
-      {notification && (
-        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-[200] animate-in slide-in-from-top duration-300">
-          <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border backdrop-blur-xl ${
-            notification.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/50 text-emerald-400' :
-            notification.type === 'error' ? 'bg-rose-500/10 border-rose-500/50 text-rose-400' :
-            'bg-indigo-500/10 border-indigo-500/50 text-indigo-400'
-          }`}>
-            {notification.type === 'success' && <CheckCircle size={20} />}
-            {notification.type === 'error' && <AlertTriangle size={20} />}
-            {notification.type === 'info' && <Info size={20} />}
-            <p className="font-bold text-sm tracking-wide">{notification.msg}</p>
-          </div>
-        </div>
-      )}
+    <div className="space-y-6">
+      <PageHeader title="Identity verification" subtitle="Review documents and approve or reject. Images are served via short-lived signed links." />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard label="Total" value={kycs.length} />
+        <StatCard label="Pending" value={count("PENDING")} accent="bg-brass" />
+        <StatCard label="Approved" value={count("APPROVED")} accent="bg-success" />
+        <StatCard label="Rejected" value={count("REJECTED")} accent="bg-oxblood" />
+      </div>
 
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-[#161f32] p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-indigo-500/20 rounded-lg">
-                <Users className="text-indigo-400" size={18} />
-              </div>
-              <span className="text-[10px] font-black text-slate-500 uppercase">Total</span>
-            </div>
-            <p className="text-3xl font-black text-white">{stats.total}</p>
-          </div>
-          <div className="bg-[#161f32] p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <AlertTriangle className="text-orange-400" size={18} />
-              </div>
-              <span className="text-[10px] font-black text-slate-500 uppercase">Pending</span>
-            </div>
-            <p className="text-3xl font-black text-orange-400">{stats.pending}</p>
-          </div>
-          <div className="bg-[#161f32] p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-emerald-500/20 rounded-lg">
-                <CheckCircle className="text-emerald-400" size={18} />
-              </div>
-              <span className="text-[10px] font-black text-slate-500 uppercase">Approved</span>
-            </div>
-            <p className="text-3xl font-black text-emerald-400">{stats.approved}</p>
-          </div>
-          <div className="bg-[#161f32] p-5 rounded-2xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-rose-500/20 rounded-lg">
-                <XCircle className="text-rose-400" size={18} />
-              </div>
-              <span className="text-[10px] font-black text-slate-500 uppercase">Rejected</span>
-            </div>
-            <p className="text-3xl font-black text-rose-400">{stats.rejected}</p>
-          </div>
-        </div>
+      <Tabs<Filter> value={filter} onChange={setFilter} items={[{ key: "PENDING", label: "Pending", count: count("PENDING") }, { key: "APPROVED", label: "Approved", count: count("APPROVED") }, { key: "REJECTED", label: "Rejected", count: count("REJECTED") }, { key: "ALL", label: "All", count: kycs.length }]} />
 
-        {/* Search & Filter */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="md:col-span-3 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-            <input 
-              type="text"
-              placeholder="Search by UID, Name, or Email Address..."
-              className="w-full pl-14 pr-6 py-4 bg-[#161f32] border border-slate-800 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none transition-all text-slate-200 shadow-inner"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <select 
-            className="bg-[#161f32] border border-slate-800 text-slate-300 px-6 py-4 rounded-2xl focus:ring-2 focus:ring-indigo-500/50 outline-none font-bold appearance-none cursor-pointer"
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="ALL">All Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="APPROVED">Approved</option>
-            <option value="REJECTED">Rejected</option>
-          </select>
-        </div>
+      <div className="relative max-w-md">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-stone" />
+        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search name, email, document no. or user ID…" className="field-box pl-10" />
+      </div>
 
-        {/* Table */}
-        {loading ? (
-          <div className="bg-[#161f32] rounded-3xl border border-slate-800 p-20 flex flex-col items-center justify-center gap-4">
-            <Loader2 className="animate-spin text-indigo-500" size={40} />
-            <p className="text-slate-500 font-bold tracking-widest uppercase text-xs">Accessing Database...</p>
-          </div>
-        ) : (
-          <div className="bg-[#161f32] rounded-3xl border border-slate-800 shadow-2xl overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-slate-800 bg-slate-900/40">
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">User ID</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Identification</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Document</th>
-                  <th className="px-6 py-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
-                  <th className="px-6 py-4 text-right text-[10px] font-black text-slate-500 uppercase tracking-widest">Action</th>
-                </tr>
+      {loading ? (
+        <Spinner />
+      ) : visible.length === 0 ? (
+        <Empty title="No records" text={filter === "PENDING" ? "No verifications waiting for review." : undefined} />
+      ) : (
+        <div className="card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-[10px] uppercase tracking-[0.2em] text-stone bg-bone-2/50">
+                <tr><th className="text-left px-5 py-3 font-medium">Applicant</th><th className="text-left px-4 py-3 font-medium">Document</th><th className="text-left px-4 py-3 font-medium">Submitted</th><th className="text-left px-4 py-3 font-medium">Status</th><th className="px-5 py-3" /></tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/50">
-                {filteredKycs.map((k) => (
-                  <tr key={k.id} className="hover:bg-indigo-500/[0.03] transition-colors group">
-                    <td className="px-6 py-4 font-mono text-indigo-400 font-bold text-sm">#{k.user.id}</td>
-                    <td className="px-6 py-4">
-                      <p className="font-bold text-slate-200 group-hover:text-white transition-colors">{k.fullName}</p>
-                      <p className="text-xs text-slate-500 font-medium">{k.user.email}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        <div className="p-1.5 bg-slate-800 rounded-md"><FileText size={12} className="text-slate-400" /></div>
-                        <span className="text-sm font-bold text-slate-300">{k.documentType}</span>
-                      </div>
-                      <p className="text-[10px] text-slate-500 font-mono mt-1">{k.documentNumber}</p>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-lg border text-[10px] font-black uppercase tracking-tighter
-                        ${k.status === 'PENDING' ? 'bg-orange-500/5 border-orange-500/20 text-orange-500' : 
-                          k.status === 'APPROVED' ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-500' : 
-                          'bg-rose-500/5 border-rose-500/20 text-rose-500'}`}>
-                        <div className={`h-1.5 w-1.5 rounded-full ${k.status === 'PENDING' ? 'bg-orange-500' : k.status === 'APPROVED' ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                        {k.status}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right">
-                      <button 
-                        onClick={() => setSelected(k)}
-                        className="p-2.5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-600 hover:text-white rounded-xl transition-all shadow-lg shadow-transparent hover:shadow-indigo-500/20"
-                      >
-                        <Eye size={18} />
-                      </button>
-                    </td>
+              <tbody className="divide-y divide-bone-3">
+                {visible.map((k) => (
+                  <tr key={k.id} className="hover:bg-bone-2/40">
+                    <td className="px-5 py-3"><p className="font-medium">{k.fullName}</p><p className="text-[11px] text-stone">{k.user.email} · #{k.user.id}</p></td>
+                    <td className="px-4 py-3"><p className="text-xs">{k.documentType.replace("_", " ")}</p><p className="font-mono text-[11px] text-stone">{k.documentNumber}</p></td>
+                    <td className="px-4 py-3 text-xs text-stone">{formatDate(k.createdAt, true)}</td>
+                    <td className="px-4 py-3"><span className={`px-2 py-0.5 border text-[10px] uppercase tracking-wider ${tone(k.status)}`}>{k.status}</span></td>
+                    <td className="px-5 py-3 text-right"><button onClick={() => { setSelected(k); setReason(""); }} className="btn-outline py-1.5 px-3 text-[10px]"><Eye size={13} /> Review</button></td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {filteredKycs.length === 0 && (
-              <div className="p-12 text-center text-slate-500">
-                <ShieldCheck size={48} className="mx-auto mb-4 opacity-30" />
-                <p className="font-bold">No KYC records found</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Detail Modal */}
-      {selected && (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setSelected(null)} />
-          <div className="relative w-full max-w-4xl bg-[#0b1120] max-h-[95vh] overflow-y-auto rounded-[32px] border border-slate-800 shadow-[0_0_100px_rgba(0,0,0,0.8)] flex flex-col animate-in fade-in zoom-in duration-300">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-start">
-              <div className="flex gap-4">
-                <div className="h-14 w-14 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center font-black text-xl text-white shadow-2xl">
-                  {selected.fullName.charAt(0)}
-                </div>
-                <div>
-                  <h2 className="text-xl font-black tracking-tight text-white uppercase">{selected.fullName}</h2>
-                  <div className="flex items-center gap-3 mt-1">
-                    <span className="px-2 py-0.5 bg-slate-800 text-indigo-400 text-[10px] font-black rounded font-mono border border-slate-700">UID: #{selected.user.id}</span>
-                    <span className="text-xs text-slate-500 font-medium">{selected.user.email}</span>
-                  </div>
-                </div>
-              </div>
-              <button onClick={() => setSelected(null)} className="p-2 bg-slate-900 text-slate-500 hover:text-white rounded-xl transition-colors border border-slate-800">
-                <XCircle size={24} />
-              </button>
-            </div>
-
-            <div className="p-6 grid grid-cols-1 lg:grid-cols-5 gap-6">
-              <div className="lg:col-span-3 space-y-6">
-                <div>
-                  <h3 className="text-[10px] font-black uppercase text-indigo-500 mb-3 tracking-[0.2em]">Verified Documents</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {[
-                      { label: "Document Front", src: selected.documentFront },
-                      { label: "Document Back", src: selected.documentBack },
-                      { label: "Biometric Face Match", src: selected.faceImage, fullWidth: true }
-                    ].map((img, i) => (
-                      <div 
-                        key={i} 
-                        onClick={() => setZoomedImage(img.src)}
-                        className={`group relative rounded-2xl overflow-hidden border border-slate-800 cursor-zoom-in bg-slate-900 shadow-xl ${img.fullWidth ? 'sm:col-span-2 aspect-[21/9]' : 'aspect-video'}`}
-                      >
-                        <img src={img.src} alt={img.label} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500 scale-100 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent p-4 flex flex-col justify-end">
-                          <p className="text-[10px] font-bold text-white uppercase tracking-widest flex items-center gap-2">
-                            <Maximize2 size={12} className="text-indigo-400" /> {img.label}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-2 flex flex-col gap-4">
-                <div className="p-5 bg-[#161f32] rounded-2xl border border-slate-800 space-y-3">
-                  <h3 className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Identity Summary</h3>
-                  <div className="space-y-3">
-                    <div className="bg-[#0b1120] p-3 rounded-xl border border-slate-800">
-                      <p className="text-[10px] font-black text-indigo-500 uppercase mb-1">Type</p>
-                      <p className="text-sm font-bold">{selected.documentType}</p>
-                    </div>
-                    <div className="bg-[#0b1120] p-3 rounded-xl border border-slate-800 font-mono">
-                      <p className="text-[10px] font-black text-indigo-500 uppercase mb-1">Ref Number</p>
-                      <p className="text-sm font-bold">{selected.documentNumber}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {selected.status === "PENDING" && (
-                  <div className="p-5 bg-indigo-500/5 rounded-2xl border border-indigo-500/20 space-y-3">
-                    <h3 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Audit Action</h3>
-                    <textarea 
-                      className="w-full bg-[#0b1120] border border-slate-700 rounded-xl p-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-white min-h-[100px] transition-all"
-                      placeholder="Type rejection reason or approval notes..."
-                      value={reason}
-                      onChange={(e) => setReason(e.target.value)}
-                    />
-                    <div className="grid grid-cols-1 gap-2">
-                      <button 
-                        onClick={() => updateStatus("APPROVED")}
-                        className="w-full bg-emerald-600 hover:bg-emerald-500 py-3 rounded-xl font-black uppercase text-xs tracking-widest transition-all shadow-lg shadow-emerald-900/20 flex items-center justify-center gap-2"
-                      >
-                        <CheckCircle size={16}/> Approve
-                      </button>
-                      <button 
-                        onClick={() => updateStatus("REJECTED")}
-                        className="w-full bg-rose-500/10 hover:bg-rose-600 text-rose-500 hover:text-white py-3 rounded-xl font-black uppercase text-xs tracking-widest border border-rose-500/20 transition-all flex items-center justify-center gap-2"
-                      >
-                        <XCircle size={16}/> Reject
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {selected.status !== "PENDING" && (
-                  <div className="p-5 bg-slate-800/50 rounded-2xl border border-slate-700">
-                    <h3 className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2">Decision</h3>
-                    <div className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-black uppercase
-                      ${selected.status === 'APPROVED' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-rose-500/10 border-rose-500/30 text-rose-400'}`}>
-                      {selected.status === 'APPROVED' ? <CheckCircle size={16}/> : <XCircle size={16}/>}
-                      {selected.status}
-                    </div>
-                    {selected.rejectionReason && (
-                      <div className="mt-3 p-3 bg-rose-500/5 rounded-xl border border-rose-500/20">
-                        <p className="text-[10px] font-black text-rose-400 uppercase mb-1">Reason</p>
-                        <p className="text-sm text-slate-300">{selected.rejectionReason}</p>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
           </div>
         </div>
       )}
 
-      {/* Lightbox */}
-      {zoomedImage && (
-        <div 
-          className="fixed inset-0 z-[300] bg-black/98 flex items-center justify-center cursor-zoom-out p-10 animate-in fade-in zoom-in duration-300"
-          onClick={() => setZoomedImage(null)}
-        >
-          <img 
-            src={zoomedImage} 
-            alt="Evidence View" 
-            className="max-w-full max-h-full object-contain rounded-lg border border-white/10 shadow-[0_0_100px_rgba(79,70,229,0.3)]"
-          />
+      {selected && (
+        <Modal title={selected.fullName} onClose={() => setSelected(null)} wide>
+          <div className="grid lg:grid-cols-5 gap-8">
+            <div className="lg:col-span-3">
+              <p className="eyebrow text-[10px] text-stone mb-3">Submitted documents</p>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {[{ label: "Document front", src: selected.documentFront }, { label: "Document back", src: selected.documentBack }, { label: "Live selfie", src: selected.faceImage, full: true }].map((img) => (
+                  <button key={img.label} onClick={() => setZoom(img.src)} className={`group relative overflow-hidden bg-bone-2 border border-bone-3 text-left ${img.full ? "sm:col-span-2 aspect-[21/9]" : "aspect-video"}`}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={img.src} alt={img.label} className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                    <span className="absolute bottom-2 left-2 bg-ink/80 text-bone text-[10px] uppercase tracking-wider px-2 py-1 flex items-center gap-1"><Maximize2 size={10} /> {img.label}</span>
+                  </button>
+                ))}
+              </div>
+              <p className="text-[11px] text-stone mt-3">Links expire after 15 minutes. Reload the list to refresh them.</p>
+            </div>
+
+            <div className="lg:col-span-2 space-y-4">
+              <div className="card p-5 text-sm space-y-2">
+                <p className="eyebrow text-[10px] text-stone mb-1">Identity summary</p>
+                <p><span className="text-stone">Name:</span> {selected.fullName}</p>
+                {selected.fatherName && <p><span className="text-stone">Father:</span> {selected.fatherName}</p>}
+                <p><span className="text-stone">Type:</span> {selected.documentType.replace("_", " ")}</p>
+                <p><span className="text-stone">Number:</span> <span className="font-mono">{selected.documentNumber}</span></p>
+                {selected.documentExpiry && <p><span className="text-stone">Expires:</span> {formatDate(selected.documentExpiry)}</p>}
+                <p><span className="text-stone">Account:</span> {selected.user.email} (#{selected.user.id})</p>
+                <p><span className="text-stone">Submitted:</span> {formatDate(selected.createdAt, true)}</p>
+              </div>
+
+              {selected.status === "PENDING" ? (
+                <div className="card p-5 space-y-3">
+                  <p className="eyebrow text-[10px] text-stone">Decision</p>
+                  <textarea value={reason} onChange={(e) => setReason(e.target.value)} rows={3} maxLength={500} className="field-box resize-none" placeholder="Rejection reason (required to reject)…" />
+                  <div className="grid grid-cols-2 gap-2">
+                    <button onClick={() => decide("APPROVED")} disabled={busy} className="btn py-3 text-[10px] bg-success text-bone">{busy ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={14} />} Approve</button>
+                    <button onClick={() => decide("REJECTED")} disabled={busy} className="btn py-3 text-[10px] border border-oxblood text-oxblood hover:bg-oxblood hover:text-bone"><XCircle size={14} /> Reject</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="card p-5 text-sm">
+                  <p className="eyebrow text-[10px] text-stone mb-2">Decision</p>
+                  <span className={`px-2 py-1 border text-[10px] uppercase tracking-wider ${tone(selected.status)}`}>{selected.status}</span>
+                  {selected.rejectionReason && <p className="mt-3 text-ink-3">Reason: {selected.rejectionReason}</p>}
+                  <p className="text-[11px] text-stone mt-2">Updated {formatDate(selected.updatedAt, true)}</p>
+                </div>
+              )}
+
+              <p className="text-[11px] text-stone flex items-center gap-2"><ShieldCheck size={12} /> Documents are stored as private Cloudinary assets.</p>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {zoom && (
+        <div className="fixed inset-0 z-[300] bg-ink/95 flex items-center justify-center p-6 cursor-zoom-out animate-fade-in" onClick={() => setZoom(null)}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={zoom} alt="Document" className="max-h-full max-w-full object-contain" />
         </div>
       )}
     </div>

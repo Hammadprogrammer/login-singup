@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
-import type { NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -73,4 +73,20 @@ export async function getAdminUser(): Promise<AuthUser | null> {
 export function isAdminRequest(req: NextRequest): boolean {
   const user = getUserFromRequest(req);
   return user?.role === "ADMIN";
+}
+
+export const UNAUTHORIZED = () =>
+  NextResponse.json({ error: "Unauthorized - please login" }, { status: 401 });
+export const FORBIDDEN = () =>
+  NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+/** Verified user from the request cookie, or null. */
+export function requireUser(req: NextRequest): AuthUser | null {
+  return getUserFromRequest(req);
+}
+
+/** Verified ADMIN from the request cookie, or null. */
+export function requireAdmin(req: NextRequest): AuthUser | null {
+  const user = getUserFromRequest(req);
+  return user?.role === "ADMIN" ? user : null;
 }

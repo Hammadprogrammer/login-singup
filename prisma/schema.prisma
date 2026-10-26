@@ -24,6 +24,7 @@ model User {
   orders          Order[]
   searchLogs      SearchLog[]
   productViews    ProductView[]
+  reviews         Review[]
 }
 
 model KYC {
@@ -169,15 +170,18 @@ model Product {
   saleType      SaleType         @default(SELL)
   condition     ProductCondition @default(NEW)
   productTypes  String[]         @default([])
+  stock         Int              @default(0)
   userId        Int?
   user          User?            @relation(fields: [userId], references: [id], onDelete: SetNull)
   carts         Cart[]
   favorites     Favorite[]
   orderItems    OrderItem[]
   views         ProductView[]
+  reviews       Review[]
 
   @@index([price])
   @@index([userId])
+  @@index([isPublished])
 }
 
 model Order {
@@ -189,14 +193,48 @@ model Order {
   totalAmount     Float
   fullName        String
   email           String
+  phone           String?
   address         String
   city            String
+  postalCode      String?
   country         String
+  notes           String?
+  idempotencyKey  String?     @unique
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
   items           OrderItem[]
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([status])
+}
+
+model Review {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId  String?
+  product    Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  rating     Int
+  title      String?
+  comment    String
+  isApproved Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([isApproved])
+  @@index([productId])
+}
+
+model ContactMessage {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
   @@index([createdAt])
 }
 
@@ -267,10 +305,12 @@ model Cart {
 
 enum OrderStatus {
   PENDING
+  PROCESSING
+  COMPLETED
+  CANCELLED
   PAID
   SHIPPED
   DELIVERED
-  CANCELLED
 }
 
 enum KycStatus {

@@ -1,341 +1,214 @@
 "use client";
-import React, { useState, useEffect, useRef } from "react";
-import { FaTimes, FaShoppingBag, FaChevronDown, FaChevronUp } from "react-icons/fa";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import style from "./navbar.module.scss";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { ShoppingBag, Menu, X, User, Search, ChevronRight, LogOut, Package, ShieldCheck, LayoutDashboard } from "lucide-react";
+import { SITE, CATEGORIES } from "@/lib/site";
+import { useSession } from "@/lib/use-session";
 
-// --- SHOP MENU DATA (Original Links) ---
-const shopMenuItems = [
-  { name: "NEW IN", href: "/new-in", dropdown: null },
-  {
-    name: "READY TO WEAR",
-    href: "",
-    dropdown: {
-      isMegaMenu: true,
-      categories: [
-        {
-          title: "EVERYDAY",
-          links: [
-            { label: "Tunics & Kurtas", href: "/ready-to-wear/everyday/tunics-kurtas" },
-            { label: "Jackets", href: "/ready-to-wear/everyday/jackets" },
-            { label: "Kaftans", href: "/ready-to-wear/everyday/kaftans" },
-            { label: "Tops", href: "/ready-to-wear/everyday/tops" },
-            { label: "Matching Sets", href: "/ready-to-wear/everyday/matching-sets" },
-            { label: "Pants", href: "/ready-to-wear/everyday/pants" },
-            { label: "All", href: "/ready-to-wear/everyday/all" },
-          ],
-        },
-        {
-          title: "OCCASION WEAR",
-          links: [
-            { label: "Kurta sets", href: "/ready-to-wear/occasion/kurta-sets" },
-            { label: "Kaftans", href: "/ready-to-wear/occasion/kaftans" },
-            { label: "Jackets", href: "/ready-to-wear/occasion/jackets" },
-            { label: "Anarkalis", href: "/ready-to-wear/occasion/anarkalis" },
-            { label: "Saree Set", href: "/ready-to-wear/occasion/saree-set" },
-            { label: "All", href: "/ready-to-wear/occasion/all" },
-          ],
-        },
-        {
-          title: "ALL",
-          links: [
-            { label: "Kaftans", href: "/ready-to-wear/all/kaftans" },
-            { label: "Tunics & Kurtas", href: "/ready-to-wear/all/tunics-kurtas" },
-            { label: "Tops", href: "/ready-to-wear/all/tops" },
-            { label: "Jackets", href: "/ready-to-wear/all/jackets" },
-            { label: "Matching Sets", href: "/ready-to-wear/all/matching-sets" },
-            { label: "Pants", href: "/ready-to-wear/all/pants" },
-            { label: "All", href: "/ready-to-wear/all" },
-          ],
-        },
-      ],
-      imageUrl: "/aaa.webp",
-      imageLink: "/ready-to-wear",
-    },
-  },
-  {
-    name: "COUTURE",
-    href: "",
-    dropdown: {
-      isMegaMenu: false,
-      categories: [
-        {
-          title: "BRIDAL & SEMI-FORMAL",
-          links: [
-            { label: "Luxury Bridal", href: "/couture/bridal/luxury" },
-            { label: "Destination Wedding", href: "/couture/bridal/destination" },
-            { label: "Consultation", href: "/couture/bridal/consultation" },
-            { label: "Evening Wear", href: "/couture/bridal/evening" },
-            { label: "Party Wear", href: "/couture/bridal/party" },
-            { label: "View All", href: "/couture/bridal/all" },
-          ],
-        },
-      ],
-      imageUrl: "/aaa.webp",
-      imageLink: "/couture",
-    },
-  },
-  { name: "UNSTITCHED", href: "/unstitched", dropdown: null },
-  { name: "ACCESSORIES", href: "/accessories", dropdown: null },
+const NAV = [
+  ...CATEGORIES.map((c) => ({ label: c.name, href: `/${c.slug}` })),
+  { label: "About", href: "/about" },
+  { label: "Reviews", href: "/reviews" },
+  { label: "Contact", href: "/contact" },
 ];
 
-// --- SELL MENU DATA (Different Links for Selling Section) ---
-const sellMenuItems = [
-  { name: "SELL", href: "/sell_product", dropdown: null },
-  { name: "ADD PRODUCT", href: "/add-product", dropdown: null },
-  { name: "MY PRODUCTS", href: "/my-products", dropdown: null },
-];
-
-const Navbar: React.FC = () => {
-  const router = useRouter();
+export default function Navbar() {
   const pathname = usePathname();
-
-  const [isOpen, setIsOpen] = useState(false);
+  const router = useRouter();
+  const { user, cartCount, loading, logout } = useSession();
+  const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
-  const [activeMobileSub, setActiveMobileSub] = useState<string | null>(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
 
-  const drawerRef = useRef<HTMLDivElement>(null);
-
-  // LOGIC: Determine which menu to show based on current URL
-  const isSellPage = pathname.startsWith("/sell_product") || 
-                     pathname === "/add-product" || 
-                     pathname === "/my-products";
-  const currentMenu = isSellPage ? sellMenuItems : shopMenuItems;
-
-  // Transparent overlay over hero only on the homepage, until the user scrolls.
   const isHome = pathname === "/";
-  const isTransparent = isHome && !scrolled && !isOpen;
-  
-  // Sell page uses same theme as shop (pink theme)
-  const sellTheme = {
-    background: '#fff5f9',
-    text: '#000000',
-    border: '#eee',
-    hover: '#f5d7e3'
-  };
-
-  const handleHamburgerClick = () => setIsOpen(true);
-  
-  const closeAllMenus = () => {
-    setIsOpen(false);
-    setHoveredLink(null);
-    setActiveMobileSub(null);
-  };
-
-  const toggleMobileSub = (name: string) => {
-    setActiveMobileSub(activeMobileSub === name ? null : name);
-  };
-
-  const checkLoginStatus = async () => {
-    try {
-      const res = await fetch("/api/auth/check-token");
-      setIsLoggedIn(res.ok);
-    } catch {
-      setIsLoggedIn(false);
-    }
-  };
-
-  const handleLoginClick = () => {
-    closeAllMenus();
-    router.push("/login");
-  };
-
-  const handleLogoutClick = async () => {
-    try {
-      const res = await fetch("/api/auth/logout", { method: "POST" });
-      if (res.ok) {
-        setIsLoggedIn(false);
-        closeAllMenus();
-        router.push("/login");
-      }
-    } catch (err) {
-      console.error("Logout failed:", err);
-    }
-  };
+  const transparent = isHome && !scrolled && !open;
 
   useEffect(() => {
-    checkLoginStatus();
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isOpen && drawerRef.current && !drawerRef.current.contains(event.target as Node)) {
-        closeAllMenus();
-      }
+    setOpen(false);
+    setAccountOpen(false);
+    setSearchOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
     };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isOpen]);
+  }, [open]);
 
-  useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = q.trim();
+    if (!term) return;
+    setSearchOpen(false);
+    router.push(`/search?q=${encodeURIComponent(term)}`);
+  };
 
-  const ShopSellToggle = ({ isMobile = false }) => (
-    <div className={`${style.toggleContainer} ${isMobile ? style.mobileToggle : style.desktopToggle}`}>
-      <Link 
-        href="/" 
-        onClick={closeAllMenus} 
-        className={`${style.toggleBtn} ${!isSellPage ? style.activeToggle : ""}`}
-      >
-        SHOP
-      </Link>
-      <Link 
-        href="/sell_product" 
-        onClick={closeAllMenus} 
-        className={`${style.toggleBtn} ${isSellPage ? style.activeToggle : ""}`}
-      >
-        SELL
-      </Link>
-    </div>
-  );
+  const handleLogout = async () => {
+    await logout();
+    router.push("/");
+    router.refresh();
+  };
+
+  const tone = transparent ? "text-bone" : "text-ink";
 
   return (
-    <div 
-      className={`${style.main} ${scrolled ? style.scrolled : ""} ${isTransparent ? style.transparent : ""} ${isSellPage ? style.sellTheme : ""}`}
-      style={isSellPage ? { backgroundColor: sellTheme.background, borderBottom: `1px solid ${sellTheme.border}` } : {}}
+    <header
+      className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${
+        transparent ? "bg-transparent" : "bg-bone/95 backdrop-blur-md border-b border-bone-3 shadow-[0_8px_30px_-20px_rgba(0,0,0,0.3)]"
+      }`}
     >
-      <div className={style.topBanner}>
-        <p className={style.text}>NEW DROP EVERY WEDNESDAY</p>
+      {/* Announcement */}
+      <div className={`hidden lg:block h-8 leading-4 text-center eyebrow py-2 transition-colors ${transparent ? "bg-ink/40 text-bone/80" : "bg-ink text-bone/80"}`}>
+        Complimentary shipping on orders over {SITE.currency === "USD" ? "$" : ""}{SITE.freeShippingOver} · Easy 14-day returns
       </div>
 
-      <nav className={style.navbar}>
-        <div className={style.leftSection}>
-          <div className={style.hamburger} onClick={handleHamburgerClick}>☰</div>
-          <ShopSellToggle isMobile={false} />
-        </div>
-
-        <div className={style.brandCenter}>
-          <Link href="/" onClick={closeAllMenus}>
-            <div className={style.logoText}>
-              <span className={style.misha}>CLothing</span>
-              <span className={style.lakhani}>Brand</span>
-            </div>
-          </Link>
-        </div>
-
-        <div className={style.rightSection}>
-          <Link href="/cart" className={style.icon} onClick={closeAllMenus}>
-            <FaShoppingBag size={20} />
-          </Link>
-          <div
-            className={`${style.loginButton} ${style.desktopOnlyIcon}`}
-            onClick={isLoggedIn ? handleLogoutClick : handleLoginClick}
-          >
-            {isLoggedIn ? "LOGOUT" : "LOGIN"}
-          </div>
-        </div>
-
-        {/* --- DYNAMIC DESKTOP NAVIGATION --- */}
-        <div 
-          className={style.desktopNavLinks} 
-          onMouseLeave={() => setHoveredLink(null)}
-          style={isSellPage ? { backgroundColor: sellTheme.background, borderBottom: `1px solid ${sellTheme.border}` } : {}}
-        >
-          {currentMenu.map((item) => (
-            <div key={item.name} className={style.desktopNavLinkItem} onMouseEnter={() => setHoveredLink(item.name)}>
-              <Link href={item.href} onClick={closeAllMenus}>{item.name}</Link>
-              {item.dropdown && (
-                <div className={`${style.dropdownMenu} ${hoveredLink === item.name ? style.menuVisible : ""}`}>
-                  <div className={style.dropdownContent}>
-                    <div className={style.categoryColumns}>
-                      {item.dropdown.categories.map((cat) => (
-                        <div key={cat.title} className={style.categoryColumn}>
-                          <h4 className={style.categoryTitle}>{cat.title}</h4>
-                          {cat.links.map((link) => (
-                            <Link 
-                              key={link.label} 
-                              href={link.href} 
-                              className={style.dropdownLink} 
-                              onClick={closeAllMenus}
-                            >
-                              {link.label}
-                            </Link>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                    <Link href={item.dropdown.imageLink} className={style.dropdownImage} onClick={closeAllMenus}>
-                      <img src={item.dropdown.imageUrl} alt={item.name} />
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {/* --- DYNAMIC MOBILE DRAWER --- */}
-        <div 
-          ref={drawerRef} 
-          className={`${style.navbarLinks} ${isOpen ? style.active : ""}`}
-          style={isSellPage && isOpen ? { backgroundColor: sellTheme.background } : {}}
-        >
-          <div className={style.closeIcon} onClick={closeAllMenus}>
-            <FaTimes size={24} color="black" />
-          </div>
-
-          <div className={style.mobileLinks}>
-            <div className={style.mobileToggleWrapper}>
-              <ShopSellToggle isMobile={true} />
-            </div>
-
-            {currentMenu.map((item) => (
-              <div key={item.name}>
-                {item.dropdown ? (
-                  <>
-                    <div className={style.mobileMainLink} onClick={() => toggleMobileSub(item.name)}>
-                      {item.name}
-                      {activeMobileSub === item.name ? <FaChevronUp size={12} /> : <FaChevronDown size={12} />}
-                    </div>
-                    <div className={`${style.mobileSubMenu} ${activeMobileSub === item.name ? style.subMenuOpen : ""}`}>
-                      {item.dropdown.categories.map((cat) => (
-                        <div key={cat.title}>
-                          <p style={{ fontSize: '11px', fontWeight: 'bold', padding: '10px 0 5px', color: '#888' }}>{cat.title}</p>
-                          {cat.links.map((link) => (
-                            <Link key={link.label} href={link.href} className={style.mobileSubLink} onClick={closeAllMenus}>
-                              {link.label}
-                            </Link>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <Link href={item.href} className={style.mobileMainLink} onClick={closeAllMenus}>
-                    {item.name}
-                  </Link>
-                )}
-              </div>
+      <nav className={`mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 flex items-center justify-between h-16 lg:h-20 ${tone}`}>
+        {/* Left: mobile menu + desktop nav */}
+        <div className="flex items-center gap-8">
+          <button aria-label="Open menu" onClick={() => setOpen(true)} className="lg:hidden p-2 -ml-2">
+            <Menu size={22} strokeWidth={1.5} />
+          </button>
+          <ul className="hidden lg:flex items-center gap-7">
+            {NAV.map((n) => (
+              <li key={n.href}>
+                <Link
+                  href={n.href}
+                  className={`link-underline text-[11px] uppercase tracking-[0.25em] font-medium ${
+                    pathname.startsWith(n.href) ? "opacity-100" : "opacity-80 hover:opacity-100"
+                  }`}
+                >
+                  {n.label}
+                </Link>
+              </li>
             ))}
+          </ul>
+        </div>
+
+        {/* Brand */}
+        <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center leading-none">
+          <span className="font-serif text-2xl lg:text-[28px] tracking-[0.35em] font-medium">{SITE.name}</span>
+          <span className={`eyebrow text-[8px] mt-1 ${transparent ? "text-brass-2" : "text-brass"}`}>Menswear</span>
+        </Link>
+
+        {/* Right: actions */}
+        <div className="flex items-center gap-1 sm:gap-3">
+          <button aria-label="Search" onClick={() => setSearchOpen((v) => !v)} className="p-2 hover:text-brass transition-colors">
+            <Search size={20} strokeWidth={1.5} />
+          </button>
+
+          <div className="relative hidden sm:block">
+            <button
+              aria-label="Account"
+              onClick={() => (user ? setAccountOpen((v) => !v) : router.push("/login"))}
+              className="p-2 hover:text-brass transition-colors flex items-center gap-2"
+            >
+              <User size={20} strokeWidth={1.5} />
+              {!loading && user && <span className="hidden xl:inline text-[11px] uppercase tracking-[0.2em]">{user.name?.split(" ")[0] || "Account"}</span>}
+            </button>
+            {accountOpen && user && (
+              <div className="absolute right-0 mt-3 w-64 card shadow-2xl text-ink p-2 animate-fade-in">
+                <div className="px-4 py-3 border-b border-bone-3">
+                  <p className="text-sm font-medium truncate">{user.name || "Customer"}</p>
+                  <p className="text-xs text-stone truncate">{user.email}</p>
+                </div>
+                <ul className="py-1 text-sm">
+                  {user.role === "ADMIN" && (
+                    <li><Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><LayoutDashboard size={16} /> Admin panel</Link></li>
+                  )}
+                  <li><Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><Package size={16} /> Order history</Link></li>
+                  <li><Link href="/kyc" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><ShieldCheck size={16} /> Identity verification</Link></li>
+                  <li><button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-bone text-left"><LogOut size={16} /> Sign out</button></li>
+                </ul>
+              </div>
+            )}
           </div>
 
-          <div className={style.mobileFooter}>
-            {isLoggedIn && (
-              <Link
-                href="/my-products"
-                className={style.mobileAccount}
-                onClick={closeAllMenus}
-                style={{ marginBottom: '10px', backgroundColor: '#4f46e5' }}
-              >
-                MY PRODUCTS
-              </Link>
+          <Link href="/cart" aria-label="Bag" className="relative p-2 hover:text-brass transition-colors">
+            <ShoppingBag size={20} strokeWidth={1.5} />
+            {cartCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-ink text-[10px] font-bold flex items-center justify-center">
+                {cartCount}
+              </span>
             )}
-            <div onClick={isLoggedIn ? handleLogoutClick : handleLoginClick} className={style.mobileAccount}>
-              {isLoggedIn ? "LOGOUT" : "LOGIN / REGISTER"}
-            </div>
-          </div>
+          </Link>
         </div>
       </nav>
 
-      {isOpen && <div className={style.backdrop} onClick={closeAllMenus}></div>}
-    </div>
-  );
-};
+      {/* Search bar */}
+      <div className={`overflow-hidden transition-all duration-500 ${searchOpen ? "max-h-24 border-t border-bone-3 bg-bone" : "max-h-0"}`}>
+        <form onSubmit={submitSearch} className="mx-auto max-w-2xl px-4 py-4 flex items-center gap-3 text-ink">
+          <Search size={18} className="text-stone" />
+          <input
+            autoFocus={searchOpen}
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder="Search shirts, trousers, shoes…"
+            className="flex-1 bg-transparent outline-none text-sm placeholder:text-stone"
+          />
+          <button type="submit" className="eyebrow text-[10px] hover:text-brass">Search</button>
+        </form>
+      </div>
 
-export default Navbar;
+      {/* Mobile drawer */}
+      <div className={`lg:hidden fixed inset-0 z-[60] transition ${open ? "pointer-events-auto" : "pointer-events-none"}`}>
+        <div className={`absolute inset-0 bg-ink/60 backdrop-blur-sm transition-opacity duration-500 ${open ? "opacity-100" : "opacity-0"}`} onClick={() => setOpen(false)} />
+        <aside
+          className={`absolute left-0 top-0 h-full w-[86%] max-w-sm bg-bone text-ink flex flex-col transition-transform duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)] ${
+            open ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="flex items-center justify-between px-6 h-16 border-b border-bone-3">
+            <span className="font-serif text-xl tracking-[0.35em]">{SITE.name}</span>
+            <button aria-label="Close menu" onClick={() => setOpen(false)} className="p-2 -mr-2"><X size={22} strokeWidth={1.5} /></button>
+          </div>
+          <nav className="flex-1 overflow-y-auto px-6 py-6">
+            <p className="eyebrow text-brass mb-4">Shop</p>
+            <ul className="space-y-1">
+              {CATEGORIES.map((c) => (
+                <li key={c.slug}>
+                  <Link href={`/${c.slug}`} className="flex items-center justify-between py-3 font-serif text-2xl border-b border-bone-3">
+                    {c.name} <ChevronRight size={18} className="text-stone" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <p className="eyebrow text-brass mt-8 mb-4">Company</p>
+            <ul className="space-y-3 text-sm">
+              <li><Link href="/about" className="block py-1">About us</Link></li>
+              <li><Link href="/reviews" className="block py-1">Customer reviews</Link></li>
+              <li><Link href="/contact" className="block py-1">Contact</Link></li>
+            </ul>
+          </nav>
+          <div className="px-6 py-5 border-t border-bone-3 space-y-3">
+            {user ? (
+              <>
+                <p className="text-xs text-stone truncate">Signed in as {user.email}</p>
+                {user.role === "ADMIN" && <Link href="/dashboard" className="btn-outline w-full">Admin panel</Link>}
+                <Link href="/orders" className="btn-ink w-full">Order history</Link>
+                <Link href="/kyc" className="btn-outline w-full">Identity verification</Link>
+                <button onClick={handleLogout} className="btn-ghost w-full justify-center">Sign out</button>
+              </>
+            ) : (
+              <>
+                <Link href="/login" className="btn-ink w-full">Sign in</Link>
+                <Link href="/signup" className="btn-outline w-full">Create account</Link>
+              </>
+            )}
+          </div>
+        </aside>
+      </div>
+    </header>
+  );
+}

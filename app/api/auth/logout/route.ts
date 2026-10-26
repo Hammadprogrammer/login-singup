@@ -1,24 +1,9 @@
-// /app/api/auth/logout/route.ts
 import { NextResponse } from "next/server";
+import { authCookieOptions } from "@/lib/auth";
 
 export async function POST() {
-  try {
-    const response = NextResponse.json({ message: "Logged out successfully" });
-
-    // Clear the cookie
-    response.cookies.set("token", "", {
-      httpOnly: true,
-      secure: true,
-      path: "/",
-      maxAge: 0, // This deletes the cookie
-    });
-
-    return response;
-  } catch (error) {
-    console.error("Logout error:", error);
-    return NextResponse.json(
-      { error: "Failed to logout" },
-      { status: 500 }
-    );
-  }
+  const response = NextResponse.json({ message: "Logged out successfully" });
+  // Must match the attributes used when setting the cookie or browsers keep it.
+  response.cookies.set("token", "", { ...authCookieOptions, maxAge: 0 });
+  return response;
 }

@@ -1,272 +1,191 @@
-import React from 'react'
-import FullScreenImageSlider from '@/component/contain/homeSlider/homeSlider'
-import ProductsDashboard from '@/component/contain/product/product'
-import PromoGrid from '@/component/contain/promo/PromoGrid'
-import ShopByCategory from '@/component/contain/sections/ShopByCategory'
-import FeaturedProducts from '@/component/contain/sections/FeaturedProducts'
-import SaleShowcase from '@/component/contain/sections/SaleShowcase'
-import BlogSection from '@/component/contain/sections/BlogSection'
-import Testimonials from '@/component/contain/sections/Testimonials'
-import KycStatusBanner from './kyc-user/page'
+import Link from "next/link";
+import { ArrowRight, Truck, RotateCcw, ShieldCheck, Scissors, Star } from "lucide-react";
+import prisma from "@/lib/prisma";
+import { CATEGORIES, SITE } from "@/lib/site";
+import Hero from "@/component/home/Hero";
+import Reveal from "@/component/ui/Reveal";
+import ProductCard from "@/component/ui/ProductCard";
 
+export const dynamic = "force-dynamic";
 
-const page = () => {
-  return (
-    <div>
-      <KycStatusBanner />
-      <FullScreenImageSlider/>
-      <PromoGrid />
-      <ShopByCategory />
-      <FeaturedProducts />
-      <SaleShowcase />
-      <ProductsDashboard/>
-      <BlogSection />
-      <Testimonials />
-    </div>
-  )
+async function getHomeData() {
+  const [slider, cats, featured, latest, reviews, reviewAgg] = await Promise.all([
+    prisma.homeSlider.findFirst({ orderBy: { createdAt: "asc" } }).catch(() => null),
+    prisma.category.findMany({ where: { isActive: true } }).catch(() => []),
+    prisma.product.findMany({ where: { isPublished: true, isFeatured: true }, orderBy: { createdAt: "desc" }, take: 8 }),
+    prisma.product.findMany({ where: { isPublished: true }, orderBy: { createdAt: "desc" }, take: 8 }),
+    prisma.review.findMany({ where: { isApproved: true }, orderBy: { createdAt: "desc" }, take: 3, include: { user: { select: { name: true } } } }),
+    prisma.review.aggregate({ where: { isApproved: true }, _avg: { rating: true }, _count: true }),
+  ]);
+  const hero = slider?.images?.length ? slider.images : ["/images/mens/hero-1.jpg", "/images/mens/hero-2.jpg", "/images/mens/hero-3.jpg"];
+  const categories = CATEGORIES.map((c) => ({
+    ...c,
+    image: cats.find((r) => r.link === `/${c.slug}`)?.image || c.image,
+  }));
+  return { hero, categories, featured: featured.length >= 4 ? featured : latest, reviews, reviewAgg };
 }
 
-export default page
+export default async function HomePage() {
+  const { hero, categories, featured, reviews, reviewAgg } = await getHomeData();
 
+  return (
+    <div className="-mt-16 lg:-mt-[112px]">
+      <Hero images={hero} />
 
+      {/* Promise strip */}
+      <section className="border-b border-bone-3 bg-bone-2/60">
+        <div className="mx-auto max-w-[1440px] px-6 lg:px-10 py-5 grid grid-cols-2 md:grid-cols-4 gap-4 text-[11px] uppercase tracking-[0.2em] text-ink-3">
+          {[
+            { icon: Truck, t: `Free shipping over $${SITE.freeShippingOver}` },
+            { icon: RotateCcw, t: "14-day easy returns" },
+            { icon: ShieldCheck, t: "Secure checkout" },
+            { icon: Scissors, t: "Tailored fits" },
+          ].map(({ icon: Icon, t }) => (
+            <div key={t} className="flex items-center gap-3"><Icon size={16} className="text-brass shrink-0" /><span>{t}</span></div>
+          ))}
+        </div>
+      </section>
 
+      {/* Categories */}
+      <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-20 lg:pt-28">
+        <Reveal className="flex items-end justify-between mb-10">
+          <div>
+            <p className="eyebrow text-brass mb-3">Shop by category</p>
+            <h2 className="display text-4xl lg:text-5xl">The essentials, done properly.</h2>
+          </div>
+        </Reveal>
+        <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
+          {categories.map((c, idx) => (
+            <Reveal key={c.slug} delay={idx * 120}>
+              <Link href={`/${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden bg-ink zoom-media">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={c.image} alt={c.name} className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100" />
+                <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-7 text-bone">
+                  <p className="eyebrow text-brass-2 mb-2">0{idx + 1}</p>
+                  <h3 className="display text-4xl mb-2">{c.name}</h3>
+                  <p className="text-sm text-bone/70 max-w-xs leading-relaxed">{c.blurb}</p>
+                  <span className="mt-5 inline-flex items-center gap-2 eyebrow text-[10px] text-bone group-hover:text-brass-2 transition-colors">
+                    Explore <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
+      {/* Featured products */}
+      <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <p className="eyebrow text-brass mb-3">Curated for you</p>
+            <h2 className="display text-4xl lg:text-5xl">This season&apos;s picks</h2>
+          </div>
+          <Link href="/search?q=" className="btn-ghost link-underline">View all products</Link>
+        </Reveal>
 
+        {featured.length === 0 ? (
+          <div className="card p-16 text-center">
+            <p className="font-serif text-2xl mb-2">The collection is being prepared.</p>
+            <p className="text-sm text-stone">New arrivals will appear here as soon as they&apos;re added.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 lg:gap-x-6">
+            {featured.map((p, idx) => (
+              <Reveal key={p.id} delay={(idx % 4) * 80}>
+                <ProductCard product={{ ...p, createdAt: p.createdAt.toISOString() }} priority={idx < 4} />
+              </Reveal>
+            ))}
+          </div>
+        )}
+      </section>
 
+      {/* Editorial split */}
+      <section className="mt-24 lg:mt-32 bg-ink text-bone">
+        <div className="mx-auto max-w-[1440px] grid lg:grid-cols-2">
+          <Reveal className="relative aspect-[4/5] lg:aspect-auto lg:min-h-[640px] overflow-hidden">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/images/mens/lookbook-1.jpg" alt="Menswear flat lay" className="absolute inset-0 h-full w-full object-cover" />
+          </Reveal>
+          <Reveal delay={150} className="flex flex-col justify-center px-8 py-16 lg:px-20">
+            <p className="eyebrow text-brass-2 mb-4">Our philosophy</p>
+            <h2 className="display text-4xl lg:text-6xl mb-6">Fewer pieces. Better made.</h2>
+            <p className="text-bone/70 leading-relaxed max-w-md mb-4">
+              We design a tight wardrobe of shirts, trousers and shoes that work together — so getting dressed takes seconds and looks like it took effort.
+            </p>
+            <p className="text-bone/70 leading-relaxed max-w-md mb-10">
+              Every fabric is chosen for how it wears over years, not seasons. Every stitch is checked before it leaves our studio.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link href="/about" className="btn-bone">Read our story</Link>
+              <Link href="/contact" className="btn-outline-bone">Book a fitting</Link>
+            </div>
+          </Reveal>
+        </div>
+      </section>
 
+      {/* Lookbook strip */}
+      <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">
+        <Reveal className="mb-10 text-center">
+          <p className="eyebrow text-brass mb-3">Lookbook</p>
+          <h2 className="display text-4xl lg:text-5xl">Worn well.</h2>
+        </Reveal>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+          {[
+            { src: "/images/mens/lookbook-2.jpg", href: "/trousers", label: "Relaxed tailoring" },
+            { src: "/images/mens/hero-2.jpg", href: "/shirts", label: "Three-piece ease" },
+            { src: "/images/mens/lookbook-3.jpg", href: "/trousers", label: "Raw denim" },
+          ].map((l, idx) => (
+            <Reveal key={l.src} delay={idx * 100} className={idx === 2 ? "col-span-2 lg:col-span-1" : ""}>
+              <Link href={l.href} className="group relative block aspect-[3/4] overflow-hidden bg-bone-2 zoom-media">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={l.src} alt={l.label} className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink/70 to-transparent">
+                  <p className="eyebrow text-bone text-[10px]">{l.label}</p>
+                </div>
+              </Link>
+            </Reveal>
+          ))}
+        </div>
+      </section>
 
-// "use client";
-
-// import { useRef, useState, useEffect } from "react";
-// import Link from "next/link";
-// import { 
-//   CheckCircle2, ArrowLeft, Camera, Loader2, Image as ImageIcon, ChevronRight 
-// } from "lucide-react";
-
-// export default function ProfessionalKYC() {
-//   const videoRef = useRef<HTMLVideoElement>(null);
-//   const canvasRef = useRef<HTMLCanvasElement>(null);
-
-//   const [loading, setLoading] = useState(true);
-//   const [step, setStep] = useState(1);
-//   const [userId, setUserId] = useState<number | null>(null);
-//   const [isSubmitting, setIsSubmitting] = useState(false);
-//   const [capturedFace, setCapturedFace] = useState<string | null>(null);
-  
-//   const [formData, setFormData] = useState({
-//     fullName: "", 
-//     fatherName: "", 
-//     documentType: "CNIC",
-//     documentNumber: "", 
-//     documentExpiry: "", 
-//     documentFront: null as string | null,
-//     documentBack: null as string | null,
-//   });
-
-//   // Check Auth & Get UserID for folder structure
-//   useEffect(() => {
-//     fetch("/api/kyc")
-//       .then(res => res.json())
-//       .then(data => {
-//         if (data.userId) setUserId(data.userId);
-//         setLoading(false);
-//       });
-//   }, []);
-
-//   // ✅ Updated Cloudinary Upload with Specific Folders
-//   const uploadToCloudinary = async (base64: string, subFolder: "documents" | "faces") => {
-//     if (!base64 || base64 === "data:,") return null;
-//     try {
-//       const cloudName = "dbzkqua3f"; 
-//       const uploadPreset = "ml_default"; 
-//       // Aapke screenshot ke mutabiq path: kyc/user_id/subFolder
-//       const folderPath = `kyc/user_${userId}/${subFolder}`;
-
-//       const data = new FormData();
-//       data.append("file", base64);
-//       data.append("upload_preset", uploadPreset);
-//       data.append("folder", folderPath); 
-
-//       const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
-//         method: "POST",
-//         body: data,
-//       });
-
-//       const resData = await res.json();
-//       return resData.secure_url || null;
-//     } catch (err) {
-//       console.error("Upload Error:", err);
-//       return null;
-//     }
-//   };
-
-//   // Camera Logic
-//   useEffect(() => {
-//     let streamInstance: MediaStream | null = null;
-//     if (step === 3 && !capturedFace) {
-//       navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-//         .then((stream) => {
-//           streamInstance = stream;
-//           if (videoRef.current) videoRef.current.srcObject = stream;
-//         })
-//         .catch(() => alert("Camera permission required."));
-//     }
-//     return () => streamInstance?.getTracks().forEach(t => t.stop());
-//   }, [step, capturedFace]);
-
-//   const capturePhoto = () => {
-//     if (canvasRef.current && videoRef.current) {
-//       const canvas = canvasRef.current;
-//       const video = videoRef.current;
-//       canvas.width = video.videoWidth; 
-//       canvas.height = video.videoHeight;
-//       const ctx = canvas.getContext("2d");
-//       if (ctx) {
-//         ctx.translate(canvas.width, 0); 
-//         ctx.scale(-1, 1);
-//         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-//         setCapturedFace(canvas.toDataURL("image/jpeg", 0.7));
-//       }
-//     }
-//   };
-
-//   const handleFinalSubmit = async () => {
-//     if (!userId) return alert("User ID not found. Please refresh.");
-//     setIsSubmitting(true);
-//     try {
-//       // 1. Upload in Parallel to correct folders
-//       const [frontUrl, backUrl, faceUrl] = await Promise.all([
-//         uploadToCloudinary(formData.documentFront!, "documents"),
-//         uploadToCloudinary(formData.documentBack!, "documents"),
-//         uploadToCloudinary(capturedFace!, "faces")
-//       ]);
-
-//       if (!frontUrl || !backUrl || !faceUrl) {
-//         throw new Error("Upload failed. Check Cloudinary settings.");
-//       }
-
-//       // 2. Save to DB
-//       const res = await fetch("/api/kyc", {
-//         method: "POST",
-//         headers: { "Content-Type": "application/json" },
-//         body: JSON.stringify({
-//           ...formData,
-//           documentFront: frontUrl,
-//           documentBack: backUrl,
-//           faceImage: faceUrl,
-//         }),
-//       });
-
-//       if (res.ok) setStep(4);
-//       else throw new Error("Database saving failed.");
-
-//     } catch (err: any) {
-//       alert(err.message);
-//     } finally {
-//       setIsSubmitting(false);
-//     }
-//   };
-
-//   if (loading) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-pink-500" size={40} /></div>;
-
-//   return (
-//     <div className="min-h-screen bg-[#FFF9FA] py-10 px-4 font-sans">
-//       <div className="max-w-2xl mx-auto">
-        
-//         {/* Progress Bar */}
-//         <div className="bg-white rounded-3xl p-5 mb-8 shadow-sm border border-pink-50 flex items-center justify-between">
-//            {[1, 2, 3].map((s) => (
-//              <div key={s} className="flex items-center gap-2">
-//                 <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold ${step >= s ? 'bg-pink-600 text-white shadow-lg shadow-pink-200' : 'bg-pink-50 text-pink-300'}`}>
-//                   {step > s ? <CheckCircle2 size={16} /> : s}
-//                 </div>
-//                 <span className={`hidden md:block text-[10px] font-black uppercase tracking-wider ${step >= s ? 'text-gray-900' : 'text-gray-300'}`}>
-//                    {s === 1 ? 'Details' : s === 2 ? 'Documents' : 'Selfie'}
-//                 </span>
-//                 {s !== 3 && <ChevronRight size={14} className="text-gray-200" />}
-//              </div>
-//            ))}
-//         </div>
-
-//         <div className="bg-white rounded-[2.5rem] shadow-xl border border-pink-50 p-8 md:p-12 transition-all">
-//           {step === 1 && (
-//             <div className="space-y-6 animate-in fade-in duration-500">
-//               <h2 className="text-3xl font-black text-gray-900">Identity Details</h2>
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 <input type="text" placeholder="Full Name" className="p-4 bg-gray-50 rounded-2xl font-bold border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" onChange={e => setFormData({...formData, fullName: e.target.value})} />
-//                 <input type="text" placeholder="Father Name" className="p-4 bg-gray-50 rounded-2xl font-bold border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" onChange={e => setFormData({...formData, fatherName: e.target.value})} />
-//                 <input type="text" placeholder="ID Number" className="p-4 bg-gray-50 rounded-2xl font-bold border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" onChange={e => setFormData({...formData, documentNumber: e.target.value})} />
-//                 <input type="date" className="p-4 bg-gray-50 rounded-2xl font-bold border-none ring-1 ring-gray-100 focus:ring-2 focus:ring-pink-500 outline-none" onChange={e => setFormData({...formData, documentExpiry: e.target.value})} />
-//               </div>
-//               <button disabled={!formData.fullName} onClick={() => setStep(2)} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Continue</button>
-//             </div>
-//           )}
-
-//           {step === 2 && (
-//             <div className="space-y-6 animate-in slide-in-from-right duration-500">
-//               <button onClick={() => setStep(1)} className="flex items-center gap-2 text-pink-500 font-bold text-xs uppercase"><ArrowLeft size={16} /> Back</button>
-//               <h2 className="text-3xl font-black text-gray-900">Upload ID Cards</h2>
-//               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-//                 {['documentFront', 'documentBack'].map((side) => (
-//                   <label key={side} className="relative h-48 border-2 border-dashed border-pink-100 rounded-[2rem] bg-pink-50/20 flex flex-col items-center justify-center cursor-pointer overflow-hidden group hover:bg-pink-50 transition-colors">
-//                     {(formData as any)[side] ? (
-//                       <img src={(formData as any)[side]} className="w-full h-full object-cover" />
-//                     ) : (
-//                       <div className="text-center">
-//                         <ImageIcon className="text-pink-500 mx-auto mb-2" size={24} />
-//                         <span className="text-[10px] font-black text-pink-600 uppercase">Upload {side.includes('Front') ? 'Front' : 'Back'}</span>
-//                       </div>
-//                     )}
-//                     <input type="file" className="hidden" accept="image/*" onChange={e => {
-//                       const reader = new FileReader();
-//                       reader.onload = () => setFormData({...formData, [side]: reader.result as string});
-//                       if (e.target.files?.[0]) reader.readAsDataURL(e.target.files[0]);
-//                     }} />
-//                   </label>
-//                 ))}
-//               </div>
-//               <button disabled={!formData.documentFront || !formData.documentBack} onClick={() => setStep(3)} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl hover:bg-pink-700 transition-all">Next: Face Verify</button>
-//             </div>
-//           )}
-
-//           {step === 3 && (
-//             <div className="text-center space-y-8 animate-in slide-in-from-right duration-500">
-//               <h2 className="text-3xl font-black text-gray-900">Live Selfie</h2>
-//               <div className="relative w-64 h-64 mx-auto rounded-[3.5rem] p-1.5 bg-gradient-to-tr from-pink-500 to-pink-200 shadow-2xl overflow-hidden">
-//                 <div className="w-full h-full rounded-[3.3rem] overflow-hidden bg-white">
-//                   {!capturedFace ? (
-//                     <video ref={videoRef} autoPlay playsInline muted className="w-full h-full object-cover scale-x-[-1]" />
-//                   ) : (
-//                     <img src={capturedFace} className="w-full h-full object-cover" />
-//                   )}
-//                 </div>
-//               </div>
-//               {!capturedFace ? (
-//                 <button onClick={capturePhoto} className="w-full flex items-center justify-center gap-3 bg-gray-950 text-white py-5 rounded-2xl font-black">
-//                   <Camera size={20} /> Take Selfie
-//                 </button>
-//               ) : (
-//                 <div className="space-y-4">
-//                   <button onClick={handleFinalSubmit} disabled={isSubmitting} className="w-full bg-pink-600 text-white font-black py-5 rounded-2xl shadow-xl">
-//                     {isSubmitting ? <Loader2 className="animate-spin mx-auto" /> : "Submit Application"}
-//                   </button>
-//                   <button onClick={() => setCapturedFace(null)} className="text-pink-500 font-black text-[10px] uppercase tracking-widest hover:underline">Retake Selfie</button>
-//                 </div>
-//               )}
-//               <canvas ref={canvasRef} className="hidden" />
-//             </div>
-//           )}
-
-//           {step === 4 && (
-//             <div className="text-center py-10 animate-in zoom-in duration-500">
-//               <CheckCircle2 size={64} className="text-green-500 mx-auto mb-4" />
-//               <h2 className="text-4xl font-black text-gray-900">KYC Submitted!</h2>
-//               <p className="text-gray-500 mt-4 font-medium">Aapka account review ke baad activate ho jayega.</p>
-//               <Link href="/dashboard" className="inline-block mt-10 bg-gray-900 text-white px-12 py-5 rounded-2xl font-black shadow-lg">Back to Dashboard</Link>
-//             </div>
-//           )}
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
+      {/* Reviews */}
+      <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
+          <div>
+            <p className="eyebrow text-brass mb-3">Customer reviews</p>
+            <h2 className="display text-4xl lg:text-5xl">What they&apos;re saying</h2>
+          </div>
+          {reviewAgg._count > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="flex text-brass">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={16} fill={i < Math.round(reviewAgg._avg.rating ?? 0) ? "currentColor" : "none"} />)}</div>
+              <p className="text-sm text-ink-3">{(reviewAgg._avg.rating ?? 0).toFixed(1)} · {reviewAgg._count} review{reviewAgg._count === 1 ? "" : "s"}</p>
+            </div>
+          )}
+        </Reveal>
+        {reviews.length === 0 ? (
+          <Reveal className="card p-12 text-center">
+            <p className="font-serif text-2xl mb-2">Be the first to leave a review.</p>
+            <p className="text-sm text-stone mb-6">Tell other customers how your pieces fit and wear.</p>
+            <Link href="/reviews" className="btn-outline">Write a review</Link>
+          </Reveal>
+        ) : (
+          <div className="grid md:grid-cols-3 gap-4 lg:gap-6">
+            {reviews.map((r, idx) => (
+              <Reveal key={r.id} delay={idx * 100} className="card p-8 flex flex-col">
+                <div className="flex text-brass mb-4">{Array.from({ length: 5 }).map((_, i) => <Star key={i} size={14} fill={i < r.rating ? "currentColor" : "none"} />)}</div>
+                {r.title && <p className="font-medium mb-2">{r.title}</p>}
+                <p className="font-serif text-lg leading-relaxed text-ink-2 flex-1">&ldquo;{r.comment}&rdquo;</p>
+                <p className="mt-6 eyebrow text-[10px] text-stone">{r.user.name || "Verified customer"}</p>
+              </Reveal>
+            ))}
+          </div>
+        )}
+        <Reveal className="text-center mt-10">
+          <Link href="/reviews" className="btn-ghost link-underline">All reviews</Link>
+        </Reveal>
+      </section>
+    </div>
+  );
+}

@@ -1,230 +1,164 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
-import { 
-  ShoppingBag, ArrowRight, Minus, Plus, Trash2, 
-  ChevronLeft, ShieldCheck, Tag
-} from 'lucide-react';
-
-interface Product {
-  id: number;
-  name: string;
-  description: string;
-  price: number;
-  brands: string[];
-  imageUrls: string[];
-}
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ShoppingBag, Minus, Plus, Trash2, ArrowRight, Loader2, ShieldCheck, Truck } from "lucide-react";
+import { formatPrice } from "@/lib/format";
+import { SITE, shippingFor } from "@/lib/site";
+import { notifySessionChange } from "@/lib/use-session";
+import { toast } from "@/component/ui/Toast";
 
 interface CartItem {
-  id: number; 
-  productId: number;
+  id: number;
   quantity: number;
-  size?: string;
-  product: Product; 
+  size: string | null;
+  product: { id: string; name: string; price: number; stock: number; imageUrls: string[]; brands: string[]; categories: string[] };
 }
 
-export default function LuxuryCartPage() {
-  const [cart, setCart] = useState<CartItem[]>([]);
+export default function CartPage() {
+  const router = useRouter();
+  const [items, setItems] = useState<CartItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState<number | null>(null);
+  const [authed, setAuthed] = useState(true);
 
-  const fetchCart = async () => {
+  const load = async () => {
     try {
-      const res = await fetch('/api/cart');
-      if (res.ok) {
-        const data = await res.json();
-        setCart(data);
+      const res = await fetch("/api/cart", { cache: "no-store" });
+      if (res.status === 401) {
+        setAuthed(false);
+        return;
       }
-    } catch (error) {
-      console.error("Fetch Error:", error);
+      if (res.ok) setItems(await res.json());
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCart();
+    load();
   }, []);
 
-  const updateQuantity = async (cartItemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-
-    setCart(prev => prev.map(item => 
-      item.id === cartItemId ? { ...item, quantity: newQuantity } : item
-    ));
-
-    try {
-      await fetch('/api/cart', {
-        method: 'PATCH',
-        body: JSON.stringify({ cartItemId, quantity: newQuantity }),
-      });
-    } catch (error) {
-      console.error("Update failed:", error);
-      fetchCart();
-    }
+  const updateQty = async (item: CartItem, qty: number) => {
+    if (qty < 1 || qty > 10) return;
+    setBusy(item.id);
+    const res = await fetch("/api/cart", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ cartItemId: item.id, quantity: qty }) });
+    if (res.ok) setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, quantity: qty } : i)));
+    else toast.error((await res.json()).error || "Could not update quantity");
+    setBusy(null);
+    notifySessionChange();
   };
 
-  const removeItem = async (cartItemId: number) => {
-    setCart(prev => prev.filter(item => item.id !== cartItemId));
-    try {
-      await fetch(`/api/cart?id=${cartItemId}`, {
-        method: 'DELETE',
-      });
-    } catch (error) {
-      console.error("Delete failed:", error);
-      fetchCart();
-    }
+  const remove = async (id: number) => {
+    setBusy(id);
+    await fetch(`/api/cart?id=${id}`, { method: "DELETE" });
+    setItems((prev) => prev.filter((i) => i.id !== id));
+    setBusy(null);
+    notifySessionChange();
   };
 
-  const formatUSDT = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-    }).format(amount).replace('$', 'USDT ');
-  };
-  // const formatPKR = (amount: number) => {
-  //   return new Intl.NumberFormat('en-PK', {
-  //     style: 'currency',
-  //     currency: 'PKR',
-  //     minimumFractionDigits: 0,
-  //     maximumFractionDigits: 0,
-  //   }).format(amount).replace('PKR', 'Rs.');
-  // };
+  const subtotal = items.reduce((a, i) => a + i.product.price * i.quantity, 0);
+  const shipping = shippingFor(subtotal);
+  const unavailable = items.filter((i) => i.product.stock < i.quantity);
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.product.price * item.quantity), 0);
+  if (loading) {
+    return <div className="min-h-[60vh] flex items-center justify-center"><Loader2 className="animate-spin text-stone" /></div>;
+  }
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-zinc-900"></div>
-    </div>
-  );
+  if (!authed) {
+    return (
+      <div className="mx-auto max-w-md px-6 py-28 text-center">
+        <ShoppingBag size={40} strokeWidth={1} className="mx-auto text-stone mb-6" />
+        <h1 className="display text-4xl mb-3">Your bag</h1>
+        <p className="text-sm text-stone mb-8">Sign in to see the items you&apos;ve saved and check out securely.</p>
+        <Link href="/login?redirect=/cart" className="btn-ink w-full">Sign in</Link>
+        <Link href="/signup" className="btn-ghost w-full justify-center mt-2">Create an account</Link>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 font-sans antialiased">
-      {/* Top Utility Bar */}
-      <div className="bg-zinc-900 text-zinc-100 text-[9px] md:text-[10px] tracking-[0.2em] uppercase py-3 text-center font-bold px-4">
-        Complimentary Insured Express Shipping
+    <div className="mx-auto max-w-[1440px] px-6 lg:px-10 py-10 lg:py-16">
+      <div className="flex items-end justify-between mb-10 pb-6 border-b border-bone-3">
+        <div>
+          <p className="eyebrow text-brass mb-3">Your bag</p>
+          <h1 className="display text-4xl lg:text-5xl">{items.length} {items.length === 1 ? "item" : "items"}</h1>
+        </div>
+        <Link href="/shirts" className="btn-ghost link-underline hidden sm:inline-flex">Continue shopping</Link>
       </div>
 
-      <main className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-12 py-6 md:py-12">
-        {/* Navigation Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 pb-6 border-b border-zinc-100 gap-4">
-          <Link href="/" className="group inline-flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-black text-zinc-900">
-            <ChevronLeft size={16} className="transition-transform group-hover:-translate-x-1" /> Back to Boutique
-          </Link>
-          <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
-             <div className="text-left sm:text-right">
-                <p className="text-[9px] tracking-[0.2em] uppercase text-zinc-400 font-bold">Your Bag</p>
-                <p className="text-xs font-black uppercase tracking-widest">{cart.length} Items</p>
-             </div>
-             <ShoppingBag size={20} strokeWidth={1.5} className="text-zinc-900" />
+      {items.length === 0 ? (
+        <div className="py-24 text-center">
+          <ShoppingBag size={40} strokeWidth={1} className="mx-auto text-stone mb-6" />
+          <p className="font-serif text-2xl mb-2">Your bag is empty.</p>
+          <p className="text-sm text-stone mb-8">Start with a shirt — everything else follows.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Link href="/shirts" className="btn-ink">Shop shirts</Link>
+            <Link href="/trousers" className="btn-outline">Shop trousers</Link>
+            <Link href="/shoes" className="btn-outline">Shop shoes</Link>
           </div>
         </div>
-
-        {cart.length === 0 ? (
-          <div className="h-[60vh] flex flex-col items-center justify-center text-center px-4">
-            <ShoppingBag size={48} strokeWidth={0.5} className="text-zinc-300 mb-6" />
-            <h2 className="text-lg tracking-[0.2em] uppercase font-black mb-6">Your bag is empty</h2>
-            <Link href="/" className="w-full max-w-xs py-4 bg-zinc-900 text-white text-[10px] tracking-[0.3em] uppercase font-black hover:bg-black transition-all">
-              Start Shopping
-            </Link>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16">
-            {/* Cart Items List */}
-            <div className="lg:col-span-7 xl:col-span-8">
-              <div className="space-y-0">
-                {cart.map((item) => (
-                  <div key={item.id} className="flex gap-4 md:gap-8 py-6 md:py-10 border-b border-zinc-100 last:border-0 items-start">
-                    {/* Image - Smaller on Mobile */}
-                    <div className="relative w-24 sm:w-40 md:w-48 aspect-[3/4] bg-zinc-50 overflow-hidden flex-shrink-0 border border-zinc-100">
-                      <img 
-                        src={item.product.imageUrls[0]} 
-                        alt={item.product.name} 
-                        className="w-full h-full object-cover" 
-                      />
-                    </div>
-
-                    {/* Content */}
-                    <div className="flex-1 flex flex-col min-h-full justify-between">
-                      <div className="space-y-1 md:space-y-3">
-                        <div className="flex justify-between items-start gap-2">
-                          <h4 className="text-[9px] md:text-[10px] tracking-[0.2em] uppercase font-black text-zinc-400">
-                            {item.product.brands?.[0] || 'Luxury Brand'}
-                          </h4>
-                          <button onClick={() => removeItem(item.id)} className="text-zinc-400 hover:text-red-500 transition-colors">
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                        <h3 className="text-base md:text-2xl font-medium tracking-tight text-zinc-900 leading-tight">
-                          {item.product.name}
-                        </h3>
-                        <div className="flex gap-2 items-center pt-1">
-                          <span className="text-[9px] bg-zinc-100 px-2 py-1 uppercase tracking-widest font-bold">
-                            Size: {item.size || 'M'}
-                          </span>
-                        </div>
+      ) : (
+        <div className="grid lg:grid-cols-12 gap-10 lg:gap-16">
+          <ul className="lg:col-span-8 divide-y divide-bone-3">
+            {items.map((i) => {
+              const short = i.product.stock < i.quantity;
+              return (
+                <li key={i.id} className={`py-7 flex gap-5 sm:gap-8 ${busy === i.id ? "opacity-60" : ""}`}>
+                  <Link href={`/product/${i.product.id}`} className="w-24 sm:w-32 aspect-[3/4] bg-bone-2 overflow-hidden shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={i.product.imageUrls[0]} alt={i.product.name} className="h-full w-full object-cover" />
+                  </Link>
+                  <div className="flex-1 flex flex-col justify-between min-w-0">
+                    <div className="flex justify-between gap-4">
+                      <div className="min-w-0">
+                        <p className="eyebrow text-[9px] text-stone mb-1">{i.product.brands[0] || i.product.categories[0]}</p>
+                        <Link href={`/product/${i.product.id}`} className="font-medium hover:text-brass transition-colors leading-snug block truncate">{i.product.name}</Link>
+                        {i.size && <p className="text-xs text-stone mt-1">Size {i.size}</p>}
+                        {short && <p className="text-xs text-oxblood mt-1">Only {i.product.stock} available — reduce quantity.</p>}
                       </div>
-
-                      {/* Quantity & Price Row */}
-                      <div className="flex flex-wrap items-end justify-between mt-4 md:mt-8 gap-4">
-                        <div className="flex items-center border border-zinc-200 rounded-sm scale-90 origin-left md:scale-100">
-                          <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="p-2 hover:bg-zinc-50"><Minus size={12} /></button>
-                          <span className="w-10 text-center text-xs font-bold">{item.quantity}</span>
-                          <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="p-2 hover:bg-zinc-50"><Plus size={12} /></button>
-                        </div>
-                        
-                        <div className="text-right">
-                          <p className="text-lg md:text-xl font-black tracking-tighter">
-                            {formatUSDT(item.product.price * item.quantity)}
-                          </p>
-                        </div>
+                      <button aria-label="Remove" onClick={() => remove(i.id)} className="text-stone hover:text-oxblood transition-colors self-start"><Trash2 size={16} /></button>
+                    </div>
+                    <div className="flex items-end justify-between mt-4">
+                      <div className="flex items-center border border-bone-3">
+                        <button aria-label="Decrease" onClick={() => updateQty(i, i.quantity - 1)} className="px-3 py-2 hover:bg-bone-2"><Minus size={12} /></button>
+                        <span className="w-9 text-center text-sm">{i.quantity}</span>
+                        <button aria-label="Increase" onClick={() => updateQty(i, i.quantity + 1)} className="px-3 py-2 hover:bg-bone-2" disabled={i.quantity >= Math.min(10, i.product.stock)}><Plus size={12} /></button>
                       </div>
+                      <p className="font-medium">{formatPrice(i.product.price * i.quantity)}</p>
                     </div>
                   </div>
-                ))}
+                </li>
+              );
+            })}
+          </ul>
+
+          <aside className="lg:col-span-4">
+            <div className="card p-7 lg:sticky lg:top-32 space-y-5">
+              <p className="eyebrow text-[10px]">Summary</p>
+              <div className="space-y-3 text-sm">
+                <div className="flex justify-between"><span className="text-stone">Subtotal</span><span>{formatPrice(subtotal)}</span></div>
+                <div className="flex justify-between"><span className="text-stone">Shipping</span><span>{shipping === 0 ? "Free" : formatPrice(shipping)}</span></div>
+                {shipping > 0 && <p className="text-xs text-stone">Add {formatPrice(SITE.freeShippingOver - subtotal)} more for free shipping.</p>}
               </div>
-            </div>
-
-            {/* Sticky Summary Card */}
-            <div className="lg:col-span-5 xl:col-span-4">
-              <div className="bg-zinc-50 p-6 md:p-10 lg:sticky lg:top-8 border border-zinc-100">
-                <h3 className="text-[11px] tracking-[0.3em] uppercase font-black text-zinc-900 mb-8 pb-3 border-b border-zinc-200">
-                  Summary
-                </h3>
-                
-                <div className="space-y-4 mb-8">
-                  <div className="flex justify-between items-center text-[11px] uppercase tracking-widest">
-                    <span className="text-zinc-500">Subtotal</span>
-                    <span className="font-bold">{formatUSDT(cartTotal)}</span>
-                  </div>
-                  <div className="flex justify-between items-center text-[11px] uppercase tracking-widest">
-                    <span className="text-zinc-500">Shipping</span>
-                    <span className="text-emerald-600 font-bold">Free</span>
-                  </div>
-                  <div className="pt-6 mt-4 border-t border-zinc-200">
-                    <div className="flex justify-between items-end">
-                      <span className="text-[10px] tracking-[0.2em] uppercase font-black text-zinc-400">Total</span>
-                      <span className="text-3xl font-black tracking-tighter">{formatUSDT(cartTotal)}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button className="w-full bg-zinc-900 text-white py-5 text-[10px] tracking-[0.4em] uppercase font-black hover:bg-black transition-all flex items-center justify-center gap-2 group mb-6">
-                  Checkout Now <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-                </button>
-
-                <div className="flex items-center justify-center gap-3 py-2 border-t border-zinc-200 pt-6">
-                  <ShieldCheck size={14} className="text-zinc-400" />
-                  <p className="text-[8px] md:text-[9px] uppercase tracking-[0.15em] font-bold text-zinc-400">
-                    Secure Payment Gateway & Insured Shipping
-                  </p>
-                </div>
+              <div className="divider" />
+              <div className="flex justify-between items-end">
+                <span className="eyebrow text-[10px]">Total</span>
+                <span className="text-2xl">{formatPrice(subtotal + shipping)}</span>
               </div>
+              <button onClick={() => router.push("/checkout")} disabled={unavailable.length > 0} className="btn-ink w-full">
+                Checkout <ArrowRight size={14} />
+              </button>
+              {unavailable.length > 0 && <p className="text-xs text-oxblood text-center">Adjust quantities for out-of-stock items to continue.</p>}
+              <ul className="text-[11px] text-stone space-y-2 pt-2">
+                <li className="flex gap-2 items-center"><Truck size={14} className="text-brass" /> 3–5 working days delivery</li>
+                <li className="flex gap-2 items-center"><ShieldCheck size={14} className="text-brass" /> Cash on delivery or bank transfer</li>
+              </ul>
             </div>
-          </div>
-        )}
-      </main>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }
