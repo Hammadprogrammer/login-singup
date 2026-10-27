@@ -22,7 +22,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   return (
     <>
       <Navbar />
-      <main className="min-h-[70vh] pt-16 lg:pt-[112px]">{children}</main>
+      <main className="min-h-[70vh] pt-16 lg:pt-[144px]">{children}</main>
       <Footer />
       <Toaster />
     </>

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ShoppingBag, Menu, X, User, Search, ChevronRight, LogOut, Package, ShieldCheck, LayoutDashboard } from "lucide-react";
+import { ShoppingBag, Menu, X, User, ChevronRight, LogOut, Package, ShieldCheck, LayoutDashboard } from "lucide-react";
 import { SITE, CATEGORIES } from "@/lib/site";
 import { useSession } from "@/lib/use-session";
 
@@ -14,15 +14,23 @@ const NAV = [
   { label: "Contact", href: "/contact" },
 ];
 
+function initials(name?: string | null, email?: string | null) {
+  const src = (name || "").trim();
+  if (src) {
+    const parts = src.split(/\s+/);
+    return (parts[0][0] + (parts[1]?.[0] || "")).toUpperCase();
+  }
+  return (email?.[0] || "?").toUpperCase();
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, cartCount, loading, logout } = useSession();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [q, setQ] = useState("");
   const [accountOpen, setAccountOpen] = useState(false);
+  const accountRef = useRef<HTMLDivElement>(null);
 
   const isHome = pathname === "/";
   const transparent = isHome && !scrolled && !open;
@@ -37,7 +45,6 @@ export default function Navbar() {
   useEffect(() => {
     setOpen(false);
     setAccountOpen(false);
-    setSearchOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -47,13 +54,14 @@ export default function Navbar() {
     };
   }, [open]);
 
-  const submitSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const term = q.trim();
-    if (!term) return;
-    setSearchOpen(false);
-    router.push(`/search?q=${encodeURIComponent(term)}`);
-  };
+  useEffect(() => {
+    if (!accountOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (!accountRef.current?.contains(e.target as Node)) setAccountOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [accountOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -62,6 +70,7 @@ export default function Navbar() {
   };
 
   const tone = transparent ? "text-bone" : "text-ink";
+  const avatar = user ? initials(user.name, user.email) : "";
 
   return (
     <header
@@ -74,13 +83,75 @@ export default function Navbar() {
         Complimentary shipping on orders over {SITE.currency === "USD" ? "$" : ""}{SITE.freeShippingOver} · Easy 14-day returns
       </div>
 
-      <nav className={`mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 flex items-center justify-between h-16 lg:h-20 ${tone}`}>
-        {/* Left: mobile menu + desktop nav */}
-        <div className="flex items-center gap-8">
+      <div className={`mx-auto max-w-[1440px] px-4 sm:px-6 lg:px-10 ${tone}`}>
+        {/* Brand row */}
+        <div className="relative flex items-center justify-between h-16 lg:h-[72px]">
           <button aria-label="Open menu" onClick={() => setOpen(true)} className="lg:hidden p-2 -ml-2">
             <Menu size={22} strokeWidth={1.5} />
           </button>
-          <ul className="hidden lg:flex items-center gap-7">
+          <div className="hidden lg:block w-24" aria-hidden />
+
+          <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center leading-none">
+            <span className="font-serif text-2xl lg:text-[30px] tracking-[0.35em] font-medium">{SITE.name}</span>
+            <span className={`eyebrow text-[8px] mt-1 ${transparent ? "text-brass-2" : "text-brass"}`}>Menswear</span>
+          </Link>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1 sm:gap-3 lg:w-24 lg:justify-end">
+            <div className="relative hidden sm:block" ref={accountRef}>
+              <button
+                aria-label="Account"
+                onClick={() => (user ? setAccountOpen((v) => !v) : router.push("/login"))}
+                className="p-1.5 hover:text-brass transition-colors flex items-center"
+              >
+                {!loading && user ? (
+                  <span
+                    title={user.name || user.email}
+                    className={`h-8 w-8 rounded-full flex items-center justify-center text-[11px] font-semibold tracking-wider ring-1 transition-colors ${
+                      transparent ? "bg-bone/15 ring-bone/40 text-bone" : "bg-ink ring-ink text-bone"
+                    }`}
+                  >
+                    {avatar}
+                  </span>
+                ) : (
+                  <User size={20} strokeWidth={1.5} />
+                )}
+              </button>
+              {accountOpen && user && (
+                <div className="absolute right-0 mt-3 w-64 card shadow-2xl text-ink p-2 animate-fade-in">
+                  <div className="px-4 py-3 border-b border-bone-3 flex items-center gap-3">
+                    <span className="h-9 w-9 rounded-full bg-ink text-bone flex items-center justify-center text-xs font-semibold shrink-0">{avatar}</span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{user.name || "Customer"}</p>
+                      <p className="text-xs text-stone truncate">{user.email}</p>
+                    </div>
+                  </div>
+                  <ul className="py-1 text-sm">
+                    {user.role === "ADMIN" && (
+                      <li><Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><LayoutDashboard size={16} /> Admin panel</Link></li>
+                    )}
+                    <li><Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><Package size={16} /> Order history</Link></li>
+                    <li><Link href="/kyc" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><ShieldCheck size={16} /> Identity verification</Link></li>
+                    <li><button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-bone text-left"><LogOut size={16} /> Sign out</button></li>
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <Link href="/cart" aria-label="Bag" className="relative p-2 hover:text-brass transition-colors">
+              <ShoppingBag size={20} strokeWidth={1.5} />
+              {cartCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-ink text-[10px] font-bold flex items-center justify-center">
+                  {cartCount}
+                </span>
+              )}
+            </Link>
+          </div>
+        </div>
+
+        {/* Nav row */}
+        <nav className={`hidden lg:block h-10 border-t ${transparent ? "border-bone/15" : "border-bone-3"}`}>
+          <ul className="flex items-center justify-center gap-10 h-full">
             {NAV.map((n) => (
               <li key={n.href}>
                 <Link
@@ -94,71 +165,7 @@ export default function Navbar() {
               </li>
             ))}
           </ul>
-        </div>
-
-        {/* Brand */}
-        <Link href="/" className="absolute left-1/2 -translate-x-1/2 flex flex-col items-center leading-none">
-          <span className="font-serif text-2xl lg:text-[28px] tracking-[0.35em] font-medium">{SITE.name}</span>
-          <span className={`eyebrow text-[8px] mt-1 ${transparent ? "text-brass-2" : "text-brass"}`}>Menswear</span>
-        </Link>
-
-        {/* Right: actions */}
-        <div className="flex items-center gap-1 sm:gap-3">
-          <button aria-label="Search" onClick={() => setSearchOpen((v) => !v)} className="p-2 hover:text-brass transition-colors">
-            <Search size={20} strokeWidth={1.5} />
-          </button>
-
-          <div className="relative hidden sm:block">
-            <button
-              aria-label="Account"
-              onClick={() => (user ? setAccountOpen((v) => !v) : router.push("/login"))}
-              className="p-2 hover:text-brass transition-colors flex items-center gap-2"
-            >
-              <User size={20} strokeWidth={1.5} />
-              {!loading && user && <span className="hidden xl:inline text-[11px] uppercase tracking-[0.2em]">{user.name?.split(" ")[0] || "Account"}</span>}
-            </button>
-            {accountOpen && user && (
-              <div className="absolute right-0 mt-3 w-64 card shadow-2xl text-ink p-2 animate-fade-in">
-                <div className="px-4 py-3 border-b border-bone-3">
-                  <p className="text-sm font-medium truncate">{user.name || "Customer"}</p>
-                  <p className="text-xs text-stone truncate">{user.email}</p>
-                </div>
-                <ul className="py-1 text-sm">
-                  {user.role === "ADMIN" && (
-                    <li><Link href="/dashboard" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><LayoutDashboard size={16} /> Admin panel</Link></li>
-                  )}
-                  <li><Link href="/orders" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><Package size={16} /> Order history</Link></li>
-                  <li><Link href="/kyc" className="flex items-center gap-3 px-4 py-2.5 hover:bg-bone"><ShieldCheck size={16} /> Identity verification</Link></li>
-                  <li><button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-bone text-left"><LogOut size={16} /> Sign out</button></li>
-                </ul>
-              </div>
-            )}
-          </div>
-
-          <Link href="/cart" aria-label="Bag" className="relative p-2 hover:text-brass transition-colors">
-            <ShoppingBag size={20} strokeWidth={1.5} />
-            {cartCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-brass text-ink text-[10px] font-bold flex items-center justify-center">
-                {cartCount}
-              </span>
-            )}
-          </Link>
-        </div>
-      </nav>
-
-      {/* Search bar */}
-      <div className={`overflow-hidden transition-all duration-500 ${searchOpen ? "max-h-24 border-t border-bone-3 bg-bone" : "max-h-0"}`}>
-        <form onSubmit={submitSearch} className="mx-auto max-w-2xl px-4 py-4 flex items-center gap-3 text-ink">
-          <Search size={18} className="text-stone" />
-          <input
-            autoFocus={searchOpen}
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search shirts, trousers, shoes…"
-            className="flex-1 bg-transparent outline-none text-sm placeholder:text-stone"
-          />
-          <button type="submit" className="eyebrow text-[10px] hover:text-brass">Search</button>
-        </form>
+        </nav>
       </div>
 
       {/* Mobile drawer */}
@@ -194,7 +201,13 @@ export default function Navbar() {
           <div className="px-6 py-5 border-t border-bone-3 space-y-3">
             {user ? (
               <>
-                <p className="text-xs text-stone truncate">Signed in as {user.email}</p>
+                <div className="flex items-center gap-3">
+                  <span className="h-9 w-9 rounded-full bg-ink text-bone flex items-center justify-center text-xs font-semibold shrink-0">{avatar}</span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{user.name || "Customer"}</p>
+                    <p className="text-xs text-stone truncate">{user.email}</p>
+                  </div>
+                </div>
                 {user.role === "ADMIN" && <Link href="/dashboard" className="btn-outline w-full">Admin panel</Link>}
                 <Link href="/orders" className="btn-ink w-full">Order history</Link>
                 <Link href="/kyc" className="btn-outline w-full">Identity verification</Link>

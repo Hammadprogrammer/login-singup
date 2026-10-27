@@ -52,6 +52,20 @@ model HomeSlider {
   updatedAt DateTime @updatedAt
 }
 
+/// Admin-managed home page imagery. slot = "editorial" (single) | "lookbook" (up to 3 tiles).
+model HomeImage {
+  id        Int      @id @default(autoincrement())
+  slot      String
+  image     String
+  label     String?
+  link      String?
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slot, order])
+}
+
 model PromoBanner {
   id         Int      @id @default(autoincrement())
   title      String

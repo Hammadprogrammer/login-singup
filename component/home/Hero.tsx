@@ -12,7 +12,7 @@ const SLIDES = [
 
 export default function Hero({ images }: { images: string[] }) {
   const [i, setI] = useState(0);
-  const slides = SLIDES.map((s, idx) => ({ ...s, image: images[idx % Math.max(images.length, 1)] || images[0] }));
+  const slides = SLIDES.map((s, idx) => ({ ...s, image: images.length ? images[idx % images.length] : null }));
 
   useEffect(() => {
     const t = setInterval(() => setI((v) => (v + 1) % slides.length), 6500);
@@ -23,8 +23,10 @@ export default function Hero({ images }: { images: string[] }) {
     <section className="relative h-[92svh] min-h-[560px] w-full overflow-hidden bg-ink text-bone">
       {slides.map((s, idx) => (
         <div key={idx} className={`absolute inset-0 transition-opacity duration-[1400ms] ${idx === i ? "opacity-100" : "opacity-0"}`} aria-hidden={idx !== i}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={s.image} alt="" className={`h-full w-full object-cover object-top ${idx === i ? "animate-ken-burns" : ""}`} />
+          {s.image && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={s.image} alt="" className={`h-full w-full object-cover object-top ${idx === i ? "animate-ken-burns" : ""}`} />
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-ink via-ink/40 to-ink/30" />
           <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-transparent to-transparent" />
         </div>

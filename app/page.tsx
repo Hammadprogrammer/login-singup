@@ -1,35 +1,32 @@
 import Link from "next/link";
 import { ArrowRight, Truck, RotateCcw, ShieldCheck, Scissors, Star } from "lucide-react";
 import prisma from "@/lib/prisma";
-import { CATEGORIES, SITE } from "@/lib/site";
+import { SITE } from "@/lib/site";
+import { loadHome, type HomeContent } from "@/lib/home";
 import Hero from "@/component/home/Hero";
 import Reveal from "@/component/ui/Reveal";
 import ProductCard from "@/component/ui/ProductCard";
 
 export const dynamic = "force-dynamic";
 
+const EMPTY_HOME: HomeContent = { hero: [], categories: [], editorial: null, lookbook: [], sliderId: null };
+
 async function getHomeData() {
-  const [slider, cats, featured, latest, reviews, reviewAgg] = await Promise.all([
-    prisma.homeSlider.findFirst({ orderBy: { createdAt: "asc" } }).catch(() => null),
-    prisma.category.findMany({ where: { isActive: true } }).catch(() => []),
+  const [home, featured, latest, reviews, reviewAgg] = await Promise.all([
+    loadHome().catch(() => EMPTY_HOME),
     prisma.product.findMany({ where: { isPublished: true, isFeatured: true }, orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.product.findMany({ where: { isPublished: true }, orderBy: { createdAt: "desc" }, take: 8 }),
     prisma.review.findMany({ where: { isApproved: true }, orderBy: { createdAt: "desc" }, take: 3, include: { user: { select: { name: true } } } }),
     prisma.review.aggregate({ where: { isApproved: true }, _avg: { rating: true }, _count: true }),
   ]);
-  const hero = slider?.images?.length ? slider.images : ["/images/mens/hero-1.jpg", "/images/mens/hero-2.jpg", "/images/mens/hero-3.jpg"];
-  const categories = CATEGORIES.map((c) => ({
-    ...c,
-    image: cats.find((r) => r.link === `/${c.slug}`)?.image || c.image,
-  }));
-  return { hero, categories, featured: featured.length >= 4 ? featured : latest, reviews, reviewAgg };
+  return { ...home, featured: featured.length >= 4 ? featured : latest, reviews, reviewAgg };
 }
 
 export default async function HomePage() {
-  const { hero, categories, featured, reviews, reviewAgg } = await getHomeData();
+  const { hero, categories, editorial, lookbook, featured, reviews, reviewAgg } = await getHomeData();
 
   return (
-    <div className="-mt-16 lg:-mt-[112px]">
+    <div className="-mt-16 lg:-mt-[144px]">
       <Hero images={hero} />
 
       {/* Promise strip */}
@@ -58,8 +55,10 @@ export default async function HomePage() {
           {categories.map((c, idx) => (
             <Reveal key={c.slug} delay={idx * 120}>
               <Link href={`/${c.slug}`} className="group relative block aspect-[4/5] overflow-hidden bg-ink zoom-media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={c.image} alt={c.name} className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100" />
+                {c.image && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={c.image} alt={c.name} className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100" />
+                )}
                 <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-ink/10 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-7 text-bone">
                   <p className="eyebrow text-brass-2 mb-2">0{idx + 1}</p>
@@ -104,9 +103,11 @@ export default async function HomePage() {
       {/* Editorial split */}
       <section className="mt-24 lg:mt-32 bg-ink text-bone">
         <div className="mx-auto max-w-[1440px] grid lg:grid-cols-2">
-          <Reveal className="relative aspect-[4/5] lg:aspect-auto lg:min-h-[640px] overflow-hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/images/mens/lookbook-1.jpg" alt="Menswear flat lay" className="absolute inset-0 h-full w-full object-cover" />
+          <Reveal className="relative aspect-[4/5] lg:aspect-auto lg:min-h-[640px] overflow-hidden bg-ink-2">
+            {editorial && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={editorial} alt="Menswear editorial" className="absolute inset-0 h-full w-full object-cover" />
+            )}
           </Reveal>
           <Reveal delay={150} className="flex flex-col justify-center px-8 py-16 lg:px-20">
             <p className="eyebrow text-brass-2 mb-4">Our philosophy</p>
@@ -126,29 +127,29 @@ export default async function HomePage() {
       </section>
 
       {/* Lookbook strip */}
-      <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">
-        <Reveal className="mb-10 text-center">
-          <p className="eyebrow text-brass mb-3">Lookbook</p>
-          <h2 className="display text-4xl lg:text-5xl">Worn well.</h2>
-        </Reveal>
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-          {[
-            { src: "/images/mens/lookbook-2.jpg", href: "/trousers", label: "Relaxed tailoring" },
-            { src: "/images/mens/hero-2.jpg", href: "/shirts", label: "Three-piece ease" },
-            { src: "/images/mens/lookbook-3.jpg", href: "/trousers", label: "Raw denim" },
-          ].map((l, idx) => (
-            <Reveal key={l.src} delay={idx * 100} className={idx === 2 ? "col-span-2 lg:col-span-1" : ""}>
-              <Link href={l.href} className="group relative block aspect-[3/4] overflow-hidden bg-bone-2 zoom-media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={l.src} alt={l.label} className="absolute inset-0 h-full w-full object-cover" />
-                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink/70 to-transparent">
-                  <p className="eyebrow text-bone text-[10px]">{l.label}</p>
-                </div>
-              </Link>
-            </Reveal>
-          ))}
-        </div>
-      </section>
+      {lookbook.length > 0 && (
+        <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">
+          <Reveal className="mb-10 text-center">
+            <p className="eyebrow text-brass mb-3">Lookbook</p>
+            <h2 className="display text-4xl lg:text-5xl">Worn well.</h2>
+          </Reveal>
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
+            {lookbook.map((l, idx) => (
+              <Reveal key={l.id} delay={idx * 100} className={idx === 2 ? "col-span-2 lg:col-span-1" : ""}>
+                <Link href={l.link} className="group relative block aspect-[3/4] overflow-hidden bg-bone-2 zoom-media">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={l.image} alt={l.label} className="absolute inset-0 h-full w-full object-cover" />
+                  {l.label && (
+                    <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-ink/70 to-transparent">
+                      <p className="eyebrow text-bone text-[10px]">{l.label}</p>
+                    </div>
+                  )}
+                </Link>
+              </Reveal>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Reviews */}
       <section className="mx-auto max-w-[1440px] px-6 lg:px-10 pt-24 lg:pt-32">

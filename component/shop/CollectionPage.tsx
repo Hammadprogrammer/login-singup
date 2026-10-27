@@ -8,7 +8,7 @@ import Reveal from "@/component/ui/Reveal";
 
 type Sort = "new" | "price_asc" | "price_desc";
 
-export default function CollectionPage({ category, query }: { category?: CategoryDef; query?: string }) {
+export default function CollectionPage({ category, image, query }: { category?: CategoryDef; image?: string | null; query?: string }) {
   const [products, setProducts] = useState<ProductSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [sub, setSub] = useState<string>("");
@@ -53,10 +53,10 @@ export default function CollectionPage({ category, query }: { category?: Categor
     <div>
       {/* Header */}
       <section className="relative overflow-hidden bg-ink text-bone">
-        {category && (
+        {category && image && (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={category.image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+            <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
             <div className="absolute inset-0 bg-gradient-to-r from-ink via-ink/70 to-ink/20" />
           </>
         )}

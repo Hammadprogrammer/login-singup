@@ -38,7 +38,6 @@ export interface CategoryDef {
   name: string;
   title: string;
   blurb: string;
-  image: string;
   subCategories: string[];
   sizes: string[];
   sizeLabel: string;
@@ -50,7 +49,6 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Shirts",
     title: "Shirts",
     blurb: "Crisp formals, relaxed linens and weekend oxfords — cut to sit clean on the shoulder.",
-    image: "/images/mens/shirts.jpg",
     subCategories: ["Formal", "Casual", "Linen", "Oxford", "Polo"],
     sizes: ["S", "M", "L", "XL", "XXL"],
     sizeLabel: "Size",
@@ -60,7 +58,6 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Trousers",
     title: "Trousers",
     blurb: "Chinos, dress trousers and denim with a tapered leg and a comfortable rise.",
-    image: "/images/mens/trousers.jpg",
     subCategories: ["Chinos", "Dress Trousers", "Denim", "Cargo", "Joggers"],
     sizes: ["28", "30", "32", "34", "36", "38", "40"],
     sizeLabel: "Waist",
@@ -70,7 +67,6 @@ export const CATEGORIES: CategoryDef[] = [
     name: "Shoes",
     title: "Shoes",
     blurb: "Hand-finished leather oxfords, loafers, boots and minimal sneakers.",
-    image: "/images/mens/shoes.jpg",
     subCategories: ["Oxford", "Loafers", "Boots", "Sneakers", "Sandals"],
     sizes: ["39", "40", "41", "42", "43", "44", "45", "46"],
     sizeLabel: "EU Size",

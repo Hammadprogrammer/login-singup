@@ -1,9 +1,12 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
+import prisma from "@/lib/prisma";
 import { CATEGORIES, getCategory } from "@/lib/site";
 import CollectionPage from "@/component/shop/CollectionPage";
 
 type Params = { params: Promise<{ category: string }> };
+
+export const dynamic = "force-dynamic";
 
 export function generateStaticParams() {
   return CATEGORIES.map((c) => ({ category: c.slug }));
@@ -19,5 +22,6 @@ export default async function CategoryPage({ params }: Params) {
   const { category } = await params;
   const def = getCategory(category);
   if (!def) notFound();
-  return <CollectionPage category={def} />;
+  const row = await prisma.category.findFirst({ where: { link: `/${def.slug}`, isActive: true } }).catch(() => null);
+  return <CollectionPage category={def} image={row?.image ?? null} />;
 }
